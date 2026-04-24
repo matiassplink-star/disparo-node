@@ -37,11 +37,10 @@ export function Sidebar({ collapsed = false, onToggle, user }: SidebarProps) {
     {
       label: 'Ferramentas',
       items: [
-        { href: '#', label: 'Extração Grupos', icon: '◎', action: 'panel', panel: 'grupos' },
-        { href: '#', label: 'Limpeza de Lista', icon: '🧹', action: 'panel', panel: 'limpeza' },
-        // { href: '#', label: 'Proxies', icon: '🌐', action: 'panel', panel: 'proxies', locked: true },
-        { href: '#', label: 'Envio Grupos', icon: '▷', action: 'panel', panel: 'envioGrupos' },
-        { href: '#', label: 'Adicionar a Grupos', icon: '⊕', action: 'panel', panel: 'addGrupos' },
+        { href: '#', label: 'Extração Grupos', icon: '◎', action: 'panel', panel: 'grupos', premium: true },
+        { href: '#', label: 'Limpeza de Lista', icon: '🧹', action: 'panel', panel: 'limpeza', premium: true },
+        { href: '#', label: 'Envio Grupos', icon: '▷', action: 'panel', panel: 'envioGrupos', premium: true },
+        { href: '#', label: 'Adicionar a Grupos', icon: '⊕', action: 'panel', panel: 'addGrupos', premium: true },
         { href: '#', label: 'Relatórios', icon: '≡', action: 'panel', panel: 'logs' },
       ]
     },
@@ -171,7 +170,14 @@ export function Sidebar({ collapsed = false, onToggle, user }: SidebarProps) {
                         <div className="absolute left-0 w-1 h-6 bg-[#22c55e] rounded-r-full" />
                       )}
                       <span className={`text-sm flex-shrink-0 w-4 text-center transition-all ${isActive ? 'text-[#22c55e]' : 'group-hover:text-white'}`}>{item.icon}</span>
-                      {!collapsed && <span>{item.label}</span>}
+                      {!collapsed && (
+                        <div className="flex justify-between items-center w-full">
+                          <span>{item.label}</span>
+                          {item.premium && user?.plano !== 'premium' && user?.plano !== 'admin' && (
+                            <span title="Recurso Premium" style={{ fontSize: '10px' }}>🔒</span>
+                          )}
+                        </div>
+                      )}
                     </a>
                   </li>
                 )

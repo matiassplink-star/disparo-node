@@ -75,17 +75,18 @@ export default function WhatsAppPage() {
   const iframeUrl = iframeToken ? `${DISPARO_URL}?token=${iframeToken}&v=${sessionVersion}` : ''
 
   useEffect(() => {
-    if (panel && iframeUrl) {
+    const activePanel = panel || 'dashboard'
+    if (iframeUrl) {
       // Envio imediato para maior responsividade
       const iframe = document.querySelector('iframe')
       if (iframe?.contentWindow) {
-        iframe.contentWindow.postMessage({ action: 'changePanel', panel }, '*')
+        iframe.contentWindow.postMessage({ action: 'changePanel', panel: activePanel }, '*')
       }
       
       // Backup para garantir carregamento inicial lento
       const timer = setTimeout(() => {
         if (iframe?.contentWindow) {
-          iframe.contentWindow.postMessage({ action: 'changePanel', panel }, '*')
+          iframe.contentWindow.postMessage({ action: 'changePanel', panel: activePanel }, '*')
         }
       }, 500)
       return () => clearTimeout(timer)
