@@ -45,7 +45,6 @@ export function Sidebar({ collapsed = false, onToggle, user, mobileOpen = false,
       label: t('group.principal'),
       items: [
         { action: 'panel', panel: 'dashboard', href: '/dashboard/whatsapp', label: t('nav.dashboard'), icon: LayoutDashboard, color: '#3b82f6' },
-        { action: 'panel', panel: 'monitor', href: '/dashboard/whatsapp', label: t('nav.monitor'), icon: Activity, color: '#22c55e' },
         { action: 'panel', panel: 'numeros', href: '/dashboard/whatsapp', label: t('nav.numbers'), icon: Smartphone, color: '#f59e0b' },
       ]
     },
@@ -64,7 +63,7 @@ export function Sidebar({ collapsed = false, onToggle, user, mobileOpen = false,
         { action: 'panel', panel: 'envioGrupos', href: '/dashboard/whatsapp', label: t('nav.groups'), icon: Users, color: '#f97316' },
         { action: 'panel', panel: 'addGrupos', href: '/dashboard/whatsapp', label: t('nav.addGroups'), icon: UserPlus, color: '#6366f1' },
         { action: 'panel', panel: 'extracao', href: '/dashboard/whatsapp', label: 'Agenda e Chats', icon: BookUser, color: '#10b981' },
-        { action: 'panel', panel: 'relatorios', href: '/dashboard/whatsapp', label: t('nav.reports'), icon: BarChart3, color: '#14b8a6' },
+        { action: 'panel', panel: 'logs', href: '/dashboard/whatsapp', label: t('nav.reports'), icon: BarChart3, color: '#14b8a6' },
       ]
     },
     {
