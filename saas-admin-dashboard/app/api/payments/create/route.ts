@@ -63,28 +63,42 @@ export async function POST(req: NextRequest) {
     
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
-    const pref = await preference.create({
-      body: {
-        items: [
-          {
-            id: plano,
-            title: title,
-            quantity: 1,
-            unit_price: valor,
-            currency_id: 'BRL',
-          }
-        ],
-        payer: {
-          email: userData.email,
-          name: userData.nome,
-        },
-        external_reference: pagamento.id,
-      }
-    })
+    try {
+      const pref = await preference.create({
+        body: {
+          items: [
+            {
+              id: plano,
+              title: title,
+              quantity: 1,
+              unit_price: valor,
+              currency_id: 'BRL',
+            }
+          ],
+          payer: {
+            email: userData.email,
+            name: userData.nome || 'Cliente',
+          },
+          external_reference: pagamento.id,
+          back_urls: {
+            success: `${appUrl}/dashboard`,
+            failure: `${appUrl}/dashboard`,
+            pending: `${appUrl}/dashboard`
+          },
+          auto_return: 'approved'
+        }
+      })
 
-    return NextResponse.json({ preferenceId: pref.id, pagamentoId: pagamento.id })
+      return NextResponse.json({ preferenceId: pref.id, pagamentoId: pagamento.id })
+    } catch (mpError: any) {
+      console.error('[MERCADO PAGO ERROR]:', mpError)
+      return NextResponse.json({ 
+        error: 'Erro no Mercado Pago: ' + (mpError?.message || 'Falha ao criar preferência de pagamento. Verifique se o email é válido e diferente do vendedor.') 
+      }, { status: 400 })
+    }
+
   } catch (error: any) {
-    console.error('Erro ao criar pagamento:', error)
+    console.error('Erro geral ao criar pagamento:', error)
     return NextResponse.json({ error: error.message || 'Erro ao criar pagamento' }, { status: 500 })
   }
 }
