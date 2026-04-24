@@ -39,7 +39,7 @@ const metaSalva = carregarMetadadosContas();
 app.use(express.json({ limit: '50mb' }));
 
 // ─── proteção: bloqueia acesso direto e faz isolamento ─────────
-const SAAS_ORIGIN = 'http://localhost:3000';
+const SAAS_ORIGIN = process.env.SAAS_URL || 'https://zaplink.casalbrokersistema.online';
 const AUTH_TOKEN = process.env.WA_AUTH_TOKEN || 'disparo-saas-2025';
 
 function verifyIframeToken(t) {
