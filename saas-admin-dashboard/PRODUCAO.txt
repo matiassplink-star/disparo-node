@@ -1,0 +1,94 @@
+🚀 PRODUÇÃO - CHECKLIST DE DEPLOY
+==================================
+
+ANTES DE PUBLICAR, VERIFIQUE:
+
+[ ] Segurança
+    [ ] Revisar SECURITY.md
+    [ ] Rate limiting implementado
+    [ ] RLS policies no Supabase
+    [ ] HTTPS ativado
+    [ ] CORS restringido
+    [ ] CSP headers adicionados
+
+[ ] Testes
+    [ ] npm run type-check (0 erros)
+    [ ] npm run lint (0 erros)
+    [ ] npm run build (sucesso)
+    [ ] Testar login/logout
+    [ ] Testar criar usuário
+    [ ] Testar editar usuário
+    [ ] Testar deletar usuário
+    [ ] Teste responsivo (mobile)
+
+[ ] Performance
+    [ ] Otimizar imagens
+    [ ] Minificar código
+    [ ] Cachear recursos
+    [ ] CDN configurado
+
+[ ] Configuração
+    [ ] .env.production preenchido
+    [ ] Database backups configurados
+    [ ] Monitoramento ativado
+    [ ] Logs centralizados
+
+[ ] Deploy
+    [ ] Código versionado (git)
+    [ ] CI/CD pipeline configurado
+    [ ] Domínio configurado
+    [ ] Email de produção (Resend)
+    [ ] Supabase em produção
+
+
+OPÇÕES DE DEPLOY:
+
+1️⃣ VERCEL (Recomendado para Next.js)
+   - Conectar GitHub
+   - Adicionar env vars
+   - Deploy automático
+
+2️⃣ DOCKER + Cloud
+   - Build image
+   - Push para registry
+   - Deploy em K8s/Docker
+
+3️⃣ SELF-HOSTED
+   - VM na nuvem
+   - PM2 para gerenciar
+   - Nginx com SSL
+   - Backup manual
+
+
+MONITORAMENTO:
+
+- Uptime: Sentry, Datadog
+- Performance: Vercel Analytics
+- Logs: DataDog, Loggly
+- Erros: Sentry, Rollbar
+- Users: Posthog, Mixpanel
+
+
+MANUTENÇÃO:
+
+- Daily: Verificar logs/erros
+- Weekly: Backup database
+- Monthly: Atualizar dependencies
+- Quarterly: Revisar segurança
+
+
+SUPORTE À PRODUÇÃO:
+
+Erros comuns:
+- OOM: Aumentar memória
+- Timeout: Aumentar timeout
+- Rate limit: Implementar backoff
+
+Soluções:
+- Cache o mais possível
+- Use CDN para assets
+- Implemente pagination
+- Comprima responses
+
+
+BOA SORTE! 🎉

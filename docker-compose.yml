@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  zaplink-node:
+    build: .
+    container_name: zaplink-node
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - WA_AUTH_TOKEN=disparo-saas-2025
+    volumes:
+      - ./sessoes:/app/sessoes
+      - ./logs:/app/logs
+      - ./contatos:/app/contatos
+      - ./midia:/app/midia
+    # Garante que o Chrome tenha memória compartilhada suficiente
+    shm_size: '2gb'

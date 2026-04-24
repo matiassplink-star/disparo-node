@@ -1,0 +1,2737 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050505;--surface:rgba(22, 24, 28, 0.65);--surface2:rgba(28, 31, 36, 0.7);--surface3:rgba(34, 38, 45, 0.8);
+  --border:rgba(255, 255, 255, 0.08);--border2:rgba(255, 255, 255, 0.12);
+  --text:#e8eaed;--muted:#8b949e;--muted2:#484f58;
+  --accent:#22c55e;--accent-dim:rgba(34,197,94,0.15);--accent-border:rgba(34,197,94,0.4);
+  --warn:#f59e0b;--warn-dim:rgba(245,158,11,0.1);
+  --danger:#ef4444;--danger-dim:rgba(239,68,68,0.1);
+  --info:#3b82f6;--info-dim:rgba(59,130,246,0.1);
+  --radius:12px;--mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;height:100vh;overflow:hidden;display:flex;flex-direction:column;position:relative}
+
+/* Aurora Background */
+body::before, body::after {
+  content: ''; position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.15; z-index: -1;
+  animation: floatOrb 20s infinite alternate ease-in-out; pointer-events:none;
+}
+body::before {
+  width: 50vw; height: 50vh; top: -10vh; left: -10vw; background: #22c55e;
+}
+body::after {
+  width: 40vw; height: 60vh; bottom: -20vh; right: -10vw; background: #8b5cf6; animation-delay: -10s;
+}
+@keyframes floatOrb {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(100px, 50px) scale(1.2); }
+}
+
+/* topbar */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:60px;background:transparent;flex-shrink:0;z-index:10}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:14px;font-weight:600;letter-spacing:.05em}
+.brand-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+.top-right{display:flex;align-items:center;gap:10px}
+
+/* layout (Island Effect) */
+.layout{display:grid;grid-template-columns:220px 1fr;flex:1;overflow:hidden;gap:20px;padding:0 20px 20px 20px;z-index:1}
+
+/* sidebar */
+.sidebar{border:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;overflow:hidden;border-radius:16px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 10px 40px rgba(0,0,0,0.2)}
+.sidebar-section{padding:12px 0}
+.sidebar-label{font-size:10px;font-family:var(--mono);color:var(--muted2);letter-spacing:.1em;text-transform:uppercase;padding:6px 18px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-left:2px solid transparent;transition:all .2s ease;user-select:none;margin:2px 8px;border-radius:8px;border-left:none}
+.nav-item:hover{color:var(--text);background:var(--surface2)}
+.nav-item.active{color:var(--text);background:var(--accent-dim);box-shadow:inset 2px 0 0 var(--accent)}
+.nav-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0;opacity:0.7}
+.nav-sep{height:1px;background:var(--border);margin:8px 16px}
+.num-badge{margin-left:auto;font-size:10px;font-family:var(--mono);background:var(--surface3);color:var(--muted);padding:2px 8px;border-radius:10px}
+.num-badge.green{background:var(--accent-dim);color:var(--accent);box-shadow:0 0 8px rgba(34,197,94,0.2)}
+
+/* main */
+.main{overflow-y:auto;padding:28px;display:flex;flex-direction:column;gap:20px;border:1px solid var(--border);background:var(--surface);border-radius:16px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 10px 40px rgba(0,0,0,0.2)}
+.main::-webkit-scrollbar{width:4px}
+.main::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* iframe integration refinements */
+body.in-iframe { background: transparent !important; height: auto !important; overflow: visible !important; }
+body.in-iframe::before, body.in-iframe::after { display: none !important; }
+body.in-iframe .layout { padding: 0 !important; gap: 0 !important; height: auto !important; overflow: visible !important; display: block !important; }
+body.in-iframe .main { 
+  border: none !important; 
+  background: transparent !important; 
+  box-shadow: none !important; 
+  backdrop-filter: none !important; 
+  padding: 10px 0 !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.panel{display:none;flex-direction:column;gap:20px}
+.panel.active{display:flex;animation:fadeSlideIn .3s ease}
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* cards */
+.card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:border-color .2s}
+.card:hover{border-color:var(--border2)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:12px;font-weight:600;color:var(--text);letter-spacing:.03em;text-transform:uppercase}
+
+/* stats */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;position:relative;overflow:hidden}
+.stat::after{content:'';position:absolute;top:0;left:0;width:100%;height:2px;background:var(--border2);opacity:0;transition:opacity .3s}
+.stat:hover::after{opacity:1;background:var(--accent)}
+.stat-label{font-size:11px;color:var(--muted);margin-bottom:6px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em}
+.stat-value{font-size:28px;font-weight:600;font-family:var(--mono);letter-spacing:-1px}
+.stat-value.g{color:var(--accent);text-shadow:0 0 12px rgba(34,197,94,0.2)}.stat-value.r{color:var(--danger)}.stat-value.w{color:var(--warn)}.stat-value.b{color:var(--info)}
+
+/* form */
+label{display:block;font-size:11px;font-family:var(--mono);color:var(--muted);letter-spacing:.06em;margin-bottom:6px}
+textarea,input[type=text],input[type=password],input[type=number],select{
+  width:100%;background:rgba(0,0,0,0.2);border:1px solid var(--border2);border-radius:8px;
+  color:var(--text);font-family:var(--mono);font-size:13px;padding:10px 14px;outline:none;
+  resize:vertical;transition:all .2s;line-height:1.6
+}
+textarea:focus,input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-dim);background:var(--surface3)}
+select option{background:var(--surface3)}
+.form-row{display:grid;gap:14px}
+.form-row.c2{grid-template-columns:1fr 1fr}
+.form-row.c3{grid-template-columns:1fr 1fr 1fr}
+.form-row.c4{grid-template-columns:1fr 1fr 1fr 1fr}
+.fg{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.fg:last-child{margin-bottom:0}
+
+/* toggle */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-info .tl{font-size:13px;font-weight:500;color:var(--text)}
+.toggle-info .ts{font-size:12px;color:var(--muted);margin-top:2px}
+.toggle{width:40px;height:22px;background:var(--border2);border-radius:11px;position:relative;cursor:pointer;transition:background .2s ease;flex-shrink:0;box-shadow:inset 0 1px 3px rgba(0,0,0,0.3)}
+.toggle.on{background:var(--accent)}
+.toggle::after{content:'';position:absolute;width:16px;height:16px;background:white;border-radius:50%;top:3px;left:3px;transition:left .2s cubic-bezier(0.4, 0.0, 0.2, 1);box-shadow:0 1px 3px rgba(0,0,0,0.3)}
+.toggle.on::after{left:21px}
+
+/* botões */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .2s cubic-bezier(0.4, 0.0, 0.2, 1);white-space:nowrap}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-primary{background:linear-gradient(135deg, #22c55e, #10b981);color:#0a1a10;box-shadow:0 4px 14px rgba(34,197,94,0.3);border:1px solid rgba(255,255,255,0.2)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(34,197,94,0.4);filter:brightness(1.1)}
+.btn-primary:active{transform:translateY(1px);box-shadow:0 2px 8px rgba(34,197,94,0.3)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-danger{background:var(--danger-dim);color:var(--danger);border:1px solid rgba(239,68,68,.3)}
+.btn-danger:hover{background:rgba(239,68,68,.2)}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border2)}
+.btn-ghost:hover{color:var(--text);background:var(--surface2);border-color:var(--muted)}
+.btn-info{background:var(--info-dim);color:var(--info);border:1px solid rgba(59,130,246,.3)}
+.btn-warn{background:var(--warn-dim);color:var(--warn);border:1px solid rgba(245,158,11,.3)}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap}
+
+/* badge */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-family:var(--mono);padding:2px 8px;border-radius:6px}
+.badge-green{background:var(--accent-dim);color:var(--accent)}
+.badge-red{background:var(--danger-dim);color:var(--danger)}
+.badge-warn{background:var(--warn-dim);color:var(--warn)}
+.badge-blue{background:var(--info-dim);color:var(--info)}
+.badge-gray{background:var(--surface3);color:var(--muted)}
+
+/* progress */
+.prog-bar{height:4px;background:var(--border2);border-radius:2px;overflow:hidden;margin-top:8px}
+.prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s ease;width:0%}
+.prog-labels{display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);color:var(--muted);margin-top:4px}
+
+/* número card */
+.num-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.num-info{display:flex;align-items:center;gap:12px}
+.num-avatar{width:40px;height:40px;border-radius:50%;background:var(--surface3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.num-details .nd-num{font-family:var(--mono);font-size:13px;color:var(--text)}
+.num-details .nd-name{font-size:12px;color:var(--muted);margin-top:2px}
+.num-actions{display:flex;gap:8px;align-items:center}
+
+/* qr */
+.qr-box{display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px;text-align:center}
+.qr-box img{width:180px;height:180px;border-radius:10px;border:2px solid var(--border2);background:white;padding:6px}
+.qr-box .qt{font-size:14px;font-weight:500}
+.qr-box .qs{font-size:12px;color:var(--muted);max-width:240px;line-height:1.6}
+
+/* spinner */
+.spinner{width:28px;height:28px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+
+/* campanha card */
+.camp-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:border-color .15s}
+.camp-card:hover{border-color:var(--border2)}
+.camp-info .ci-nome{font-size:13px;font-weight:500;color:var(--text)}
+.camp-info .ci-meta{font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--mono)}
+.camp-actions{display:flex;gap:6px;align-items:center}
+
+/* disparo card */
+.disp-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.disp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.disp-nome{font-size:13px;font-weight:500}
+
+/* log */
+.log-entry{padding:9px 11px;border-radius:7px;margin-bottom:4px;border-left:2px solid transparent;background:var(--surface2);animation:fadeSlide .25s ease}
+.log-entry.enviado{border-left-color:var(--accent)}
+.log-entry.invalido{border-left-color:var(--muted)}
+.log-entry.erro{border-left-color:var(--danger)}
+.le-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.le-num{font-family:var(--mono);font-size:11px;color:var(--text)}
+.le-hora{font-size:10px;font-family:var(--mono);color:var(--muted)}
+.le-nome{font-size:12px;color:var(--muted);margin-bottom:2px}
+.le-msg{font-size:11px;color:var(--muted2);font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* overlay / modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:100}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:14px;width:560px;max-height:88vh;overflow-y:auto;padding:24px;box-shadow:0 24px 60px rgba(0,0,0,.5);animation:fadeSlide .2s ease}
+.modal::-webkit-scrollbar{width:4px}
+.modal::-webkit-scrollbar-thumb{background:var(--border2)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-size:16px;font-weight:500}
+.close-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer;color:var(--muted);font-size:18px;background:none;border:none;transition:all .15s}
+.close-btn:hover{background:var(--surface2);color:var(--text)}
+
+/* variações */
+.var-list{display:flex;flex-direction:column;gap:8px}
+.var-item{display:flex;gap:8px}
+.var-item textarea{min-height:56px}
+.rm-btn{width:28px;height:28px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;background:var(--danger-dim);color:var(--danger);border:1px solid rgba(239,68,68,.2);border-radius:6px;cursor:pointer;font-size:14px;transition:all .15s}
+.rm-btn:hover{background:rgba(239,68,68,.2)}
+
+/* mídia preview */
+.midia-preview{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-top:8px}
+.midia-icon{font-size:20px}
+.midia-info{flex:1;min-width:0}
+.midia-nome{font-size:12px;font-family:var(--mono);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.midia-tipo{font-size:11px;color:var(--muted)}
+
+/* empty */
+.empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:36px;color:var(--muted);text-align:center}
+.empty-icon{font-size:26px;opacity:.3}
+.empty-text{font-size:12px}
+
+/* extração */
+.extr-item{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--surface2);border-radius:7px;margin-bottom:4px}
+.extr-num{font-family:var(--mono);font-size:12px}
+.extr-nome{font-size:12px;color:var(--muted)}
+
+/* toast */
+.toast{position:fixed;bottom:24px;right:24px;padding:10px 18px;border-radius:8px;font-family:var(--mono);font-size:12px;font-weight:500;z-index:999;animation:fadeSlide .2s ease;pointer-events:none}
+.toast.success{background:var(--accent);color:#0a1a10}
+.toast.error{background:var(--danger);color:white}
+.toast.warn{background:var(--warn);color:#1a0a00}
+
+/* rotacao badge no disparo */
+.rot-badge{font-size:10px;font-family:var(--mono);padding:2px 7px;border-radius:5px;cursor:pointer;transition:all .15s;border:none}
+.rot-badge.on{background:var(--accent-dim);color:var(--accent)}
+.rot-badge.off{background:var(--surface3);color:var(--muted)}
+
+/* Orb IA */
+.ai-orb {
+  position: absolute; width: 200px; height: 200px; background: radial-gradient(circle, rgba(139,92,246,0.3) 0%, rgba(139,92,246,0) 70%); border-radius: 50%;
+  top: -80px; right: -50px; pointer-events: none; animation: orbPulse 4s infinite alternate; z-index: 0;
+}
+@keyframes orbPulse {
+  0% { transform: scale(0.8); opacity: 0.4; }
+  100% { transform: scale(1.3); opacity: 0.8; }
+}
+.gpt-content { position: relative; z-index: 1; }
+
+/* Island Effect / Iframe adjustments */
+.layout{display:grid;grid-template-columns:220px 1fr;flex:1;overflow:hidden;gap:20px;padding:0 20px 20px 20px;z-index:1}
+body.in-iframe .sidebar { display: none !important; }
+body.in-iframe .layout { grid-template-columns: 1fr; padding-top: 20px; }
+body.in-iframe .topbar { display: none !important; }
+</style>
+</head>
+<body class="loading">
+<script>
+  if (window.location.search.includes('token=')) {
+    document.body.classList.add('in-iframe');
+  }
+  window.addEventListener('message', (event) => {
+    if (event.data.action === 'changePanel') {
+      navegar(event.data.panel);
+    }
+  });
+</script>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-dot"></div>
+  </div>
+  <div class="top-right">
+    <span id="wsStatus" class="badge badge-gray" title="Status da conexão com servidor">● desconectado</span>
+    <span id="topStatus" class="badge badge-gray">● sem número</span>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- Modal Upsell -->
+<div class="overlay" id="upsellModal" onclick="this.classList.remove('open')" style="z-index:9999">
+  <div class="modal upsell-modal" onclick="event.stopPropagation()" style="max-width:400px;text-align:center;padding:40px 20px;border-radius:24px;border:1px solid rgba(245,158,11,0.3);background:#16181c;box-shadow:0 10px 40px rgba(0,0,0,0.8)">
+    <div style="font-size:50px;margin-bottom:15px;filter:drop-shadow(0 0 15px rgba(245,158,11,0.5))">👑</div>
+    <div style="font-size:22px;font-weight:bold;color:#e8eaed;margin-bottom:10px">Upgrade Necessário</div>
+    <div id="upsellText" style="font-size:14px;color:#8b949e;margin-bottom:30px;line-height:1.6"></div>
+    <button class="btn" style="width:100%;padding:14px;font-size:15px;font-weight:bold;background:linear-gradient(90deg, #f59e0b, #d97706);color:#0a0a0a;border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px rgba(245,158,11,0.3)" onclick="window.parent.location.href='/dashboard/perfil'">
+      Evoluir Patente Agora
+    </button>
+    <button class="btn btn-ghost" style="width:100%;margin-top:10px;color:#6b7280" onclick="document.getElementById('upsellModal').classList.remove('open')">Agora não</button>
+  </div>
+</div>
+<nav class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Principal</div>
+    <div class="nav-item active" data-panel="dashboard"><span class="nav-icon">◈</span> Dashboard</div>
+    <div class="nav-item" data-panel="numeros"><span class="nav-icon">◉</span> Números<span class="num-badge" id="badgeNumeros">0</span></div>
+  </div>
+  <div class="nav-sep"></div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Disparos</div>
+    <div class="nav-item" data-panel="contatos"><span class="nav-icon">◫</span> Contatos<span class="num-badge" id="badgeCampanhas">0</span></div>
+    <div class="nav-item" data-panel="disparo"><span class="nav-icon">▶</span> Disparo</div>
+  </div>
+  <div class="nav-sep"></div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Ferramentas</div>
+    <div class="nav-item" data-panel="grupos"><span class="nav-icon">◎</span> Extração Grupos</div>
+    <div class="nav-item" data-panel="limpeza"><span class="nav-icon">🧹</span> Limpeza de Lista</div>
+    <div class="nav-item" data-panel="envioGrupos"><span class="nav-icon">▷</span> Envio Grupos</div>
+    <div class="nav-item" data-panel="addGrupos"><span class="nav-icon">⊕</span> Adicionar a Grupos</div>
+    <div class="nav-item" data-panel="extracao"><span class="nav-icon">◌</span> Extração Contatos</div>
+    <div class="nav-item" data-panel="logs"><span class="nav-icon">≡</span> Relatórios</div>
+  </div>
+  <div class="nav-sep"></div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Suporte</div>
+    <div class="nav-item" onclick="window.parent.postMessage({ action: 'navigate', url: '/dashboard/tutoriais' }, '*')"><span class="nav-icon">▶</span> Tutoriais</div>
+    <div class="nav-item" onclick="window.open('https://wa.me/5534999929764', '_blank')"><span class="nav-icon">👥</span> Comunidade <span style="font-size:9px; background:var(--warn-dim); color:var(--warn); padding:2px 4px; border-radius:4px; margin-left:6px; font-family:var(--mono);">Acesso</span></div>
+  </div>
+</nav>
+
+<main class="main">
+
+  <!-- DASHBOARD -->
+  <div id="panel-dashboard" class="panel active">
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-label">NÚMEROS CONECTADOS</div><div class="stat-value b" id="sConectados">0</div></div>
+      <div class="stat"><div class="stat-label">LISTAS SALVAS</div><div class="stat-value" id="sCampanhas">0</div></div>
+      <div class="stat"><div class="stat-label">ENVIADOS</div><div class="stat-value g" id="sEnviados">0</div></div>
+      <div class="stat"><div class="stat-label">DISPAROS ATIVOS</div><div class="stat-value w" id="sAtivos">0</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
+        <div class="card-title">Disparos em andamento</div>
+        <div class="btn-row" style="margin-left:auto">
+          <button class="btn btn-sm btn-ghost" onclick="pausarTodos()" title="Pausar todos os disparos">⏸ Pausar Todos</button>
+          <button class="btn btn-sm btn-ghost" onclick="retomarTodos()" title="Retomar todos os pausados">▶ Retomar Todos</button>
+          <button class="btn btn-sm btn-danger" onclick="finalizarTodos()" title="Finalizar todos os disparos">🛑 Finalizar Todos</button>
+          <button class="btn btn-sm btn-primary" onclick="navegar('disparo')">+ Novo disparo</button>
+        </div>
+      </div>
+      <div id="disparosLista">
+        <div class="empty"><div class="empty-icon">◌</div><div class="empty-text">Nenhum disparo ativo</div></div>
+      </div>
+    </div>
+
+    <!-- Progresso de Grupos -->
+    <div class="card" id="cardProgressoGrupos" style="display:none">
+      <div class="card-header">
+        <div class="card-title">Envio em Massa (Grupos)</div>
+      </div>
+      <div id="grupoProgresso"></div>
+    </div>
+
+    <!-- Progresso de Adição -->
+    <div class="card" id="cardProgressoAdd" style="display:none">
+      <div class="card-header">
+        <div class="card-title">Adição de Membros</div>
+      </div>
+      <div id="addProgresso"></div>
+    </div>
+
+    <!-- Progresso de Limpeza de Lista -->
+    <div class="card" id="cardProgressoLimpeza" style="display:none">
+      <div class="card-header">
+        <div class="card-title">🧹 Limpeza de Lista em Andamento</div>
+        <span class="badge badge-blue" id="limpezaDashBadge">verificando...</span>
+      </div>
+      <div id="limpezaProgresso"></div>
+    </div>
+  </div>
+
+  <!-- NÚMEROS -->
+  <div id="panel-numeros" class="panel">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Números conectados</div>
+        <button class="btn btn-primary" onclick="adicionarNumero()">+ Adicionar número</button>
+      </div>
+      <div id="numerosLista">
+        <div class="empty"><div class="empty-icon">◉</div><div class="empty-text">Nenhum número adicionado</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTATOS -->
+  <div id="panel-contatos" class="panel">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Nova lista de contatos</div></div>
+      <div class="fg">
+        <label>NOME DA LISTA</label>
+        <input type="text" id="campanhaNome" placeholder="Ex: Corretores Uberaba, Leads Maio...">
+      </div>
+      <div class="fg">
+        <label>CONTATOS — um por linha (número | número,nome | número;nome)</label>
+        <textarea id="campanhaTexto" rows="12" placeholder="5534999999999&#10;5534888888888, João Silva&#10;5511777777777; Maria"></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="salvarCampanha()">Salvar lista</button>
+        <button class="btn btn-ghost" onclick="baixarExemploCSV()">📁 Baixar Exemplo</button>
+        <label class="btn btn-ghost" style="cursor:pointer">
+          Importar arquivo
+          <input type="file" accept=".txt,.csv" style="display:none" onchange="importarArquivo(this)">
+        </label>
+        <button class="btn btn-ghost" onclick="limparFormCampanha()">Limpar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Listas salvas</div>
+        <span id="totalCampanhas" class="badge badge-gray">0 listas</span>
+      </div>
+      <div id="campanhasLista">
+        <div class="empty"><div class="empty-icon">◫</div><div class="empty-text">Nenhuma lista salva</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DISPARO -->
+  <div id="panel-disparo" class="panel">
+    <div style="display:grid; grid-template-columns: 1fr 380px; gap:20px; align-items: start;">
+      
+      <!-- Coluna Esquerda: Configurações Principais -->
+      <div style="display:flex; flex-direction:column; gap:20px">
+        <div class="card" style="padding:24px">
+          <div class="card-header" style="margin-bottom:24px">
+            <div style="display:flex; align-items:center; gap:12px">
+              <div style="width:32px; height:32px; border-radius:8px; background:var(--accent-dim); display:flex; align-items:center; justify-content:center; color:var(--accent)">🚀</div>
+              <div class="card-title">Configurar Novo Disparo</div>
+            </div>
+          </div>
+
+          <div class="fg">
+            <label>NOME DA CAMPANHA</label>
+            <input type="text" id="dispNome" placeholder="Ex: Campanha VIP - {data}" style="padding:12px 16px; font-size:14px">
+          </div>
+
+          <div class="form-row c2">
+            <div class="fg">
+              <label>LISTA DE CONTATOS</label>
+              <select id="dispCampanha" style="padding:12px 16px; height:48px">
+                <option value="">Selecionar lista...</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>NÚMEROS REMETENTES</label>
+              <div id="dispNumerosList" style="padding:10px; background:rgba(0,0,0,0.2); border:1px solid var(--border2); border-radius:8px; min-height:48px; max-height:120px; overflow-y:auto"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:24px">
+          <div class="card-header" style="margin-bottom:20px">
+            <div class="card-title">Conteúdo da Mensagem</div>
+            <div class="badge badge-gray">Variáveis: {nome}</div>
+          </div>
+
+          <div class="var-list" id="dispVarList"></div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:12px; width:100%; border-style:dashed" onclick="adicionarVariacaoDisp()">+ Adicionar variação (A/B Testing)</button>
+
+          <div style="margin-top:24px; padding-top:24px; border-top:1px solid var(--border)">
+            <div class="toggle-row" style="padding:0; margin-bottom:16px">
+              <div class="toggle-info">
+                <div class="tl" style="color:var(--accent); font-weight:bold">Inteligência Artificial (OpenAI)</div>
+                <div class="ts">Gera textos únicos para cada cliente</div>
+              </div>
+              <div class="toggle" id="tgGPT" onclick="toggleDisp('gpt')"></div>
+            </div>
+            
+            <div id="gptWrapper" style="position:relative">
+              <div id="gptFields" style="display:none; padding:20px; background:linear-gradient(135deg, rgba(139,92,246,0.1), rgba(34,197,94,0.05)); border-radius:12px; margin-top:10px; border: 1px solid rgba(139,92,246,0.2); overflow:hidden">
+                  <div class="ai-orb"></div>
+                  <div class="gpt-content">
+                    <div class="fg">
+                      <label style="color:#a78bfa">CHAVE DA API</label>
+                      <input type="password" id="dispGptKey" placeholder="sk-..." style="border-color:rgba(139,92,246,0.3)">
+                    </div>
+                    <div class="fg">
+                      <label style="color:#a78bfa">MODELO</label>
+                      <select id="dispGptModel" style="border-color:rgba(139,92,246,0.3)">
+                        <option value="gpt-4o-mini">GPT-4o Mini (rápido e barato)</option>
+                        <option value="gpt-4o">GPT-4o (recomendado)</option>
+                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                        <option value="gpt-4">GPT-4</option>
+                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                        <option value="o1-mini">o1-mini (raciocínio)</option>
+                        <option value="o1-preview">o1-preview (raciocínio avançado)</option>
+                      </select>
+                    </div>
+                    <div class="fg">
+                      <label style="color:#a78bfa">INSTRUÇÕES PARA O GPT</label>
+                      <textarea id="dispGptPrompt" rows="3" placeholder="Ex: Crie uma mensagem amigável para {nome} sobre o produto X..." style="border-color:rgba(139,92,246,0.3)"></textarea>
+                    </div>
+                    <button class="btn btn-sm btn-primary" onclick="salvarConfigIA()" style="width: 100%; background: linear-gradient(135deg, #8b5cf6, #6d28d9); border-color: transparent; box-shadow: 0 4px 14px rgba(139,92,246,0.3);">💾 Salvar Credenciais de IA</button>
+                  </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:20px">
+            <label>ANEXAR MÍDIA</label>
+            <div style="display:flex; gap:10px; align-items:center">
+              <label class="btn btn-ghost" style="cursor:pointer; flex:1">
+                📁 Escolher Arquivo
+                <input type="file" accept="image/*,video/*,audio/*" style="display:none" onchange="selecionarMidia(this)">
+              </label>
+              <div id="midiaPreview" style="display:none; margin-top:0; flex:2" class="midia-preview">
+                <div class="midia-icon" id="midiaIcon">🖼</div>
+                <div class="midia-info">
+                  <div class="midia-nome" id="midiaNome"></div>
+                </div>
+                <button class="rm-btn" onclick="removerMidia()">×</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coluna Direita: Regras de Envio e Delays -->
+      <div style="display:flex; flex-direction:column; gap:20px">
+        <div class="card" style="padding:24px; background:var(--surface3)">
+          <div class="card-header" style="margin-bottom:20px">
+            <div class="card-title">⏱️ Delays de Segurança</div>
+          </div>
+          
+          <div class="fg">
+            <label>DELAY APÓS ENVIO (segundos)</label>
+            <input type="number" id="dispDelayEnvio" value="5" style="text-align:center">
+          </div>
+          
+          <div class="form-row c2">
+            <div class="fg">
+              <label>MÍNIMO (ms)</label>
+              <input type="number" id="dispDelayMin" value="8000" style="text-align:center">
+            </div>
+            <div class="fg">
+              <label>MÁXIMO (ms)</label>
+              <input type="number" id="dispDelayMax" value="15000" style="text-align:center">
+            </div>
+          </div>
+          
+          <div style="margin-top:10px; font-size:11px; color:var(--muted); line-height:1.4">
+            * O sistema usará um delay aleatório entre o mínimo e máximo para simular comportamento humano.
+          </div>
+        </div>
+
+        <div class="card" style="padding:24px">
+          <div class="toggle-row" style="padding:0; margin-bottom:16px">
+            <div class="toggle-info">
+              <div class="tl">Rotação de Números</div>
+              <div class="ts">Evita banimentos</div>
+            </div>
+            <div class="toggle on" id="tgRotacao" onclick="toggleRotacao()"></div>
+          </div>
+
+          <div id="rotacaoWrapper" style="position:relative">
+            <div id="rotacaoFields">
+              <div class="fg">
+                <label>TROCAR A CADA X MENSAGENS</label>
+                <input type="number" id="dispRotacao" value="20" style="text-align:center">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:24px">
+          <div class="toggle-row" style="padding:0; margin-bottom:16px">
+            <div class="toggle-info">
+              <div class="tl">Pausa Automática</div>
+              <div class="ts">Cooldown entre blocos</div>
+            </div>
+            <div class="toggle" id="tgPausa" onclick="toggleDisp('pausa')"></div>
+          </div>
+          <div id="pausaFields" style="display:none">
+            <div class="fg">
+              <label>PAUSAR A CADA (mensagens)</label>
+              <input type="number" id="dispPausaCada" value="10" style="text-align:center">
+            </div>
+            <div class="fg">
+              <label>TEMPO DE PAUSA (minutos)</label>
+              <input type="number" id="dispPausaTempo" value="1" style="text-align:center">
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="btnIniciarDisparo" style="height:60px; font-size:16px; width:100%" onclick="iniciarDisparo()">
+          🚀 LANÇAR DISPARO AGORA
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GESTOR DE PROXIES -->
+  <div id="panel-proxies" class="panel">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🌐 Gestor de Proxies (Pool Brasil 🇧🇷)</div>
+        <div class="btn-row">
+          <button class="btn btn-sm btn-ghost" onclick="retestarProxies()">⚡ Retestar Velocidades</button>
+          <button class="btn btn-sm btn-primary" onclick="capturarNovosProxies()">🔄 Capturar Novos (BR 🇧🇷)</button>
+        </div>
+      </div>
+      <div style="margin-top:20px">
+        <div style="font-size:12px; color:var(--muted); margin-bottom:15px; background:rgba(255,255,255,0.03); padding:10px; border-radius:10px; border:1px solid var(--border)">
+          ⚠️ <b>Aviso:</b> Proxies gratuitos podem ser instáveis. O sistema tentará usar os mais recentes.
+        </div>
+        <div id="proxiesLista" class="extr-lista" style="max-height:400px; overflow-y:auto">
+          <div class="empty">Nenhum proxy capturado.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXTRAÇÃO GRUPOS -->
+  <div id="panel-grupos" class="panel">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Extrair grupos</div></div>
+      <div class="form-row c2" style="margin-bottom:12px">
+        <div class="fg"><label>NÚMERO</label><select id="gruposNumero"><option value="">Selecionar número...</option></select></div>
+        <div style="display:flex;align-items:flex-end"><button class="btn btn-ghost" onclick="extrairGrupos()">Extrair grupos</button></div>
+      </div>
+      <div id="gruposLista"><div class="empty"><div class="empty-icon">◎</div><div class="empty-text">Selecione um número para ver os grupos</div></div></div>
+    </div>
+    
+    <div class="card" id="grupoExtracaoResultCard" style="display:none; margin-top:20px;">
+      <div class="card-header">
+        <div class="card-title">Membros do Grupo</div>
+        <div class="btn-row">
+          <span id="grupoExtracaoCount" class="badge badge-blue">0 contatos</span>
+          <button class="btn btn-sm btn-primary" onclick="salvarMembrosCampanha()">Salvar como lista</button>
+          <button class="btn btn-sm btn-ghost" onclick="exportarMembrosCSV()">Exportar CSV</button>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:12px"><label>NOME DA LISTA</label><input type="text" id="grupoExtracaoNomeCamp" placeholder="Ex: Membros Grupo X"></div>
+      <div id="grupoExtracaoLista" style="max-height:320px;overflow-y:auto"></div>
+    </div>
+  </div>
+
+  <!-- LIMPEZA DE LISTA -->
+  <div id="panel-limpeza" class="panel">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Ferramenta de Limpeza de Lista (Filtro WhatsApp)</div>
+      </div>
+      <div style="font-size:12px; color:var(--muted); margin-bottom:15px; background:rgba(255,255,255,0.03); padding:10px; border-radius:10px; border:1px solid var(--border)">
+        ⚠️ <b>Como funciona:</b> Esta ferramenta valida se os números possuem WhatsApp ativo (checando o 9º dígito). Os números inválidos serão removidos da lista.
+      </div>
+      
+      <div class="form-row c2" style="margin-bottom:12px">
+        <div class="fg">
+          <label>NÚMERO CONECTADO (Usado para a verificação)</label>
+          <select id="limpezaNumero"><option value="">Selecionar número...</option></select>
+        </div>
+      </div>
+
+      <div class="fg" style="margin-bottom:12px">
+        <label>LISTA DE NÚMEROS A VERIFICAR (um por linha)</label>
+        <textarea id="limpezaListaRaw" rows="8" placeholder="5534999999999&#10;5534888888888"></textarea>
+      </div>
+
+      <button class="btn btn-primary" id="btnIniciarLimpeza" style="width:100%; height:50px; font-size:14px; margin-bottom:20px" onclick="iniciarLimpezaLista()">
+        🔍 INICIAR VERIFICAÇÃO E LIMPEZA
+      </button>
+
+      <!-- Progresso de Limpeza -->
+      <div id="progressLimpeza" style="display:none; margin-bottom:20px">
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:8px;">
+          <span id="progressLimpezaStatus" style="color:var(--accent); font-weight:bold;">Verificando contatos...</span>
+          <span id="progressLimpezaPercent" style="color:var(--muted); font-family:var(--mono)">0%</span>
+        </div>
+        <div style="height:10px; background:rgba(255,255,255,0.05); border-radius:6px; overflow:hidden; border:1px solid var(--border); margin-bottom:8px">
+          <div id="progressLimpezaBar" style="width:0%; height:100%; background:linear-gradient(to right,#22c55e,#16a34a); transition:width 0.4s ease; border-radius:6px"></div>
+        </div>
+        <div style="display:flex; gap:16px; font-size:11px; font-family:var(--mono); color:var(--muted)">
+          <span>✓ <span id="limpezaValidosCount" style="color:#22c55e">0</span> válidos</span>
+          <span>✗ <span id="limpezaInvalidosCount" style="color:#ef4444">0</span> inválidos</span>
+          <span>⏳ <span id="limpezaRestanteCount">0</span> restantes</span>
+        </div>
+      </div>
+
+      <!-- Resultados -->
+      <div id="limpezaResultado" style="display:none; padding-top:20px; border-top:1px solid var(--border)">
+        <div class="card-header" style="margin-bottom:12px">
+          <div class="card-title">Resultado da Limpeza</div>
+          <div class="btn-row">
+            <span id="limpezaCountValid" class="badge badge-green">0 Válidos</span>
+            <span id="limpezaCountInvalid" class="badge badge-red">0 Inválidos</span>
+          </div>
+        </div>
+        <div class="fg" style="margin-bottom:12px">
+          <label>NOME PARA SALVAR A LISTA LIMPA</label>
+          <input type="text" id="limpezaNomeCamp" placeholder="Ex: Leads Filtrados">
+        </div>
+        <div class="fg">
+          <label>NÚMEROS VÁLIDOS (Com WhatsApp)</label>
+          <textarea id="limpezaListaValida" rows="6" readonly style="border-color:rgba(34,197,94,0.3)"></textarea>
+        </div>
+        <div class="btn-row" style="margin-top:12px">
+          <button class="btn btn-primary" onclick="salvarListaLimpa()">Salvar como Lista</button>
+          <button class="btn btn-ghost" onclick="exportarListaLimpaCSV()">Exportar CSV</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ENVIO GRUPOS -->
+  <div id="panel-envioGrupos" class="panel">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Selecionar Grupos</div>
+        <button class="btn btn-sm btn-ghost" onclick="carregarGruposParaEnvio()">Carregar Grupos</button>
+      </div>
+      <div class="form-row c2" style="margin-bottom:12px">
+        <div class="fg">
+          <label>NÚMEROS REMETENTES (Emissores)</label>
+          <div id="envGrupoNumerosList" style="padding:10px; background:rgba(0,0,0,0.2); border:1px solid var(--border2); border-radius:8px; min-height:48px; max-height:120px; overflow-y:auto"></div>
+        </div>
+        <div class="fg">
+          <label>TROCAR REMETENTE A CADA (X envios)</label>
+          <input type="number" id="envGrupoRotacao" value="5" min="1">
+        </div>
+      </div>
+      <div id="envGruposLista" style="max-height:280px;overflow-y:auto">
+        <div class="empty"><div class="empty-icon">▷</div><div class="empty-text">Clique em "Carregar Grupos" para listar</div></div>
+      </div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:10px">
+        <span class="badge badge-blue" id="envGruposSelecionados">0 grupos selecionados</span>
+        <button class="btn btn-sm btn-ghost" onclick="selecionarTodosGrupos(true)">Selecionar todos</button>
+        <button class="btn btn-sm btn-ghost" onclick="selecionarTodosGrupos(false)">Desmarcar todos</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">Configuração de Envio</div></div>
+
+      <div class="fg"><label>MENSAGEM</label><textarea id="envGrupoMsg" rows="4" placeholder="Mensagem para os grupos..."></textarea></div>
+      <div id="envGrupoVarList"></div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%;border-style:dashed" onclick="adicionarVariacaoEnvGrupo()">+ Adicionar variação (A/B Testing)</button>
+
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+        <div class="toggle-row" style="padding:0;margin-bottom:14px">
+          <div class="toggle-info">
+            <div class="tl" style="color:var(--accent);font-weight:bold">Inteligência Artificial (OpenAI)</div>
+            <div class="ts">Gera textos únicos para cada grupo</div>
+          </div>
+          <div class="toggle" id="tgGPTGrupo" onclick="toggleEnvGrupo('gpt')"></div>
+        </div>
+        <div id="envGrupoGptWrapper" style="position:relative">
+          <div id="envGrupoGptFields" style="display:none;padding:16px;background:linear-gradient(135deg,rgba(139,92,246,0.1),rgba(34,197,94,0.05));border-radius:12px;border:1px solid rgba(139,92,246,0.2)">
+            <div class="fg"><label style="color:#a78bfa">CHAVE DA API</label><input type="password" id="envGrupoGptKey" placeholder="sk-..." style="border-color:rgba(139,92,246,0.3)"></div>
+            <div class="fg"><label style="color:#a78bfa">MODELO</label>
+              <select id="envGrupoGptModel" style="border-color:rgba(139,92,246,0.3)">
+                <option value="gpt-4o-mini">GPT-4o Mini (rápido e barato)</option>
+                <option value="gpt-4o">GPT-4o (recomendado)</option>
+                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                <option value="gpt-4">GPT-4</option>
+                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                <option value="o1-mini">o1-mini (raciocínio)</option>
+                <option value="o1-preview">o1-preview (raciocínio avançado)</option>
+              </select>
+            </div>
+            <div class="fg"><label style="color:#a78bfa">INSTRUÇÕES PARA O GPT</label><textarea id="envGrupoGptPrompt" rows="3" placeholder="Ex: Reescreva a mensagem de forma única..." style="border-color:rgba(139,92,246,0.3)"></textarea></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+        <div class="form-row c2">
+          <div class="fg"><label>DELAY MÍN (segundos)</label><input type="number" id="envGrupoDelayMin" value="5" style="text-align:center"></div>
+          <div class="fg"><label>DELAY MÁX (segundos)</label><input type="number" id="envGrupoDelayMax" value="15" style="text-align:center"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px">
+        <div class="toggle-row" style="padding:0;margin-bottom:14px">
+          <div class="toggle-info">
+            <div class="tl">Pausa Automática</div>
+            <div class="ts">Cooldown entre blocos de envio</div>
+          </div>
+          <div class="toggle" id="tgPausaGrupo" onclick="toggleEnvGrupo('pausa')"></div>
+        </div>
+        <div id="envGrupoPausaFields" style="display:none">
+          <div class="form-row c2">
+            <div class="fg"><label>PAUSAR A CADA (mensagens)</label><input type="number" id="envGrupoPausaCada" value="5" style="text-align:center"></div>
+            <div class="fg"><label>TEMPO DE PAUSA (minutos)</label><input type="number" id="envGrupoPausaTempo" value="2" style="text-align:center"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+        <label>ANEXAR MÍDIA (opcional)</label>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:6px">
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+            📁 Escolher Arquivo
+            <input type="file" accept="image/*,video/*,audio/*" style="display:none" onchange="selecionarMidiaEnvGrupo(this)">
+          </label>
+          <div id="envGrupoMidiaPreview" style="display:none" class="midia-preview">
+            <div class="midia-icon" id="envGrupoMidiaIcon">🖼</div>
+            <div class="midia-info"><div class="midia-nome" id="envGrupoMidiaNome"></div></div>
+            <button class="rm-btn" onclick="removerMidiaEnvGrupo()">×</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+        <div class="fg">
+          <label>AGENDAR ENVIO (vazio = enviar agora)</label>
+          <input type="datetime-local" id="envGrupoAgendamento" style="border-color:rgba(34,197,94,0.3)">
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="btnEnviarGrupos" style="height:56px;font-size:15px;width:100%;margin-top:24px" onclick="iniciarEnvioGrupos()">
+        🚀 ENVIAR PARA GRUPOS SELECIONADOS
+      </button>
+
+      <div id="envGrupoLog" style="margin-top:16px; font-size:11px; color:var(--text-dim); background:rgba(0,0,0,0.2); padding:8px; border-radius:4px; max-height:100px; overflow-y:auto; display:none"></div>
+
+      <!-- PROGRESS BAR ENVIO GRUPOS -->
+      <div id="progressGrupos" style="display:none; margin-top:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:8px;">
+          <span id="progressGruposStatus" style="color:var(--accent); font-weight:bold;">Processando envios...</span>
+          <span id="progressGruposPercent" style="color:var(--muted); font-family:var(--mono)">0%</span>
+        </div>
+        <div style="height:10px; background:rgba(255,255,255,0.05); border-radius:6px; overflow:hidden; border:1px solid var(--border); margin-bottom:8px">
+          <div id="progressGruposBar" style="width:0%; height:100%; background:linear-gradient(to right, var(--accent), var(--accent2)); transition:width 0.4s ease; border-radius:6px"></div>
+        </div>
+        <div style="display:flex; gap:16px; font-size:11px; font-family:var(--mono); color:var(--muted)">
+          <span>✓ <span id="envGruposOkCount" style="color:#22c55e">0</span> enviados</span>
+          <span>✗ <span id="envGruposFalhaCount" style="color:#ef4444">0</span> falhas</span>
+          <span>⏳ <span id="envGruposRestanteCount">0</span> restantes</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADICIONAR A GRUPOS -->
+  <div id="panel-addGrupos" class="panel">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Adicionar pessoas a grupo</div>
+        <button class="btn btn-sm btn-ghost" onclick="carregarGruposParaAdd()">Carregar Grupos</button>
+      </div>
+      <div class="form-row c2">
+        <div class="fg">
+          <label>NÚMEROS REMETENTES (Selecione um ou mais)</label>
+          <div id="grupoAddNumerosList" style="padding:10px; background:rgba(0,0,0,0.2); border:1px solid var(--border2); border-radius:8px; min-height:48px; max-height:120px; overflow-y:auto"></div>
+        </div>
+        <div class="fg"><label>GRUPO DESTINO</label><select id="grupoAddId"><option value="">Carregar grupos primeiro...</option></select></div>
+      </div>
+      
+      <div class="form-row c2">
+        <div class="fg">
+          <label>ORIGEM: LISTAS SALVAS (Selecione várias ou deixe vazio)</label>
+          <div id="grupoAddCampanhasList" style="padding:10px; background:rgba(0,0,0,0.2); border:1px solid var(--border2); border-radius:8px; min-height:48px; max-height:120px; overflow-y:auto">
+             <div class="empty-text" style="font-size:11px">Nenhuma lista encontrada.</div>
+          </div>
+        </div>
+        <div class="fg">
+          <label>TROCAR REMETENTE A CADA (X convites)</label>
+          <input type="number" id="grupoAddRotacao" value="5" min="1">
+        </div>
+      </div>
+
+      <div class="fg" id="grupoAddListaContainer">
+        <label>LISTA DE NÚMEROS (um por linha)</label>
+        <textarea id="grupoAddLista" rows="6" placeholder="5534999999999&#10;5534888888888"></textarea>
+        
+        <div style="margin-top:8px; font-size:11px; color:var(--muted)">
+          Dica: Se a sua lista for muito "suja" (cheia de números inválidos), recomendamos usar a nova <b>"🧹 Limpeza de Lista"</b> na aba de Ferramentas primeiro para evitar banimentos por SPAM.
+        </div>
+      </div>
+      
+      <div class="form-row c2" style="margin-top:16px">
+        <div class="fg"><label>DELAY ENTRE ADIÇÕES (ms)</label><input type="number" id="grupoAddDelay" value="3000"></div>
+        <div class="fg"><label>AGENDAR (vazio = agora)</label><input type="datetime-local" id="grupoAddAgendamento" style="border-color:rgba(34,197,94,0.3)"></div>
+      </div>
+
+      <div class="card" style="margin-top:20px; border: 1px solid rgba(239,68,68,0.3); background: rgba(239,68,68,0.02);">
+        <div class="card-header" style="margin-bottom:10px">
+          <div class="card-title" style="color:var(--danger); font-weight:bold">🔥 CONFIGURAÇÕES AGRESSIVAS</div>
+        </div>
+        <div class="toggle-row" style="padding:0">
+          <div class="toggle-info">
+            <div class="tl">Modo Brutal (Turbo)</div>
+            <div class="ts">Ignora delays e adiciona toda a lista de uma vez só (ALTO RISCO DE BAN)</div>
+          </div>
+          <div class="toggle" id="tgAddBrutal" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" style="height:60px; font-size:16px; width:100%; margin-top:20px" onclick="adicionarAoGrupo(event)">
+        🚀 INICIAR ADIÇÃO EM MASSA (MODO BRUTAL SE ATIVO)
+      </button>
+
+      <!-- PROGRESS BAR ADD GRUPOS -->
+      <div id="progressAddGrupos" style="display:none; margin-top:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:8px;">
+          <span id="progressAddGruposStatus" style="color:var(--accent); font-weight:bold;">Adicionando membros...</span>
+          <span id="progressAddGruposPercent" style="color:var(--muted); font-family:var(--mono)">0%</span>
+        </div>
+        <div style="height:10px; background:rgba(255,255,255,0.05); border-radius:6px; overflow:hidden; border:1px solid var(--border); margin-bottom:8px">
+          <div id="progressAddGruposBar" style="width:0%; height:100%; background:linear-gradient(to right, var(--accent), var(--accent2)); transition:width 0.4s ease; border-radius:6px"></div>
+        </div>
+        <div style="display:flex; gap:16px; font-size:11px; font-family:var(--mono); color:var(--muted)">
+          <span>✓ <span id="addGruposOkCount" style="color:#22c55e">0</span> adicionados</span>
+          <span>✗ <span id="addGruposFalhaCount" style="color:#ef4444">0</span> falhas</span>
+          <span>⏳ <span id="addGruposRestanteCount">0</span> restantes</span>
+        </div>
+      </div>
+      
+      <div id="grupoAddResultado" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- EXTRAÇÃO -->
+  <div id="panel-extracao" class="panel">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Extrair contatos</div></div>
+      <div class="form-row c2" style="margin-bottom:12px">
+        <div class="fg"><label>NÚMERO</label><select id="extracaoNumero"><option value="">Selecionar...</option></select></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="extrairAgenda()">Extrair da agenda</button>
+        <button class="btn btn-ghost" onclick="extrairConversas()">Extrair de conversas</button>
+      </div>
+    </div>
+
+    <div class="card" id="extracaoResultCard" style="display:none">
+      <div class="card-header">
+        <div class="card-title">Resultado</div>
+        <div class="btn-row">
+          <span id="extracaoCount" class="badge badge-blue">0 contatos</span>
+          <button class="btn btn-sm btn-primary" onclick="salvarExtracaoCampanha()">Salvar como lista</button>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:12px"><label>NOME DA LISTA</label><input type="text" id="extracaoNomeCamp" placeholder="Ex: Agenda principal"></div>
+      <div id="extracaoLista" style="max-height:320px;overflow-y:auto"></div>
+    </div>
+  </div>
+
+  <!-- RELATÓRIOS (ANTIGO LOGS) -->
+  <div id="panel-logs" class="panel">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Relatórios de Disparo</div></div>
+      <div class="fg">
+        <label>SELECIONAR DISPARO</label>
+        <select id="logDisparo" onchange="carregarLog(this.value)">
+          <option value="">Selecionar...</option>
+        </select>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="carregarListaLogs()">↻ Atualizar lista</button>
+    </div>
+    <div class="card" id="logCard" style="display:none">
+      <div class="card-header">
+        <div class="card-title">Entradas</div>
+        <button class="btn btn-sm btn-ghost" onclick="exportarLog()">Exportar CSV</button>
+      </div>
+      <div id="logEntradas" style="max-height:480px;overflow-y:auto"></div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<!-- modal QR -->
+<div class="overlay" id="overlayQR">
+  <div class="modal" style="width:360px">
+    <div class="modal-header">
+      <div class="modal-title">Conectar número</div>
+      <button class="close-btn" onclick="fecharOverlay('overlayQR')">×</button>
+    </div>
+    <div id="qrConteudo" class="qr-box">
+      <div class="spinner"></div>
+      <div class="qt">Iniciando...</div>
+      <div class="qs">Aguarde enquanto preparamos a conexão.</div>
+    </div>
+  </div>
+</div>
+
+<!-- modal confirmar disparo -->
+<div class="overlay" id="overlayConfirmar">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Confirmar disparo</div>
+      <button class="close-btn" onclick="fecharOverlay('overlayConfirmar')">×</button>
+    </div>
+    <div id="resumoConfirmar" style="background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:18px;font-family:var(--mono);font-size:12px;line-height:2;color:var(--muted)"></div>
+    <div class="fg" style="margin-bottom: 16px;">
+      <label>AGENDAR DISPARO (Deixe vazio para enviar agora)</label>
+      <input type="datetime-local" id="dataAgendamento" style="width: 100%; border-color: rgba(34,197,94,0.3);">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnConfirmar" style="flex:1" onclick="confirmarDisparo()">▶ Confirmar e disparar</button>
+      <button class="btn btn-ghost" onclick="fecharOverlay('overlayConfirmar')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── estado ────────────────────────────────────────────────
+let numerosData = [];
+let campanhasData = [];
+let disparosData = [];
+let dispVariacoes = [''];
+let useRotacao = false;
+let useGPT = false;
+let usePausa = false;
+let midiaDisp = null;
+let midiaGrupo = null;
+let extracaoAtual = [];
+let membrosGrupoAtual = [];
+let disparoPendente = null;
+let logAtual = [];
+let userPlano = 'free'; // default
+
+// ─── bloqueios de plano ─────────────────────────────────────────
+function mostrarUpsell(recurso) {
+  const modal = document.getElementById('upsellModal');
+  const txt = document.getElementById('upsellText');
+  if (modal && txt) {
+    txt.innerHTML = `A função <b style="color:#f59e0b">${recurso}</b> é exclusiva para usuários VIP.<br><br>Evolua sua patente para remover os limites, fazer disparos ilimitados e conectar quantas contas quiser.`;
+    modal.classList.add('open');
+  } else {
+    window.parent.location.href = '/dashboard/perfil';
+  }
+}
+
+function aplicarBloqueiosPlano() {
+  const isFree = userPlano === 'free';
+  
+  // 1. Menu Grupos, Envio, Add, Extração
+  const menus = [
+    { id: 'grupos', icon: '👥' },
+    { id: 'envioGrupos', icon: '▷' },
+    { id: 'addGrupos', icon: '⊕' },
+    { id: 'extracao', icon: '📥' }
+  ];
+
+  menus.forEach(m => {
+    const el = document.querySelector(`.nav-item[data-panel="${m.id}"]`);
+    if (el) {
+      if (isFree) {
+        el.dataset.locked = 'true';
+        if (!el.innerHTML.includes('badge-warn')) {
+          el.innerHTML = `<span class="nav-icon">${m.icon}</span> ${el.innerText.trim()} <span class="badge badge-warn" style="margin-left:auto;font-size:9px;display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;box-shadow:0 0 8px rgba(245,158,11,0.4)">PRO <span style="font-size:11px">🔒</span></span>`;
+        }
+      } else {
+        el.dataset.locked = 'false';
+        el.innerHTML = `<span class="nav-icon">${m.icon}</span> ${el.innerText.trim()}`;
+      }
+    }
+  });
+
+  // 2. ChatGPT no Disparo
+  const gptWrapper = document.getElementById('gptWrapper');
+  if (gptWrapper) {
+    if (isFree) {
+      if (!document.getElementById('gptLockOverlay')) {
+        gptWrapper.innerHTML += `
+          <div id="gptLockOverlay" class="locked-overlay" onclick="mostrarUpsell('Inteligência Artificial (OpenAI)')">
+            <div class="locked-icon">🔒</div>
+            <div class="locked-text">Exclusivo Premium</div>
+          </div>
+        `;
+      }
+    } else {
+      const lock = document.getElementById('gptLockOverlay');
+      if (lock) lock.remove();
+    }
+  }
+
+  // 3. Rotação de Números
+  const rotWrapper = document.getElementById('rotacaoWrapper');
+  if (rotWrapper) {
+    if (isFree) {
+      if (!document.getElementById('rotLockOverlay')) {
+        rotWrapper.innerHTML += `
+          <div id="rotLockOverlay" class="locked-overlay" style="border-radius:8px" onclick="mostrarUpsell('Rotação de Números')">
+            <div class="locked-icon">🔒</div>
+            <div class="locked-text">Exclusivo Premium</div>
+          </div>
+        `;
+      }
+    } else {
+      const lock = document.getElementById('rotLockOverlay');
+      if (lock) lock.remove();
+    }
+  }
+}
+
+// Ouvinte para trocar painéis vindo do SaaS pai
+window.addEventListener('message', (e) => {
+  if (e.data?.action === 'changePanel' && e.data.panel) {
+    navegar(e.data.panel);
+    // Enviar altura após a troca de painel
+    setTimeout(reportHeight, 100);
+  }
+});
+
+function reportHeight() {
+  if (window.location.search.includes('token=')) {
+    window.parent.postMessage({ 
+      action: 'setHeight', 
+      height: document.body.scrollHeight 
+    }, '*');
+  }
+}
+
+// Observar mudanças de tamanho para ajuste dinâmico
+const resizeObserver = new ResizeObserver(() => reportHeight());
+resizeObserver.observe(document.body);
+setInterval(reportHeight, 2000); // Fallback
+
+// ─── websocket com reconexão ───────────────────────────────
+let ws = null;
+let wsReconectando = false;
+const urlParams = new URLSearchParams(window.location.search);
+const iframeToken = urlParams.get('token') || '';
+const appendToken = (url) => url + (url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(iframeToken);
+
+function conectarWS() {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const url = appendToken(`${proto}//${location.host}`);
+  
+  try {
+    ws = new WebSocket(url);
+  } catch (e) {
+    console.error('Erro ao criar WebSocket:', e);
+    agendarReconexao();
+    return;
+  }
+
+  ws.onopen = () => {
+    wsReconectando = false;
+    const el = document.getElementById('wsStatus');
+    if (el) { el.className = 'badge badge-green'; el.textContent = '● conectado'; }
+    console.log('✅ WebSocket conectado');
+  };
+
+  ws.onmessage = (e) => {
+    try {
+      const { tipo, dados } = JSON.parse(e.data);
+      if (tipo === 'init') {
+        userPlano = dados.plano;
+        aplicarBloqueiosPlano();
+      }
+      if (tipo === 'numeros') atualizarNumeros(dados);
+      if (tipo === 'campanhas') atualizarCampanhas(dados);
+      if (tipo === 'disparos') atualizarDisparos(dados);
+      if (tipo === 'log') adicionarLogEntrada(dados);
+      if (tipo === 'progresso') atualizarProgresso(dados);
+      if (tipo === 'progresso_grupos') atualizarProgressoGrupos(dados);
+      if (tipo === 'progresso_add_grupos') atualizarProgressoAddGrupos(dados);
+      if (tipo === 'progresso_limpeza') atualizarProgressoLimpeza(dados);
+      if (tipo === 'limpeza_concluida') concluirLimpeza(dados);
+      if (tipo === 'limpeza_erro') erroLimpeza(dados);
+      if (tipo === 'disparo_concluido') {
+        toast(`✅ Disparo concluído: ${dados.enviados} enviados, ${dados.falhas} falhas`, 'success');
+      }
+    } catch (err) {
+      console.error('Erro ao processar msg WS:', err);
+    }
+  };
+
+  ws.onclose = () => {
+    const el = document.getElementById('wsStatus');
+    if (el) { el.className = 'badge badge-red'; el.textContent = '● desconectado'; }
+    agendarReconexao();
+  };
+
+  ws.onerror = () => {
+    const el = document.getElementById('wsStatus');
+    if (el) { el.className = 'badge badge-red'; el.textContent = '● erro'; }
+  };
+}
+
+function agendarReconexao() {
+  if (wsReconectando) return;
+  wsReconectando = true;
+  setTimeout(() => {
+    wsReconectando = false;
+    conectarWS();
+  }, 3000);
+}
+
+// ─── api ───────────────────────────────────────────────────
+const api = {
+  get: async (url) => {
+    const r = await fetch(appendToken(url));
+    if (!r.ok) { const err = await r.json().catch(() => ({ erro: r.statusText })); throw new Error(err.erro || r.statusText); }
+    return r.json();
+  },
+  post: async (url, body) => {
+    const r = await fetch(appendToken(url), { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    if (!r.ok) { const err = await r.json().catch(() => ({ erro: r.statusText })); throw new Error(err.erro || r.statusText); }
+    return r.json();
+  },
+  del: async (url) => {
+    const r = await fetch(appendToken(url), { method:'DELETE' });
+    if (!r.ok) { const err = await r.json().catch(() => ({ erro: r.statusText })); throw new Error(err.erro || r.statusText); }
+    return r.json();
+  },
+};
+
+// ─── navegação ─────────────────────────────────────────────
+function navegar(panel) {
+  const btn = document.querySelector(`.nav-item[data-panel="${panel}"]`);
+  if (btn && btn.dataset.locked === 'true') {
+    mostrarUpsell(panel === 'grupos' ? 'Extrator de Grupos' : 'Recurso Premium');
+    return;
+  }
+  document.querySelectorAll('.nav-item[data-panel]').forEach(n => n.classList.toggle('active', n.dataset.panel === panel));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + panel));
+}
+document.querySelectorAll('.nav-item[data-panel]').forEach(n => n.addEventListener('click', () => navegar(n.dataset.panel)));
+
+// ─── números ───────────────────────────────────────────────
+function atualizarNumeros(dados) {
+  numerosData = dados;
+  const conectados = dados.filter(n => n.status === 'conectado').length;
+
+  document.getElementById('badgeNumeros').textContent = dados.length;
+  document.getElementById('badgeNumeros').className = 'num-badge' + (conectados > 0 ? ' green' : '');
+  document.getElementById('sConectados').textContent = conectados;
+
+  const topStatus = document.getElementById('topStatus');
+  if (conectados > 0) {
+    topStatus.className = 'badge badge-green';
+    topStatus.textContent = `● ${conectados} conectado${conectados > 1 ? 's' : ''}`;
+  } else {
+    topStatus.className = 'badge badge-gray';
+    topStatus.textContent = '● sem número';
+  }
+  renderSelects(dados);
+}
+
+function renderSelects(dados) {
+  // 1. Lista de números (Cards)
+  const lista = document.getElementById('numerosLista');
+  if (lista) {
+    if (!dados.length) {
+      lista.innerHTML = '<div class="empty"><div class="empty-icon">◉</div><div class="empty-text">Nenhum número adicionado</div></div>';
+    } else {
+      lista.innerHTML = dados.map(n => `
+        <div class="num-card" style="margin-bottom:8px">
+          <div class="num-info">
+            <div class="num-avatar">${n.status === 'conectado' ? '📱' : n.status === 'aguardando_qr' ? '⬡' : '○'}</div>
+            <div class="num-details">
+              <div class="nd-num">${n.numero ? '+' + n.numero : n.id}</div>
+              <div class="nd-name">${n.nome || statusLabel(n.status)}</div>
+              <div style="font-size:10px; margin-top:4px; font-family:var(--mono); display:flex; align-items:center; gap:4px">
+                <span style="opacity:0.6">${n.proxy ? '🌐' : '🔌'}</span>
+                <span style="color:${n.proxy ? '#22c55e' : '#6b7280'}; font-weight:bold">
+                  ${n.proxy ? 'PROXY: ' + n.proxy : 'SEM PROXY'}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="num-actions">
+            <span class="badge ${badgeStatus(n.status)}">${statusLabel(n.status)}</span>
+            ${n.status === 'aguardando_qr' ? `<button class="btn btn-sm btn-info" onclick="verQR('${n.id}')">Ver QR</button>` : ''}
+            <button class="btn btn-sm btn-danger" onclick="removerNumero('${n.id}')">Remover</button>
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+
+  // 2. Exibir QR automaticamente
+  const aguardando = dados.find(n => n.status === 'aguardando_qr' && n.qrCode);
+  if (aguardando) mostrarQR(aguardando.qrCode);
+
+  // 3. Fechar modal QR se conectou
+  const conectouAgora = dados.find(n => n.status === 'conectado');
+  if (conectouAgora) {
+    const overlay = document.getElementById('overlayQR');
+    if (overlay && overlay.classList.contains('open')) {
+      overlay.classList.remove('open');
+      toast('Número conectado com sucesso!', 'success');
+    }
+  }
+
+  // 4. Atualizar dropdowns de números (emissores)
+  const conectado = dados.filter(n => n.status === 'conectado');
+  const opts = conectado.map(n => `<option value="${n.id}">${n.numero ? '+' + n.numero : n.id}${n.nome ? ' — ' + n.nome : ''}</option>`).join('');
+
+  // Seletores que usam um único número conectado
+  ['gruposNumero','envGrupoNumero','extracaoNumero','limpezaNumero'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { const v = el.value; el.innerHTML = '<option value="">Selecionar número...</option>' + opts; el.value = v; }
+  });
+
+  const optCamps = '<option value="">Digitar manualmente...</option>' + campanhasData.map(c => `<option value="${c.id}">${c.nome} (${c.total})</option>`).join('');
+  ['dispCampanha', 'grupoAddCampanha'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { const v = el.value; el.innerHTML = optCamps; el.value = v; }
+  });
+
+  const renderChecks = (containerId, checkClass) => {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    if (!conectado.length) {
+      el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px">Nenhum número conectado</div>';
+    } else {
+      el.innerHTML = conectado.map(n => `
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;font-size:12px">
+          <input type="checkbox" class="${checkClass}" value="${n.id}" checked style="width:14px;height:14px;accent-color:var(--accent)">
+          <span style="color:var(--text)">${n.nome || n.numero || n.id}</span>
+        </label>
+      `).join('');
+    }
+  };
+
+  renderChecks('dispNumerosList', 'dispNumCheck');
+  renderChecks('grupoAddNumerosList', 'grupoAddNumCheck');
+  renderChecks('envGrupoNumerosList', 'envGrupoNumCheck');
+
+  // Listeners para rotação
+  document.querySelectorAll('.dispNumCheck').forEach(ch => ch.addEventListener('change', atualizarStatusRotacaoDisparo));
+  document.querySelectorAll('.grupoAddNumCheck').forEach(ch => ch.addEventListener('change', atualizarStatusRotacaoGrupo));
+  document.querySelectorAll('.envGrupoNumCheck').forEach(ch => ch.addEventListener('change', atualizarStatusRotacaoEnvGrupo));
+  
+  atualizarStatusRotacaoDisparo();
+  atualizarStatusRotacaoGrupo();
+  atualizarStatusRotacaoEnvGrupo();
+}
+
+function atualizarStatusRotacaoDisparo() {
+  const selecionados = document.querySelectorAll('.dispNumCheck:checked').length;
+  const inputRot = document.getElementById('dispRotacao');
+  const tgRot = document.getElementById('tgRotacao');
+  
+  if (inputRot) {
+    inputRot.disabled = selecionados <= 1;
+    inputRot.parentElement.parentElement.style.opacity = selecionados <= 1 ? '0.5' : '1';
+    if (selecionados <= 1) {
+      if (tgRot && tgRot.classList.contains('on')) toggleRotacao();
+      inputRot.title = "Selecione mais de um número para usar a rotação automática";
+    } else {
+      inputRot.title = "";
+    }
+  }
+}
+
+function atualizarStatusRotacaoEnvGrupo() {
+  const selecionados = document.querySelectorAll('.envGrupoNumCheck:checked').length;
+  const inputRot = document.getElementById('envGrupoRotacao');
+  if (inputRot) {
+    inputRot.disabled = selecionados <= 1;
+    inputRot.parentElement.style.opacity = selecionados <= 1 ? '0.5' : '1';
+  }
+}
+
+function atualizarStatusRotacaoGrupo() {
+  const selecionados = document.querySelectorAll('.grupoAddNumCheck:checked').length;
+  const inputRot = document.getElementById('grupoAddRotacao');
+  if (inputRot) {
+    inputRot.disabled = selecionados <= 1;
+    inputRot.parentElement.style.opacity = selecionados <= 1 ? '0.5' : '1';
+    if (selecionados <= 1) inputRot.title = "Selecione mais de um número para usar a rotação";
+    else inputRot.title = "";
+  }
+}
+
+function statusLabel(s) {
+  return { conectado:'conectado', aguardando_qr:'aguardando QR', iniciando:'iniciando', desconectado:'desconectado' }[s] || s;
+}
+function badgeStatus(s) {
+  return { conectado:'badge-green', aguardando_qr:'badge-warn', iniciando:'badge-blue', desconectado:'badge-gray' }[s] || 'badge-gray';
+}
+
+async function adicionarNumero() {
+  if (userPlano === 'free' && numerosData.length >= 1) {
+    return mostrarUpsell('Múltiplos Números Simultâneos');
+  }
+  document.getElementById('overlayQR').classList.add('open');
+  document.getElementById('qrConteudo').innerHTML = `
+    <div style="text-align:left; width:100%">
+      <div class="fg" style="margin-bottom:15px">
+        <label>PROXY PERSONALIZADO</label>
+        <input type="text" id="addNumProxy" placeholder="ex: host:port ou user:pass@host:port" style="font-size:12px">
+      </div>
+      <div class="toggle-row" style="margin-bottom:20px; padding:0">
+        <div class="toggle-info">
+          <div class="tl" style="font-size:12px">Usar Proxy Automático</div>
+          <div class="ts">Pega um IP aleatório da sua lista de capturas</div>
+        </div>
+        <div class="toggle" id="tgUsarPool" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="confirmarAdicionarNumero()">Próximo: Gerar QR Code</button>
+    </div>
+  `;
+}
+
+async function confirmarAdicionarNumero() {
+  const proxy = document.getElementById('addNumProxy').value.trim();
+  const usarPool = document.getElementById('tgUsarPool').classList.contains('on');
+  
+  document.getElementById('qrConteudo').innerHTML = `<div class="spinner"></div><div class="qt">Iniciando...</div><div class="qs">Aguarde o QR code aparecer.</div>`;
+  try {
+    await api.post('/api/numeros', { proxy, usarPool });
+  } catch (err) {
+    toast('Erro ao criar número: ' + err.message, 'error');
+    document.getElementById('overlayQR').classList.remove('open');
+  }
+}
+
+async function capturarNovosProxies() {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = 'Buscando...';
+  try {
+    const res = await api.post('/api/proxies/scrape');
+    toast(`Sucesso! ${res.total} proxies na sua lista.`, 'success');
+    atualizarListaProxies();
+  } catch (err) {
+    toast('Erro ao capturar: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔄 Capturar e Testar Novos';
+  }
+}
+
+async function retestarProxies() {
+  const btn = event.target;
+  const oldText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⚡ Testando...';
+  try {
+    await api.post('/api/proxies/test-all');
+    toast('Teste concluído! Lista atualizada com os IPs mais velozes.', 'success');
+    atualizarListaProxies();
+  } catch (err) {
+    toast('Erro ao testar: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
+}
+
+async function atualizarListaProxies() {
+  try {
+    const proxies = await api.get('/api/proxies');
+    const container = document.getElementById('proxiesLista');
+    if (!proxies.length) {
+      container.innerHTML = '<div class="empty">Nenhum proxy capturado.</div>';
+      return;
+    }
+    container.innerHTML = proxies.map(p => {
+      const ms = p.latencia || 0;
+      const color = ms < 500 ? '#22c55e' : (ms < 1500 ? '#eab308' : '#ef4444');
+      return `
+        <div class="extr-item">
+          <div style="flex:1">
+            <div style="font-family:var(--mono); font-size:12px">🌐 ${p.url}</div>
+            <div style="font-size:10px; color:var(--muted)">Capturado em: ${new Date(p.capturadoEm).toLocaleString()}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:14px; font-weight:bold; color:${color}">${ms}ms</div>
+            <span class="badge ${p.status === 'ativo' ? 'badge-green' : 'badge-red'}" style="font-size:9px">${p.status}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch {}
+}
+
+function verQR(id) {
+  const n = numerosData.find(x => x.id === id);
+  if (n?.qrCode) mostrarQR(n.qrCode);
+}
+
+function mostrarQR(src) {
+  document.getElementById('overlayQR').classList.add('open');
+  document.getElementById('qrConteudo').innerHTML = `
+    <img src="${src}" alt="QR Code">
+    <div class="qt">Escaneie o QR Code</div>
+    <div class="qs">Abra o WhatsApp → Dispositivos conectados → Conectar dispositivo</div>
+  `;
+}
+
+async function removerNumero(id) {
+  if (!confirm('Remover este número?')) return;
+  try {
+    await api.del(`/api/numeros/${id}`);
+    toast('Número removido', 'success');
+  } catch (err) {
+    toast('Erro: ' + err.message, 'error');
+  }
+}
+
+// ─── campanhas ─────────────────────────────────────────────
+function atualizarCampanhas(dados) {
+  campanhasData = dados;
+  document.getElementById('badgeCampanhas').textContent = dados.length;
+  document.getElementById('sCampanhas').textContent = dados.length;
+  document.getElementById('totalCampanhas').textContent = dados.length + ' listas';
+
+  const lista = document.getElementById('campanhasLista');
+  if (!dados.length) {
+    lista.innerHTML = '<div class="empty"><div class="empty-icon">◫</div><div class="empty-text">Nenhuma lista salva</div></div>';
+  } else {
+    lista.innerHTML = dados.map(c => `
+      <div class="camp-card" style="margin-bottom:8px">
+        <div class="camp-info">
+          <div class="ci-nome">${c.nome}</div>
+          <div class="ci-meta">${c.total} contatos · ${new Date(c.criado).toLocaleDateString('pt-BR')}</div>
+        </div>
+        <div class="camp-actions">
+          <span class="badge badge-gray">${c.total}</span>
+          <button class="btn btn-sm btn-danger" onclick="deletarCampanha('${c.id}', event)">Excluir</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Atualizar dropdowns padrões (Disparo)
+  const optCamps = '<option value="">Digitar manualmente...</option>' + dados.map(c => `<option value="${c.id}">${c.nome} (${c.total} contatos)</option>`).join('');
+  ['dispCampanha', 'envGrupoCampanha'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      const v = el.value;
+      el.innerHTML = optCamps;
+      el.value = v;
+    }
+  });
+
+  // Atualizar Checkboxes de Múltiplas Listas (Adicionar Grupos)
+  const listAddGrupos = document.getElementById('grupoAddCampanhasList');
+  if (listAddGrupos) {
+    if (!dados.length) {
+      listAddGrupos.innerHTML = '<div class="empty-text" style="font-size:11px">Nenhuma lista encontrada.</div>';
+    } else {
+      listAddGrupos.innerHTML = dados.map(c => `
+        <label style="display:flex; align-items:center; gap:8px; padding:4px 0; cursor:pointer; font-size:12px; color:var(--text)">
+          <input type="checkbox" class="grupoAddCampanhaCheck" value="${c.id}" style="width:14px; height:14px; accent-color:var(--accent)" onchange="toggleGrupoAddInput()">
+          ${c.nome} <span style="color:var(--muted); font-size:10px">(${c.total} contatos)</span>
+        </label>
+      `).join('');
+    }
+  }
+}
+
+async function salvarCampanha() {
+  if (userPlano === 'free' && campanhasData.length >= 1) {
+    return mostrarUpsell('Múltiplas Listas de Contatos');
+  }
+  const nome = document.getElementById('campanhaNome').value.trim();
+  const textoRaw = document.getElementById('campanhaTexto').value.trim();
+  if (!nome) { toast('Digite o nome da lista', 'error'); return; }
+  if (!textoRaw) { toast('Adicione pelo menos um contato', 'error'); return; }
+
+  // Auto-prefixo 55 e REMOVER DUPLICATAS
+  const linhasRaw = textoRaw.split('\n').filter(l => l.trim().length > 0);
+  const contatosUnicos = new Map();
+  let removidos = 0;
+
+  linhasRaw.forEach(l => {
+    let linha = l.trim();
+    let partes = linha.split(/[,;|]/);
+    let num = partes[0].trim().replace(/\D/g, '');
+    
+    // Auto-fix Brasil (55)
+    if (num.length >= 10 && num.length <= 11 && !num.startsWith('55')) {
+      num = '55' + num;
+      partes[0] = num;
+      linha = partes.join(',');
+    }
+
+    if (num && !contatosUnicos.has(num)) {
+      contatosUnicos.set(num, linha);
+    } else {
+      removidos++;
+    }
+  });
+
+  const texto = Array.from(contatosUnicos.values()).join('\n');
+
+  try {
+    const res = await api.post('/api/campanhas', { nome, texto });
+    toast(`✅ ${res.total} contatos salvos${removidos > 0 ? ` (${removidos} duplicados removidos)` : ''}`, 'success');
+    limparFormCampanha();
+  } catch (err) {
+    toast('Erro: ' + err.message, 'error');
+  }
+}
+
+function baixarExemploCSV() {
+  const content = "numero,nome\n5534999999999,Joao Silva\n5511988887777,Maria Souza";
+  const blob = new Blob([content], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'exemplo_contatos_zaplink.csv';
+  a.click();
+}
+
+function limparFormCampanha() {
+  document.getElementById('campanhaNome').value = '';
+  document.getElementById('campanhaTexto').value = '';
+}
+
+async function deletarCampanha(id, e) {
+  e.stopPropagation();
+  if (!confirm('Excluir esta lista?')) return;
+  try {
+    await api.del(`/api/campanhas/${id}`);
+    toast('Lista excluída', 'success');
+  } catch (err) {
+    toast('Erro: ' + err.message, 'error');
+  }
+}
+
+function importarArquivo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('campanhaTexto').value = e.target.result;
+    if (!document.getElementById('campanhaNome').value) {
+      document.getElementById('campanhaNome').value = file.name.replace(/\.[^.]+$/, '');
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+// ─── disparo ───────────────────────────────────────────────
+function renderizarVarDisp() {
+  const list = document.getElementById('dispVarList');
+  list.innerHTML = dispVariacoes.map((v, i) => `
+    <div class="var-item">
+      <textarea rows="2" oninput="dispVariacoes[${i}]=this.value">${v}</textarea>
+      ${dispVariacoes.length > 1 ? `<button class="rm-btn" onclick="removerVarDisp(${i})">×</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function adicionarVariacaoDisp() {
+  dispVariacoes.push('Olá {nome}, tudo bem?');
+  renderizarVarDisp();
+}
+function removerVarDisp(i) {
+  dispVariacoes.splice(i, 1);
+  renderizarVarDisp();
+}
+
+// TOGGLE ROTAÇÃO
+function toggleRotacao() {
+  useRotacao = !useRotacao;
+  document.getElementById('tgRotacao').classList.toggle('on', useRotacao);
+  document.getElementById('rotacaoFields').style.display = useRotacao ? 'block' : 'none';
+}
+
+function toggleDisp(op) {
+  if (op === 'gpt') {
+    useGPT = !useGPT;
+    document.getElementById('tgGPT').classList.toggle('on', useGPT);
+    document.getElementById('gptFields').style.display = useGPT ? 'block' : 'none';
+    if (useGPT) carregarConfigIA(); // Carrega ao ativar se ainda não carregou
+  }
+  if (op === 'pausa') {
+    usePausa = !usePausa;
+    document.getElementById('tgPausa').classList.toggle('on', usePausa);
+    document.getElementById('pausaFields').style.display = usePausa ? 'block' : 'none';
+  }
+}
+
+async function carregarConfigIA() {
+  try {
+    const config = await api.get('/api/users/ai-settings');
+    if (config.openai_key) document.getElementById('dispGptKey').value = config.openai_key;
+    if (config.openai_prompt) document.getElementById('dispGptPrompt').value = config.openai_prompt;
+  } catch (err) { console.error('Erro ao carregar IA:', err); }
+}
+
+async function salvarConfigIA() {
+  const key = document.getElementById('dispGptKey').value.trim();
+  const prompt = document.getElementById('dispGptPrompt').value.trim();
+  try {
+    await api.post('/api/users/ai-settings', { key, prompt });
+    toast('Configurações de IA salvas!', 'success');
+  } catch (err) { toast('Erro ao salvar IA', 'error'); }
+}
+
+function selecionarMidia(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    midiaDisp = { data: e.target.result.split(',')[1], mimetype: file.type, filename: file.name };
+    const icons = { image:'🖼', video:'🎬', audio:'🎵' };
+    document.getElementById('midiaIcon').textContent = icons[file.type.split('/')[0]] || '📎';
+    document.getElementById('midiaNome').textContent = file.name + ' (' + file.type + ')';
+    document.getElementById('midiaPreview').style.display = 'flex';
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+function removerMidia() { midiaDisp = null; document.getElementById('midiaPreview').style.display = 'none'; }
+
+// ─── INICIAR DISPARO (corrigido) ───────────────────────────
+function iniciarDisparo() {
+  const campanhaId = document.getElementById('dispCampanha').value;
+  if (!campanhaId) { toast('Selecione uma lista de contatos', 'error'); return; }
+
+  const checkboxes = document.querySelectorAll('#dispNumerosList input[type=checkbox]:checked');
+  const numerosIds = Array.from(checkboxes).map(i => i.value);
+  if (!numerosIds.length) { toast('Selecione pelo menos um número', 'error'); return; }
+
+  // validar variações
+  const variacoesValidas = dispVariacoes.filter(v => v.trim());
+  if (!variacoesValidas.length && !useGPT) { toast('Adicione pelo menos uma mensagem', 'error'); return; }
+
+  // validar GPT
+  if (useGPT) {
+    const key = document.getElementById('dispGptKey').value.trim();
+    const prompt = document.getElementById('dispGptPrompt').value.trim();
+    if (!key) { toast('Informe a API key do OpenAI', 'error'); return; }
+    if (!prompt) { toast('Informe o prompt do ChatGPT', 'error'); return; }
+  }
+
+  const camp = campanhasData.find(c => c.id === campanhaId);
+  const nums = numerosIds.map(id => {
+    const n = numerosData.find(x => x.id === id);
+    return n?.numero ? '+' + n.numero : id;
+  });
+
+  disparoPendente = montarConfigDisparo(campanhaId, numerosIds);
+
+  document.getElementById('resumoConfirmar').innerHTML = `
+    <span style="color:var(--text)">Lista:</span> ${camp?.nome || campanhaId}<br>
+    <span style="color:var(--text)">Total de contatos:</span> ${camp?.total || '?'}<br>
+    <span style="color:var(--text)">Números:</span> ${nums.join(', ')}<br>
+    <span style="color:var(--text)">Rotação:</span> ${useRotacao ? `a cada ${disparoPendente.rotacaoApos} msgs` : 'desativada'}<br>
+    <span style="color:var(--text)">Delay:</span> ${disparoPendente.delayMin/1000}s – ${disparoPendente.delayMax/1000}s<br>
+    <span style="color:var(--text)">ChatGPT:</span> ${useGPT ? 'sim' : 'não'}<br>
+    <span style="color:var(--text)">Pausa Auto:</span> ${usePausa ? `${disparoPendente.pausaCada} msgs / ${disparoPendente.pausaTempo} min` : 'não'}<br>
+    <span style="color:var(--text)">Mídia:</span> ${midiaDisp ? midiaDisp.filename : 'nenhuma'}
+  `;
+  document.getElementById('overlayConfirmar').classList.add('open');
+}
+
+function montarConfigDisparo(campanhaId, numerosIds) {
+  return {
+    nome: document.getElementById('dispNome').value.trim() || 'Disparo ' + new Date().toLocaleString('pt-BR'),
+    campanhaId,
+    numerosIds,
+    variacoes: dispVariacoes.filter(v => v.trim()),
+    usarGPT: useGPT,
+    gptKey: document.getElementById('dispGptKey').value.trim(),
+    gptModel: document.getElementById('dispGptModel').value,
+    gptPrompt: document.getElementById('dispGptPrompt').value.trim(),
+    midia: midiaDisp,
+    rotacaoAtiva: useRotacao,
+    rotacaoApos: parseInt(document.getElementById('dispRotacao').value) || 50,
+    delayAposEnvio: (parseInt(document.getElementById('dispDelayEnvio').value) || 5) * 1000,
+    delayMin: parseInt(document.getElementById('dispDelayMin').value) || 8000,
+    delayMax: parseInt(document.getElementById('dispDelayMax').value) || 12000,
+    mensagensPorNumero: parseInt(document.getElementById('dispRotacao').value) || 20,
+    pausaAtiva: usePausa,
+    pausaCada: parseInt(document.getElementById('dispPausaCada').value) || 10,
+    pausaTempo: parseInt(document.getElementById('dispPausaTempo').value) || 1,
+  };
+}
+
+async function confirmarDisparo() {
+  if (!disparoPendente) return;
+
+  const dataAgendamento = document.getElementById('dataAgendamento').value;
+  if (dataAgendamento) {
+      disparoPendente.agendadoPara = new Date(dataAgendamento).getTime();
+  } else {
+      disparoPendente.agendadoPara = null;
+  }
+
+  const btn = document.getElementById('btnConfirmar');
+  btn.disabled = true;
+  btn.textContent = 'Iniciando...';
+
+  try {
+    const res = await api.post('/api/disparos', disparoPendente);
+    fecharOverlay('overlayConfirmar');
+    if (disparoPendente.agendadoPara) {
+        toast(`⏰ Disparo agendado com sucesso!`, 'success');
+    } else {
+        toast(`🚀 Disparo iniciado! ${res.total} contatos na fila.`, 'success');
+    }
+    navegar('dashboard');
+    disparoPendente = null;
+  } catch (err) {
+    toast('Erro ao iniciar disparo: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '▶ Confirmar e disparar';
+  }
+}
+
+// ─── lista de disparos ─────────────────────────────────────
+function atualizarDisparos(dados) {
+  disparosData = dados;
+  const ativos = dados.filter(d => d.status === 'rodando' || d.status === 'pausado').length;
+  document.getElementById('sAtivos').textContent = ativos;
+  document.getElementById('sEnviados').textContent = dados.reduce((a, d) => a + (d.enviados || 0), 0);
+
+  const lista = document.getElementById('disparosLista');
+  const visiveis = dados.filter(d => ['rodando','pausado','aguardando'].includes(d.status));
+
+  if (!visiveis.length) {
+    lista.innerHTML = '<div class="empty"><div class="empty-icon">◌</div><div class="empty-text">Nenhum disparo ativo</div></div>';
+    return;
+  }
+
+  lista.innerHTML = visiveis.map(d => {
+    const pct = d.total ? Math.round(((d.enviados || 0) / d.total) * 100) : 0;
+    const rotStatus = d.rotacaoAtiva !== false;
+    return `
+      <div class="disp-card" data-id="${d.id}" style="margin-bottom:10px">
+        <div class="disp-header">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="disp-nome">${d.nome}</div>
+            <button class="rot-badge ${rotStatus ? 'on' : 'off'}" 
+              onclick="toggleRotacaoDisparo('${d.id}', ${rotStatus})"
+              title="Clique para ${rotStatus ? 'desativar' : 'ativar'} rotação">
+              ⟳ rotação ${rotStatus ? 'on' : 'off'}
+            </button>
+          </div>
+          <span class="badge ${d.status === 'rodando' ? 'badge-green' : d.status === 'pausado' ? 'badge-warn' : 'badge-gray'}">${d.status}</span>
+        </div>
+        <div style="display:flex;gap:16px;font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:8px">
+          <span>✓ ${d.enviados || 0}</span>
+          <span>✗ ${d.falhas || 0}</span>
+          <span>⚠ ${d.invalidos || 0}</span>
+          <span>total ${d.total || 0}</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+        <div class="prog-labels"><span>${d.enviados || 0} de ${d.total || 0}</span><span>${pct}%</span></div>
+        <div class="btn-row" style="margin-top:10px">
+          ${d.status === 'rodando' ? `<button class="btn btn-sm btn-warn" onclick="pausarDisparo('${d.id}')">⏸ Pausar</button>` : ''}
+          ${d.status === 'pausado' ? `<button class="btn btn-sm btn-primary" onclick="retomarDisparo('${d.id}')">▶ Retomar</button>` : ''}
+          <button class="btn btn-sm btn-danger" onclick="pararDisparo('${d.id}')">◼ Parar</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function atualizarProgressoGrupos(dados) {
+  const perc = dados.total ? Math.round((dados.atual / dados.total) * 100) : 0;
+  const restantes = dados.total - dados.atual;
+
+  // 1. Atualiza na aba Ferramentas (se aberta)
+  const containerTool = document.getElementById('progressGrupos');
+  if (containerTool) {
+    containerTool.style.display = 'block';
+    const bar = document.getElementById('progressGruposBar');
+    if (bar) bar.style.width = perc + '%';
+    const pct = document.getElementById('progressGruposPercent');
+    if (pct) pct.textContent = perc + '%';
+    const status = document.getElementById('progressGruposStatus');
+    if (status) status.textContent = `Enviando para ${dados.atual} de ${dados.total} grupos...`;
+    
+    const okEl = document.getElementById('envGruposOkCount');
+    if (okEl) okEl.textContent = dados.enviados || 0;
+    const falhaEl = document.getElementById('envGruposFalhaCount');
+    if (falhaEl) falhaEl.textContent = dados.falhas || 0;
+    const restEl = document.getElementById('envGruposRestanteCount');
+    if (restEl) restEl.textContent = restantes;
+  }
+
+  // 2. Atualiza no Dashboard (Monitor)
+  const cardDash = document.getElementById('cardProgressoGrupos');
+  const dashContent = document.getElementById('grupoProgresso');
+  if (cardDash && dashContent) {
+    cardDash.style.display = 'block';
+    dashContent.innerHTML = `
+      <div class="disp-card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:11px;font-weight:bold;color:var(--text)">Progresso do Envio</span>
+          <span class="badge badge-blue">rodando</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${perc}%"></div></div>
+        <div class="prog-labels"><span>${dados.atual} de ${dados.total} grupos</span><span>${perc}%</span></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:8px">✓ ${dados.enviados} enviados · ✗ ${dados.falhas} falhas</div>
+      </div>
+    `;
+    if (dados.atual >= dados.total) {
+      setTimeout(() => { cardDash.style.display = 'none'; }, 10000);
+    }
+  }
+}
+
+function atualizarProgressoAddGrupos(dados) {
+  const perc = dados.total ? Math.round((dados.atual / dados.total) * 100) : 0;
+  const ok = dados.resultados.filter(r => r.status === 'adicionado').length;
+  const falhas = dados.resultados.filter(r => r.status === 'erro').length;
+  const restantes = dados.total - dados.atual;
+
+  // 1. Atualiza na aba Ferramentas (se aberta)
+  const containerTool = document.getElementById('progressAddGrupos');
+  if (containerTool) {
+    containerTool.style.display = 'block';
+    const bar = document.getElementById('progressAddGruposBar');
+    if (bar) bar.style.width = perc + '%';
+    const pct = document.getElementById('progressAddGruposPercent');
+    if (pct) pct.textContent = perc + '%';
+    const status = document.getElementById('progressAddGruposStatus');
+    if (status) status.textContent = `Adicionando ${dados.atual} de ${dados.total} contatos...`;
+
+    const okEl = document.getElementById('addGruposOkCount');
+    if (okEl) okEl.textContent = ok;
+    const falhaEl = document.getElementById('addGruposFalhaCount');
+    if (falhaEl) falhaEl.textContent = falhas;
+    const restEl = document.getElementById('addGruposRestanteCount');
+    if (restEl) restEl.textContent = restantes;
+  }
+
+  // 2. Atualiza no Dashboard (Monitor)
+  const cardDash = document.getElementById('cardProgressoAdd');
+  const dashContent = document.getElementById('addProgresso');
+  if (cardDash && dashContent) {
+    cardDash.style.display = 'block';
+    dashContent.innerHTML = `
+      <div class="disp-card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:11px;font-weight:bold;color:var(--text)">Progresso da Adição</span>
+          <span class="badge badge-blue">rodando</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${perc}%"></div></div>
+        <div class="prog-labels"><span>${dados.atual} de ${dados.total} contatos</span><span>${perc}%</span></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:8px">✓ ${ok} adicionados · ✗ ${falhas} falhas</div>
+      </div>
+    `;
+    if (dados.atual >= dados.total) {
+      setTimeout(() => { cardDash.style.display = 'none'; }, 10000);
+    }
+  }
+}
+
+function atualizarProgresso({ disparoId, atual, total }) {
+  const pct = total ? Math.round((atual / total) * 100) : 0;
+  const card = document.querySelector(`.disp-card[data-id="${disparoId}"]`);
+  if (!card) return;
+  const fill = card.querySelector('.prog-fill');
+  if (fill) fill.style.width = pct + '%';
+  const labels = card.querySelectorAll('.prog-labels span');
+  if (labels[0]) labels[0].textContent = `${atual} de ${total}`;
+  if (labels[1]) labels[1].textContent = `${pct}%`;
+}
+
+async function pausarDisparo(id) {
+  try { await api.post(`/api/disparos/${id}/pausar`, {}); }
+  catch (err) { toast('Erro: ' + err.message, 'error'); }
+}
+async function retomarDisparo(id) {
+  try { await api.post(`/api/disparos/${id}/retomar`, {}); }
+  catch (err) { toast('Erro: ' + err.message, 'error'); }
+}
+async function pararDisparo(id) {
+  if (!confirm('Parar este disparo?')) return;
+  try { await api.post(`/api/disparos/${id}/parar`, {}); }
+  catch (err) { toast('Erro: ' + err.message, 'error'); }
+}
+
+// Toggle rotação em disparo ativo
+async function toggleRotacaoDisparo(id, atualmenteAtiva) {
+  try {
+    await api.post(`/api/disparos/${id}/rotacao`, { ativa: !atualmenteAtiva });
+    toast(`Rotação ${!atualmenteAtiva ? 'ativada' : 'desativada'}`, 'success');
+  } catch (err) {
+    toast('Erro: ' + err.message, 'error');
+  }
+}
+
+// ─── grupos ────────────────────────────────────────────────
+async function extrairGrupos() {
+  const id = document.getElementById('gruposNumero').value;
+  if (!id) { toast('Selecione um número', 'error'); return; }
+  
+  const btn = event.target;
+  const oldText = btn.textContent;
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;margin:0"></div>';
+  
+  try {
+    const grupos = await api.get(`/api/grupos/${id}`);
+    const lista = document.getElementById('gruposLista');
+    if (!grupos.length) {
+      lista.innerHTML = '<div class="empty"><div class="empty-icon">◎</div><div class="empty-text">Nenhum grupo encontrado</div></div>';
+    } else {
+      lista.innerHTML = grupos.map(g => `
+        <div class="extr-item" style="margin-bottom:4px">
+          <div>
+            <div style="font-size:13px;font-weight:500">${g.nome}</div>
+            <div class="extr-num" style="color:var(--muted);font-size:11px">${g.id}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="badge badge-gray">${g.participantes} membros</span>
+            <button class="btn btn-sm btn-info" onclick="extrairMembrosGrupo('${g.id}', '${(g.nome || 'Sem nome').replace(/'/g, "\\'")}')">📥 Extrair Membros</button>
+            <button class="btn btn-sm btn-ghost" onclick="copiarTexto('${g.id}')">Copiar ID</button>
+          </div>
+        </div>
+      `).join('');
+    }
+  } catch (err) {
+    toast('Erro: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
+}
+
+async function extrairMembrosGrupo(grupoId, grupoNome) {
+  const numeroId = document.getElementById('gruposNumero').value;
+  if (!numeroId) { toast('Selecione um número', 'error'); return; }
+  
+  toast('Extraindo membros, aguarde...', 'success');
+  if (grupoNome) {
+      document.getElementById('grupoExtracaoNomeCamp').value = `Membros - ${grupoNome}`;
+  }
+  try {
+    const res = await api.get(`/api/grupos/${numeroId}/${encodeURIComponent(grupoId)}/membros`);
+    membrosGrupoAtual = res;
+    
+    document.getElementById('grupoExtracaoResultCard').style.display = 'block';
+    document.getElementById('grupoExtracaoCount').textContent = res.length + ' membros';
+    
+    const container = document.getElementById('grupoExtracaoLista');
+    container.innerHTML = res.slice(0, 100).map(c => `
+      <div class="extr-item">
+        <span class="extr-num">+${c.numero}</span>
+        <span class="extr-nome">${c.nome || '—'}${c.isAdmin ? ' <span class="badge badge-warn" style="font-size:9px;padding:2px 4px;margin-left:4px">Admin</span>' : ''}</span>
+      </div>
+    `).join('');
+    
+    if (res.length > 100) {
+      container.innerHTML += `<div style="text-align:center;padding:10px;font-size:12px;color:var(--muted)">+${res.length - 100} membros (todos serão salvos)</div>`;
+    }
+  } catch (err) {
+    toast('Erro ao extrair membros: ' + err.message, 'error');
+  }
+}
+
+async function salvarMembrosCampanha() {
+  const nome = document.getElementById('grupoExtracaoNomeCamp').value.trim();
+  if (!nome) { toast('Digite o nome da lista', 'error'); return; }
+  
+  const contatosUnicos = new Map();
+  let removidos = 0;
+  membrosGrupoAtual.forEach(c => {
+    if (!contatosUnicos.has(c.numero)) {
+      contatosUnicos.set(c.numero, c.nome ? `${c.numero},${c.nome}` : c.numero);
+    } else {
+      removidos++;
+    }
+  });
+  
+  const texto = Array.from(contatosUnicos.values()).join('\n');
+  try {
+    const res = await api.post('/api/campanhas', { nome, texto });
+    toast(`✅ ${res.total} contatos salvos como "${nome}"${removidos > 0 ? ` (${removidos} duplicados ignorados)` : ''}`, 'success');
+  } catch (err) { toast('Erro: ' + err.message, 'error'); }
+}
+
+async function carregarGruposParaAdd() {
+  const checkboxes = document.querySelectorAll('.grupoAddNumCheck:checked');
+  if (!checkboxes.length) { 
+    toast('Selecione ao menos um número remetente na lista acima para carregar os grupos', 'error'); 
+    return; 
+  }
+  const id = checkboxes[0].value;
+  const btn = document.querySelector('button[onclick="carregarGruposParaAdd()"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Carregando...'; }
+  
+  try {
+    const sel = document.getElementById('grupoAddId');
+    sel.innerHTML = '<option value="">Carregando grupos...</option>';
+    
+    const grupos = await api.get(`/api/grupos/${id}`);
+    
+    if (!grupos || !grupos.length) {
+      sel.innerHTML = '<option value="">Nenhum grupo encontrado</option>';
+      toast('Nenhum grupo encontrado neste número', 'info');
+    } else {
+      sel.innerHTML = '<option value="">Selecionar grupo...</option>' +
+        grupos.map(g => `<option value="${g.id}">${g.nome} (${g.participantes} membros)</option>`).join('');
+      toast(`${grupos.length} grupos carregados`, 'success');
+    }
+  } catch (err) { 
+    const sel = document.getElementById('grupoAddId');
+    sel.innerHTML = '<option value="">Erro ao carregar lista</option>';
+    toast('Erro: ' + err.message, 'error'); 
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Carregar Grupos'; }
+  }
+}
+
+function exportarMembrosCSV() {
+  if (!membrosGrupoAtual.length) return;
+  const csv = [
+    'numero,nome,admin',
+    ...membrosGrupoAtual.map(c => `${c.numero},"${(c.nome || '').replace(/"/g,'""')}","${c.isAdmin ? 'sim' : 'nao'}"`)
+  ].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type:'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `membros_grupo.csv`;
+  a.click();
+}
+
+async function enviarGrupo() {
+  const grupoId = document.getElementById('grupoEnviarId').value.trim();
+  const numeroId = document.getElementById('grupoEnviarNumero').value;
+  const mensagem = document.getElementById('grupoMensagem').value.trim();
+  if (!grupoId || !numeroId || !mensagem) { toast('Preencha todos os campos', 'error'); return; }
+  try {
+    await api.post('/api/grupos/enviar', { numeroId, grupoId, mensagem, midia: midiaGrupo });
+    toast('Mensagem enviada ao grupo', 'success');
+  } catch (err) {
+    toast('Erro: ' + err.message, 'error');
+  }
+}
+
+function toggleGrupoAddInput() {
+  const campanhasChecked = document.querySelectorAll('.grupoAddCampanhaCheck:checked');
+  document.getElementById('grupoAddListaContainer').style.display = campanhasChecked.length > 0 ? 'none' : 'block';
+}
+
+// Função verificarListaAddGrupos removida (A limpeza de lista agora tem painel próprio assíncrono)
+
+async function adicionarAoGrupo() {
+  const checkboxes = document.querySelectorAll('.grupoAddNumCheck:checked');
+  const numerosIds = [...checkboxes].map(c => c.value);
+  const grupoId = document.getElementById('grupoAddId').value;
+  
+  const campanhasChecked = document.querySelectorAll('.grupoAddCampanhaCheck:checked');
+  const campanhasIds = [...campanhasChecked].map(c => c.value);
+  
+  const listaManual = document.getElementById('grupoAddLista').value.trim();
+  const delayMs = parseInt(document.getElementById('grupoAddDelay').value) || 3000;
+  const trocaApos = parseInt(document.getElementById('grupoAddRotacao').value) || 5;
+
+  if (!numerosIds.length || !grupoId) { toast('Selecione remetentes e grupo', 'error'); return; }
+  
+  let contatos = [];
+  if (campanhasIds.length > 0) {
+    try {
+      // Buscar contatos de todas as listas selecionadas em paralelo
+      const listasData = await Promise.all(campanhasIds.map(id => api.get(`/api/campanhas/${id}`)));
+      listasData.forEach(data => {
+        const nums = data.contatos.map(c => c.numero);
+        contatos.push(...nums);
+      });
+      // Remover duplicatas
+      contatos = [...new Set(contatos)];
+    } catch (e) { toast('Erro ao carregar listas', 'error'); return; }
+  } else {
+    if (!listaManual) { toast('Digite os números ou selecione uma lista', 'error'); return; }
+    contatos = listaManual.split('\n').map(l => l.replace(/\D/g, '')).filter(l => l.length >= 10);
+    contatos = [...new Set(contatos)]; // Remover duplicatas da lista manual também
+  }
+
+  if (!contatos.length) { toast('Lista vazia', 'error'); return; }
+
+  // Capturar o botão de forma resiliente
+  const btn = (typeof event !== 'undefined' && event?.target) ? event.target : document.querySelector('button[onclick^="adicionarAoGrupo"]');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Adicionando...';
+  }
+
+  const brutal = document.getElementById('tgAddBrutal').classList.contains('on');
+  const agendamentoStr = document.getElementById('grupoAddAgendamento')?.value;
+  const agendadoPara = agendamentoStr ? new Date(agendamentoStr).getTime() : null;
+
+  try {
+    const res = await api.post('/api/grupos/adicionar', { 
+      numerosIds, 
+      grupoId, 
+      contatos, 
+      delayMs: brutal ? 0 : delayMs,
+      trocaApos,
+      brutal,
+      agendadoPara
+    });
+    
+    if (res.ok) {
+      toast(brutal ? '🔥 MODO BRUTAL ATIVADO! Adicionando em massa...' : '🚀 Adição de membros iniciada!', 'success');
+      document.getElementById('progressAddGrupos').style.display = 'block';
+    }
+  } catch (err) {
+    toast('Erro: ' + err.message, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '🚀 INICIAR ADIÇÃO EM MASSA (MODO BRUTAL SE ATIVO)';
+    }
+  }
+}
+
+function selecionarMidiaGrupo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    midiaGrupo = { data: e.target.result.split(',')[1], mimetype: file.type, filename: file.name };
+    const icons = { image:'🖼', video:'🎬', audio:'🎵' };
+    document.getElementById('midiaGrupoIcon').textContent = icons[file.type.split('/')[0]] || '📎';
+    document.getElementById('midiaGrupoNome').textContent = file.name;
+    document.getElementById('midiaGrupoPreview').style.display = 'flex';
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+function removerMidiaGrupo() { midiaGrupo = null; document.getElementById('midiaGrupoPreview').style.display = 'none'; }
+
+// ─── envio em massa para grupos ──────────────────────────────
+let envGrupoVars = [];
+let envGrupoGPT = false;
+let envGrupoPausa = false;
+let envGrupoMidia = null;
+let gruposCarregados = [];
+
+async function carregarGruposParaEnvio() {
+  const id = document.getElementById('envGrupoNumero').value;
+  if (!id) { toast('Selecione um número', 'error'); return; }
+  try {
+    const grupos = await api.get(`/api/grupos/${id}`);
+    gruposCarregados = grupos;
+    const lista = document.getElementById('envGruposLista');
+    if (!grupos.length) {
+      lista.innerHTML = '<div class="empty"><div class="empty-icon">▷</div><div class="empty-text">Nenhum grupo encontrado</div></div>';
+      return;
+    }
+    lista.innerHTML = grupos.map(g => `
+      <label class="extr-item" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:8px 12px">
+        <input type="checkbox" class="envGrupoCheck" value="${g.id}" data-nome="${g.nome}" onchange="atualizarContagemGrupos()" style="width:16px;height:16px;accent-color:var(--accent)">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:500">${g.nome}</div>
+          <div style="color:var(--muted);font-size:11px">${g.participantes} membros</div>
+        </div>
+      </label>
+    `).join('');
+    atualizarContagemGrupos();
+  } catch (err) { toast('Erro: ' + err.message, 'error'); }
+}
+
+function atualizarContagemGrupos() {
+  const count = document.querySelectorAll('.envGrupoCheck:checked').length;
+  document.getElementById('envGruposSelecionados').textContent = count + ' grupos selecionados';
+  document.getElementById('btnEnviarGrupos').textContent = `🚀 ENVIAR PARA ${count} GRUPO${count !== 1 ? 'S' : ''}`;
+}
+
+function selecionarTodosGrupos(marcar) {
+  document.querySelectorAll('.envGrupoCheck').forEach(c => c.checked = marcar);
+  atualizarContagemGrupos();
+}
+
+function adicionarVariacaoEnvGrupo() {
+  envGrupoVars.push('');
+  renderizarVarsEnvGrupo();
+}
+
+function renderizarVarsEnvGrupo() {
+  document.getElementById('envGrupoVarList').innerHTML = envGrupoVars.map((v, i) => `
+    <div class="fg" style="margin-top:8px">
+      <label>VARIAÇÃO ${i + 2}</label>
+      <div style="display:flex;gap:8px">
+        <textarea rows="2" style="flex:1" placeholder="Texto alternativo..." oninput="envGrupoVars[${i}]=this.value">${v}</textarea>
+        <button class="btn btn-sm btn-danger" onclick="envGrupoVars.splice(${i},1);renderizarVarsEnvGrupo()">×</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleEnvGrupo(tipo) {
+  if (tipo === 'gpt') {
+    envGrupoGPT = !envGrupoGPT;
+    document.getElementById('tgGPTGrupo').classList.toggle('on', envGrupoGPT);
+    document.getElementById('envGrupoGptFields').style.display = envGrupoGPT ? 'block' : 'none';
+  } else if (tipo === 'pausa') {
+    envGrupoPausa = !envGrupoPausa;
+    document.getElementById('tgPausaGrupo').classList.toggle('on', envGrupoPausa);
+    document.getElementById('envGrupoPausaFields').style.display = envGrupoPausa ? 'block' : 'none';
+  }
+}
+
+function selecionarMidiaEnvGrupo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    envGrupoMidia = { data: e.target.result.split(',')[1], mimetype: file.type, filename: file.name };
+    const icons = { image:'🖼', video:'🎬', audio:'🎵' };
+    document.getElementById('envGrupoMidiaIcon').textContent = icons[file.type.split('/')[0]] || '📎';
+    document.getElementById('envGrupoMidiaNome').textContent = file.name;
+    document.getElementById('envGrupoMidiaPreview').style.display = 'flex';
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+function removerMidiaEnvGrupo() { envGrupoMidia = null; document.getElementById('envGrupoMidiaPreview').style.display = 'none'; }
+
+async function iniciarEnvioGrupos() {
+  const checkboxes = document.querySelectorAll('.envGrupoNumCheck:checked');
+  const numerosIds = [...checkboxes].map(c => c.value);
+  if (!numerosIds.length) { toast('Selecione ao menos um número emissor', 'error'); return; }
+  
+  const gruposSelecionados = [...document.querySelectorAll('.envGrupoCheck:checked')].map(c => c.value);
+  if (!gruposSelecionados.length) { toast('Selecione ao menos um grupo', 'error'); return; }
+  
+  const msgPrincipal = document.getElementById('envGrupoMsg').value.trim();
+  if (!msgPrincipal && !envGrupoGPT && !envGrupoMidia) { toast('Digite uma mensagem ou anexe uma mídia', 'error'); return; }
+  
+  const config = {
+    numerosIds,
+    gruposIds: gruposSelecionados,
+    variacoes: [msgPrincipal, ...envGrupoVars].filter(v => v.trim()),
+    usarGPT: envGrupoGPT,
+    gptKey: document.getElementById('envGrupoGptKey').value.trim(),
+    gptModel: document.getElementById('envGrupoGptModel')?.value || 'gpt-4o-mini',
+    gptPrompt: document.getElementById('envGrupoGptPrompt').value.trim(),
+    midia: envGrupoMidia,
+    delayMin: (parseInt(document.getElementById('envGrupoDelayMin').value) || 5) * 1000,
+    delayMax: (parseInt(document.getElementById('envGrupoDelayMax').value) || 15) * 1000,
+    pausaAtiva: envGrupoPausa,
+    pausaCada: parseInt(document.getElementById('envGrupoPausaCada').value) || 5,
+    pausaTempo: parseInt(document.getElementById('envGrupoPausaTempo').value) || 2,
+    agendadoPara: document.getElementById('envGrupoAgendamento').value ? new Date(document.getElementById('envGrupoAgendamento').value).getTime() : null,
+    trocaApos: parseInt(document.getElementById('envGrupoRotacao').value) || 5
+  };
+  
+  const btn = document.getElementById('btnEnviarGrupos');
+  btn.disabled = true;
+  btn.textContent = 'Iniciando...';
+  
+  try {
+    const res = await api.post('/api/grupos/enviar-massa', config);
+    if (res.ok) {
+      toast('🚀 Envio iniciado em segundo plano!', 'success');
+      document.getElementById('progressGrupos').style.display = 'block';
+      document.getElementById('envGrupoLog').style.display = 'block';
+      document.getElementById('envGrupoLog').innerHTML = '<div>> Aguardando início dos envios...</div>';
+    }
+  } catch (err) {
+    toast('Erro: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🚀 ENVIAR PARA GRUPOS SELECIONADOS';
+  }
+}
+
+function carregarGruposParaEnvio() {
+  const checkboxes = document.querySelectorAll('.envGrupoNumCheck:checked');
+  if (!checkboxes.length) { toast('Selecione ao menos um número remetente para carregar os grupos', 'error'); return; }
+  const id = checkboxes[0].value;
+  
+  const btn = document.querySelector('button[onclick="carregarGruposParaEnvio()"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Carregando...'; }
+  
+  api.get(`/api/grupos/${id}`).then(grupos => {
+    const lista = document.getElementById('envGruposLista');
+    if (!grupos.length) {
+      lista.innerHTML = '<div class="empty"><div class="empty-icon">◉</div><div class="empty-text">Nenhum grupo encontrado</div></div>';
+    } else {
+      lista.innerHTML = grupos.map(g => `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px;border-bottom:1px solid var(--border2)">
+          <input type="checkbox" class="envGrupoCheck" value="${g.id}" onchange="atualizarContagemGrupos()">
+          <div style="font-size:13px;color:var(--text)">${g.nome}</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-left:auto">${g.participantes} membros</div>
+        </div>
+      `).join('');
+    }
+  }).catch(err => toast('Erro ao carregar: ' + err.message, 'error'))
+  .finally(() => { if(btn) { btn.disabled = false; btn.textContent = 'Carregar Grupos'; } });
+}
+
+function atualizarContagemGrupos() {
+  const n = document.querySelectorAll('.envGrupoCheck:checked').length;
+  const badge = document.getElementById('envGruposSelecionados');
+  if (badge) badge.textContent = `${n} grupos selecionados`;
+}
+
+function selecionarTodosGrupos(val) {
+  document.querySelectorAll('.envGrupoCheck').forEach(c => c.checked = val);
+  atualizarContagemGrupos();
+}
+
+// ─── extração ──────────────────────────────────────────────
+async function extrairAgenda() {
+  const id = document.getElementById('extracaoNumero').value;
+  if (!id) { toast('Selecione um número', 'error'); return; }
+  try {
+    const res = await api.get(`/api/extracao/agenda/${id}`);
+    mostrarExtracaoResultado(res);
+  } catch (err) { toast('Erro: ' + err.message, 'error'); }
+}
+
+async function extrairConversas() {
+  const id = document.getElementById('extracaoNumero').value;
+  if (!id) { toast('Selecione um número', 'error'); return; }
+  try {
+    const res = await api.get(`/api/extracao/conversas/${id}`);
+    mostrarExtracaoResultado(res);
+  } catch (err) { toast('Erro: ' + err.message, 'error'); }
+}
+
+function mostrarExtracaoResultado(lista) {
+  extracaoAtual = lista;
+  document.getElementById('extracaoResultCard').style.display = 'block';
+  document.getElementById('extracaoCount').textContent = lista.length + ' contatos';
+  const container = document.getElementById('extracaoLista');
+  container.innerHTML = lista.slice(0, 100).map(c => `
+    <div class="extr-item">
+      <span class="extr-num">+${c.numero}</span>
+      <span class="extr-nome">${c.nome || '—'}</span>
+    </div>
+  `).join('');
+  if (lista.length > 100) {
+    container.innerHTML += `<div style="text-align:center;padding:10px;font-size:12px;color:var(--muted)">+${lista.length - 100} contatos (todos serão salvos)</div>`;
+  }
+}
+
+async function salvarExtracaoCampanha() {
+  const nome = document.getElementById('extracaoNomeCamp').value.trim();
+  if (!nome) { toast('Digite o nome da lista', 'error'); return; }
+  const texto = extracaoAtual.map(c => c.nome ? `${c.numero},${c.nome}` : c.numero).join('\n');
+  try {
+    const res = await api.post('/api/campanhas', { nome, texto });
+    toast(`${res.total} contatos salvos como "${nome}"`, 'success');
+  } catch (err) { toast('Erro: ' + err.message, 'error'); }
+}
+
+// ─── logs ──────────────────────────────────────────────────
+function adicionarLogEntrada({ disparoId, entrada }) {
+  if (document.getElementById('logDisparo').value === disparoId) {
+    logAtual.unshift(entrada);
+    renderizarLog();
+  }
+}
+
+async function carregarListaLogs() {
+  try {
+    const lista = await api.get('/api/logs');
+    const sel = document.getElementById('logDisparo');
+    sel.innerHTML = '<option value="">Selecionar...</option>' +
+      lista.map(l => `<option value="${l.id}">${l.nome || l.id}</option>`).join('');
+  } catch { /* ignorar */ }
+}
+
+async function carregarLog(disparoId) {
+  if (!disparoId) return;
+  try {
+    const res = await api.get(`/api/logs/${disparoId}`);
+    // Se for o formato novo (objeto com entradas), pegamos as entradas
+    logAtual = Array.isArray(res) ? res : (res.entradas || []);
+    document.getElementById('logCard').style.display = 'block';
+    renderizarLog();
+  } catch (err) {
+    toast('Erro ao carregar log: ' + err.message, 'error');
+  }
+}
+
+function renderizarLog() {
+  document.getElementById('logEntradas').innerHTML = logAtual.slice(0, 200).map(e => `
+    <div class="log-entry ${e.status}">
+      <div class="le-top">
+        <span class="le-num">+${e.numero}</span>
+        <span class="le-hora">${e.hora ? new Date(e.hora).toLocaleTimeString('pt-BR') : '-'}</span>
+      </div>
+      <div class="le-nome">${e.nome || '-'} <span class="badge ${e.status === 'enviado' ? 'badge-green' : e.status === 'erro' ? 'badge-red' : 'badge-gray'}">${e.status}</span></div>
+      ${e.mensagem && e.mensagem !== '-' ? `<div class="le-msg">"${e.mensagem}"</div>` : ''}
+    </div>
+  `).join('') || '<div class="empty"><div class="empty-text">Nenhuma entrada</div></div>';
+}
+
+function exportarLog() {
+  const csv = [
+    'hora,numero,nome,status,mensagem,numeroUsado',
+    ...logAtual.map(e => `${e.hora},${e.numero},${e.nome || ''},"${e.status}","${(e.mensagem || '').replace(/"/g,'""')}","${e.numeroUsado || ''}"`)
+  ].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type:'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `log_${document.getElementById('logDisparo').value || 'disparo'}.csv`;
+  a.click();
+}
+
+// ─── LIMPEZA DE LISTA ─────────────────────────────────────
+let limpezaListaAtual = [];
+
+async function iniciarLimpezaLista() {
+  const numeroId = document.getElementById('limpezaNumero').value;
+  if (!numeroId) { toast('Selecione um número para usar na verificação', 'error'); return; }
+
+  const textarea = document.getElementById('limpezaListaRaw');
+  const listaManual = textarea.value.trim();
+  if (!listaManual) { toast('Cole ou digite os números para verificar', 'error'); return; }
+
+  // Aceitar formato "numero,nome", separar e REMOVER DUPLICATAS
+  const linhas = listaManual.split('\n').filter(l => l.trim().length > 0);
+  const contatosUnicos = new Map();
+  
+  linhas.forEach(linha => {
+    const partes = linha.split(/[,;|]/);
+    const numLimpo = partes[0].replace(/\D/g, '');
+    if (numLimpo.length >= 10 && !contatosUnicos.has(numLimpo)) {
+      contatosUnicos.set(numLimpo, { original: linha, numero: numLimpo });
+    }
+  });
+
+  const contatosParaVerificar = Array.from(contatosUnicos.values());
+
+  if (!contatosParaVerificar.length) { toast('Nenhum número válido encontrado', 'error'); return; }
+
+  const btn = document.getElementById('btnIniciarLimpeza');
+  btn.disabled = true;
+  btn.textContent = '⏳ Verificando no WhatsApp... (Pode demorar um pouco)';
+
+  const progress = document.getElementById('progressLimpeza');
+  const status = document.getElementById('progressLimpezaStatus');
+  progress.style.display = 'block';
+  status.textContent = `Validando ${contatosParaVerificar.length} números...`;
+
+  document.getElementById('limpezaResultado').style.display = 'none';
+
+  try {
+    const res = await api.post('/api/listas/verificar', { 
+      numerosIds: [numeroId], 
+      contatos: contatosParaVerificar.map(c => c.numero) 
+    });
+    
+    // Agora salvamos globalmente para reconstruir depois
+    window.contatosParaVerificarBackup = contatosParaVerificar;
+    
+    toast('Verificação iniciada em background!', 'info');
+  } catch (err) {
+    toast('Erro ao iniciar verificação: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '🔍 INICIAR VERIFICAÇÃO E LIMPEZA';
+    progress.style.display = 'none';
+  }
+}
+
+function atualizarProgressoLimpeza(dados) {
+  const perc = dados.total ? Math.round((dados.atual / dados.total) * 100) : 0;
+  const restantes = dados.total - dados.atual;
+
+  // Atualizar barra no painel de Limpeza
+  const bar = document.getElementById('progressLimpezaBar');
+  if (bar) bar.style.width = perc + '%';
+  const pct = document.getElementById('progressLimpezaPercent');
+  if (pct) pct.textContent = perc + '%';
+  const status = document.getElementById('progressLimpezaStatus');
+  if (status) status.textContent = `Verificando ${dados.atual} de ${dados.total} números...`;
+  const validosEl = document.getElementById('limpezaValidosCount');
+  if (validosEl) validosEl.textContent = dados.validos;
+  const invalidosEl = document.getElementById('limpezaInvalidosCount');
+  if (invalidosEl) invalidosEl.textContent = dados.invalidos;
+  const restanteEl = document.getElementById('limpezaRestanteCount');
+  if (restanteEl) restanteEl.textContent = restantes;
+
+  // Atualizar card no Dashboard
+  const cardDash = document.getElementById('cardProgressoLimpeza');
+  const dashContent = document.getElementById('limpezaProgresso');
+  const badge = document.getElementById('limpezaDashBadge');
+  if (cardDash && dashContent) {
+    cardDash.style.display = 'block';
+    if (badge) badge.textContent = `${perc}% concluído`;
+    dashContent.innerHTML = `
+      <div class="disp-card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:11px;font-weight:bold;color:var(--text)">Filtrando ${dados.total} números</span>
+          <span class="badge badge-blue">rodando</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${perc}%;background:linear-gradient(to right,#22c55e,#16a34a)"></div></div>
+        <div class="prog-labels"><span>${dados.atual} de ${dados.total}</span><span>${perc}%</span></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:8px">✓ ${dados.validos} válidos · ✗ ${dados.invalidos} inválidos</div>
+      </div>
+    `;
+  }
+}
+
+function concluirLimpeza(dados) {
+  const btn = document.getElementById('btnIniciarLimpeza');
+  const progress = document.getElementById('progressLimpeza');
+
+  // Barra chega em 100% antes de sumir
+  const bar = document.getElementById('progressLimpezaBar');
+  if (bar) bar.style.width = '100%';
+  const pct = document.getElementById('progressLimpezaPercent');
+  if (pct) pct.textContent = '100%';
+  
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = '🔍 INICIAR VERIFICAÇÃO E LIMPEZA';
+  }
+  setTimeout(() => { if (progress) progress.style.display = 'none'; }, 1200);
+
+  // Esconder card do dashboard após uns segundos
+  const cardDash = document.getElementById('cardProgressoLimpeza');
+  if (cardDash) {
+    document.getElementById('limpezaProgresso').innerHTML = `
+      <div class="disp-card">
+        <div class="prog-bar"><div class="prog-fill" style="width:100%;background:linear-gradient(to right,#22c55e,#16a34a)"></div></div>
+        <div class="prog-labels"><span>${dados.total} de ${dados.total}</span><span>100%</span></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:8px">✓ ${dados.validos.length} válidos · ✗ ${dados.invalidos.length} inválidos · Concluído!</div>
+      </div>
+    `;
+    setTimeout(() => { cardDash.style.display = 'none'; }, 10000);
+  }
+
+  const contatosParaVerificar = window.contatosParaVerificarBackup || [];
+  const linhasValidas = [];
+  contatosParaVerificar.forEach(c => {
+    if (dados.validos.includes(c.numero)) {
+      linhasValidas.push(c.original);
+    }
+  });
+
+  limpezaListaAtual = linhasValidas;
+
+  document.getElementById('limpezaResultado').style.display = 'block';
+  document.getElementById('limpezaCountValid').textContent = `${dados.validos.length} Válidos`;
+  document.getElementById('limpezaCountInvalid').textContent = `${dados.invalidos.length} Inválidos`;
+  document.getElementById('limpezaListaValida').value = linhasValidas.join('\n');
+  
+  toast(`✅ ${dados.validos.length} números com WhatsApp ativo!`, 'success');
+}
+
+function erroLimpeza(dados) {
+  const btn = document.getElementById('btnIniciarLimpeza');
+  const progress = document.getElementById('progressLimpeza');
+  
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = '🔍 INICIAR VERIFICAÇÃO E LIMPEZA';
+  }
+  if (progress) progress.style.display = 'none';
+  
+  toast('Erro na verificação: ' + dados.erro, 'error');
+}
+
+async function salvarListaLimpa() {
+  const nome = document.getElementById('limpezaNomeCamp').value.trim();
+  if (!nome) { toast('Digite um nome para salvar a lista', 'error'); return; }
+  if (!limpezaListaAtual.length) { toast('Nenhum contato válido para salvar', 'error'); return; }
+
+  try {
+    const res = await api.post('/api/campanhas', { nome, texto: limpezaListaAtual.join('\n') });
+    toast(`✅ Lista "${nome}" salva com ${res.total} contatos!`, 'success');
+  } catch (err) {
+    toast('Erro: ' + err.message, 'error');
+  }
+}
+
+function exportarListaLimpaCSV() {
+  if (!limpezaListaAtual.length) { toast('Nenhum contato válido para exportar', 'error'); return; }
+  
+  // Criar CSV básico
+  const csvLinhas = ['numero,nome'];
+  limpezaListaAtual.forEach(linha => {
+    const partes = linha.split(/[,;|]/);
+    const num = partes[0].replace(/\D/g, '');
+    const nome = partes[1] ? `"${partes[1].trim().replace(/"/g,'""')}"` : '';
+    csvLinhas.push(`${num},${nome}`);
+  });
+
+  const blob = new Blob(['\uFEFF' + csvLinhas.join('\n')], { type:'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `lista_filtrada_${new Date().getTime()}.csv`;
+  a.click();
+}
+
+// ─── utilitários ──────────────────────────────────────────
+function fecharOverlay(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); }));
+
+function copiarTexto(txt) {
+  navigator.clipboard.writeText(txt).then(() => toast('Copiado!', 'success'));
+}
+
+function toast(msg, tipo = 'success') {
+  const t = document.createElement('div');
+  t.className = `toast ${tipo}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, 2500);
+}
+
+// ─── init ──────────────────────────────────────────────────
+renderizarVarDisp();
+conectarWS();
+carregarListaLogs();
+
+// carregar dados iniciais
+Promise.all([
+  api.get('/api/numeros'),
+  api.get('/api/campanhas'),
+  api.get('/api/disparos')
+]).then(([n, c, d]) => {
+  atualizarNumeros(n);
+  atualizarCampanhas(c);
+  atualizarDisparos(d);
+  carregarConfigIA(); // Puxa a chave e o prompt salvos
+}).catch(err => {
+  console.error('Erro ao carregar dados iniciais:', err);
+  toast('Erro ao conectar ao servidor. Verifique se está rodando na porta 3000.', 'error');
+});
+async function pausarTodos() {
+  try {
+    const res = await api.post('/api/disparos/pausar-todos');
+    toast(`${res.count} disparos pausados`, 'success');
+  } catch (err) { toast('Erro: ' + err.message, 'error'); }
+}
+
+async function retomarTodos() {
+  try {
+    const res = await api.post('/api/disparos/retomar-todos');
+    toast(`${res.count} disparos retomados`, 'success');
+  } catch (err) { toast('Erro: ' + err.message, 'error'); }
+}
+
+async function finalizarTodos() {
+  if (!confirm('Tem certeza que deseja FINALIZAR TODOS os disparos ativos?')) return;
+  try {
+    const res = await api.post('/api/disparos/parar-todos');
+    toast(`${res.count} disparos finalizados`, 'success');
+  } catch (err) { toast('Erro: ' + err.message, 'error'); }
+}
+</script>
+</body>
+</html>

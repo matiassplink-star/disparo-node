@@ -1,0 +1,23 @@
+node_modules
+npm-debug.log
+.env
+.env.local
+.DS_Store
+
+# WhatsApp data (must be kept local or on server volumes, not on git)
+sessoes/
+logs/
+contatos/
+midia/
+whatsapp_session/
+.wwebjs_cache/
+.wwebjs_auth/
+
+# Backups
+*.backup
+*.bak
+
+# Next.js build
+saas-admin-dashboard/.next/
+saas-admin-dashboard/out/
+saas-admin-dashboard/build/
