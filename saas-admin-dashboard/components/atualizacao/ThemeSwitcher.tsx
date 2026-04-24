@@ -12,28 +12,38 @@ export function ThemeSwitcher() {
     setMounted(true)
   }, [])
 
+  useEffect(() => {
+    // Sincronizar tema com o iframe sempre que o tema mudar ou o componente montar
+    const syncTheme = () => {
+      const iframe = document.querySelector('iframe')
+      if (iframe?.contentWindow) {
+        iframe.contentWindow.postMessage({ action: 'setTheme', theme: theme }, '*')
+      }
+    }
+    
+    syncTheme()
+    // Pequeno delay para garantir que o iframe carregou
+    const timer = setTimeout(syncTheme, 1000)
+    return () => clearTimeout(timer)
+  }, [theme, mounted])
+
   if (!mounted) {
-    return <div className="w-8 h-8 rounded-full" />
+    return <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/5 animate-pulse" />
   }
 
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark'
     setTheme(newTheme)
-    
-    // Notificar o iframe do motor de automação (Coolify)
-    const iframe = document.querySelector('iframe')
-    if (iframe?.contentWindow) {
-      iframe.contentWindow.postMessage({ action: 'setTheme', theme: newTheme }, '*')
-    }
   }
 
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 rounded-full transition-colors flex items-center justify-center text-[#8b949e] hover:bg-[rgba(255,255,255,0.05)] hover:text-white focus:outline-none"
+      className="w-9 h-9 rounded-xl transition-all flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white border border-transparent hover:border-slate-200 dark:hover:border-white/10"
       title={theme === 'dark' ? 'Mudar para Claro' : 'Mudar para Escuro'}
     >
-      {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+      {theme === 'dark' ? <Sun size={18} strokeWidth={2.5} /> : <Moon size={18} strokeWidth={2.5} />}
     </button>
+
   )
 }

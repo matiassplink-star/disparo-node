@@ -1,10 +1,28 @@
 'use client'
 
-import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { useState } from 'react'
 import { User } from '@/types'
 import { useLanguage } from '@/components/atualizacao/LanguageContext'
+import { 
+  LayoutDashboard, 
+  Activity, 
+  Smartphone, 
+  BookUser, 
+  Send, 
+  Download, 
+  Eraser, 
+  Users, 
+  UserPlus, 
+  BarChart3, 
+  LifeBuoy, 
+  Globe, 
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  ShieldCheck,
+  Lock
+} from 'lucide-react'
 
 interface SidebarProps {
   collapsed?: boolean
@@ -24,35 +42,35 @@ export function Sidebar({ collapsed = false, onToggle, user, mobileOpen = false,
 
   const menuGroups = [
     {
-      label: t('group.main'),
+      label: t('group.principal'),
       items: [
-        { href: '/dashboard', label: t('nav.dashboard'), icon: '◈' },
-        { href: '/dashboard/whatsapp', label: t('nav.whatsapp'), icon: '◫', action: 'panel', panel: 'dashboard' },
-        { href: '/dashboard/whatsapp', label: t('nav.connect'), icon: '⊕', action: 'panel', panel: 'numeros' },
+        { action: 'panel', panel: 'dashboard', href: '/dashboard/whatsapp', label: t('nav.dashboard'), icon: LayoutDashboard, color: '#3b82f6' },
+        { action: 'panel', panel: 'monitor', href: '/dashboard/whatsapp', label: t('nav.monitor'), icon: Activity, color: '#22c55e' },
+        { action: 'panel', panel: 'numeros', href: '/dashboard/whatsapp', label: t('nav.numbers'), icon: Smartphone, color: '#f59e0b' },
       ]
     },
     {
-      label: t('group.shoots'),
+      label: t('group.disparos'),
       items: [
-        { href: '#', label: t('nav.contacts'), icon: '◫', action: 'panel', panel: 'contatos' },
-        { href: '#', label: t('nav.shoot'), icon: '▶', action: 'panel', panel: 'disparo' },
+        { action: 'panel', panel: 'contatos', href: '/dashboard/whatsapp', label: t('nav.contacts'), icon: BookUser, color: '#8b5cf6' },
+        { action: 'panel', panel: 'disparo', href: '/dashboard/whatsapp', label: t('nav.send'), icon: Send, color: '#10b981' },
       ]
     },
     {
-      label: t('group.tools'),
+      label: t('group.ferramentas'),
       items: [
-        { href: '#', label: t('nav.extract'), icon: '◎', action: 'panel', panel: 'grupos', premium: true },
-        { href: '#', label: t('nav.clean'), icon: '🧹', action: 'panel', panel: 'limpeza', premium: true },
-        { href: '#', label: t('nav.send_group'), icon: '▷', action: 'panel', panel: 'envioGrupos', premium: true },
-        { href: '#', label: t('nav.add_group'), icon: '⊕', action: 'panel', panel: 'addGrupos', premium: true },
-        { href: '#', label: t('nav.reports'), icon: '≡', action: 'panel', panel: 'logs' },
+        { action: 'panel', panel: 'extracao', href: '/dashboard/whatsapp', label: t('nav.extraction'), icon: Download, color: '#ec4899' },
+        { action: 'panel', panel: 'limpeza', href: '/dashboard/whatsapp', label: t('nav.cleaning'), icon: Eraser, color: '#06b6d4' },
+        { action: 'panel', panel: 'envioGrupos', href: '/dashboard/whatsapp', label: t('nav.groups'), icon: Users, color: '#f97316' },
+        { action: 'panel', panel: 'addGrupos', href: '/dashboard/whatsapp', label: t('nav.addGroups'), icon: UserPlus, color: '#6366f1' },
+        { action: 'panel', panel: 'relatorios', href: '/dashboard/whatsapp', label: t('nav.reports'), icon: BarChart3, color: '#14b8a6' },
       ]
     },
     {
-      label: t('group.support'),
+      label: t('group.suporte'),
       items: [
-        { href: '/dashboard/tutoriais', label: t('nav.tutorials'), icon: '▶' },
-        { href: 'https://wa.me/5534999929764', label: t('nav.community'), icon: '👥', external: true },
+        { href: '/dashboard/tutoriais', label: t('nav.tutorials'), icon: LifeBuoy, color: '#64748b' },
+        { href: 'https://wa.me/5534999929764', label: t('nav.community'), icon: Globe, color: '#22c55e', external: true },
       ]
     }
   ]
@@ -61,19 +79,15 @@ export function Sidebar({ collapsed = false, onToggle, user, mobileOpen = false,
     menuGroups.push({
       label: t('group.admin'),
       items: [
-        { href: '/dashboard/users', label: t('nav.users'), icon: '◫' },
-        { href: '/dashboard/settings', label: t('nav.settings'), icon: '⚙' },
+        { href: '/dashboard/users', label: t('nav.users'), icon: ShieldCheck, color: '#ef4444' },
       ]
     })
   }
 
   const handleItemClick = (item: any, e: React.MouseEvent) => {
     if (item.external) return;
-
     e.preventDefault();
-    
     if (setMobileOpen) setMobileOpen(false);
-
     if (item.action === 'panel') {
       router.push('/dashboard/whatsapp?panel=' + item.panel);
     } else if (item.href && item.href !== '#') {
@@ -102,72 +116,73 @@ export function Sidebar({ collapsed = false, onToggle, user, mobileOpen = false,
         width: collapsed ? '68px' : '256px',
       }}
     >
-      <div
-        className={`flex items-center h-[52px] ${collapsed ? 'justify-center px-2' : 'justify-between px-5'}`}
-        style={{ borderBottom: '1px solid #2a2d34' }}
-      >
+      {/* Header Logo */}
+      <div className={`flex items-center h-[52px] border-b border-gray-100 dark:border-[#2a2d34] ${collapsed ? 'justify-center px-2' : 'justify-between px-5'}`}>
         {!collapsed && (
-          <div className="flex items-center gap-2.5">
-            <div className="w-2 h-2 rounded-full" style={{ background: '#22c55e', boxShadow: '0 0 8px #22c55e' }} />
-            <span className="text-sm font-medium tracking-wider" style={{ color: '#e8eaed', fontFamily: "'DM Mono', monospace" }}>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+            <span className="text-xs font-bold tracking-widest text-slate-900 dark:text-white font-mono">
               ZAPLINK
             </span>
           </div>
         )}
         {collapsed && (
-          <div className="w-2 h-2 rounded-full" style={{ background: '#22c55e', boxShadow: '0 0 8px #22c55e' }} />
+          <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
         )}
         <button
           onClick={onToggle}
-          className="w-7 h-7 flex items-center justify-center rounded-md transition-colors text-xs"
-          style={{ color: '#6b7280' }}
-          onMouseOver={(e) => { e.currentTarget.style.color = '#e8eaed'; e.currentTarget.style.background = '#1c1f24' }}
-          onMouseOut={(e) => { e.currentTarget.style.color = '#6b7280'; e.currentTarget.style.background = 'transparent' }}
-          title={collapsed ? 'Expandir menu' : 'Recolher menu'}
+          className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
+          title={collapsed ? 'Expandir' : 'Recolher'}
         >
-          {collapsed ? '→' : '←'}
+          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>
       </div>
 
-      <nav className="flex-1 py-3 px-2.5 overflow-y-auto hide-scrollbar">
-        {menuGroups.map((group, gIdx) => (
-          <div key={group.label} className={gIdx > 0 ? 'mt-6' : ''}>
+      {/* Nav Content */}
+      <nav className="flex-1 py-4 px-2.5 overflow-y-auto hide-scrollbar space-y-6">
+        {menuGroups.map((group) => (
+          <div key={group.label}>
             {!collapsed && (
-              <div className="px-3 pb-2 pt-1 text-[10px] tracking-widest uppercase font-bold" style={{ color: '#4b5563', fontFamily: "'DM Mono', monospace" }}>
+              <div className="px-3 mb-2 text-[10px] tracking-widest uppercase font-bold text-slate-400 dark:text-slate-600 font-mono">
                 {group.label}
               </div>
             )}
-            <ul className="space-y-0.5">
+            <ul className="space-y-1">
               {group.items.map((item) => {
                 const isPanelActive = item.action === 'panel' && pathname === '/dashboard/whatsapp' && currentPanel === item.panel
                 const isUrlActive = item.href !== '#' && (pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href)))
                 const isActive = isPanelActive || (item.action !== 'panel' && isUrlActive)
-                
+                const Icon = item.icon
+
                 return (
                   <li key={item.label}>
                     <a
                       href={item.href}
                       target={item.external ? '_blank' : undefined}
                       onClick={(e) => handleItemClick(item, e)}
-                      title={collapsed ? item.label : ''}
-                      className={`flex items-center gap-2.5 rounded-xl transition-all text-[13px] no-underline group relative ${
-                        collapsed ? 'justify-center px-2 py-2.5' : 'px-4 py-2.5'
-                      } ${isActive ? 'text-green-700 dark:text-white font-semibold bg-green-500/10 dark:bg-green-500/20' : 'text-slate-600 dark:text-[#8b949e] hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'}`}
-                      style={{
-                        cursor: 'pointer',
-                      }}
+                      className={`flex items-center gap-3 rounded-xl transition-all text-xs no-underline group relative py-2.5 ${
+                        collapsed ? 'justify-center px-0' : 'px-3'
+                      } ${isActive 
+                        ? 'text-green-700 dark:text-white font-semibold bg-green-500/10 dark:bg-green-500/20' 
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
+                      }`}
                     >
-                      {isActive && !collapsed && (
-                        <div className="absolute left-0 w-1 h-6 bg-[#22c55e] rounded-r-full" />
-                      )}
-                      <span className={`text-sm flex-shrink-0 w-4 text-center transition-all ${isActive ? 'text-[#22c55e]' : 'group-hover:text-white'}`}>{item.icon}</span>
+                      <Icon 
+                        size={18} 
+                        strokeWidth={2.5}
+                        className={`transition-all duration-300 ${isActive ? 'text-green-500 scale-110' : 'text-slate-400 dark:text-slate-500 group-hover:scale-110'}`}
+                        style={{ color: isActive ? undefined : undefined }}
+                      />
                       {!collapsed && (
                         <div className="flex justify-between items-center w-full">
-                          <span>{item.label}</span>
+                          <span className="truncate">{item.label}</span>
                           {item.premium && user?.plano !== 'premium' && user?.plano !== 'admin' && (
-                            <span title="Recurso Premium" style={{ fontSize: '10px' }}>🔒</span>
+                            <Lock size={12} className="text-slate-400" />
                           )}
                         </div>
+                      )}
+                      {isActive && !collapsed && (
+                        <div className="absolute left-0 w-1 h-5 bg-green-500 rounded-r-full" />
                       )}
                     </a>
                   </li>
@@ -178,23 +193,17 @@ export function Sidebar({ collapsed = false, onToggle, user, mobileOpen = false,
         ))}
       </nav>
 
-      <div className={`${collapsed ? 'p-2' : 'p-3'}`} style={{ borderTop: '1px solid #2a2d34' }}>
+      {/* Footer / Logout */}
+      <div className="p-3 border-t border-gray-100 dark:border-[#2a2d34]">
         <button
           onClick={handleLogout}
           disabled={isLoading}
-          title={collapsed ? 'Sair' : ''}
-          className={`flex items-center justify-center gap-2 rounded-lg transition-all text-[13px] font-medium ${
-            collapsed ? 'w-10 h-10 mx-auto' : 'w-full px-4 py-2'
-          }`}
-          style={{
-            background: 'rgba(239,68,68,0.1)',
-            color: '#ef4444',
-            border: '1px solid rgba(239,68,68,0.2)',
-          }}
-          onMouseOver={(e) => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.color = 'white' }}
-          onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#ef4444' }}
+          className={`flex items-center gap-2 rounded-xl transition-all text-xs font-semibold ${
+            collapsed ? 'w-10 h-10 justify-center' : 'w-full px-4 py-2.5'
+          } bg-red-500/5 dark:bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 shadow-sm shadow-red-500/10`}
         >
-          {collapsed ? '✕' : isLoading ? '...' : t('nav.logout')}
+          <LogOut size={18} strokeWidth={2.5} />
+          {!collapsed && <span>{isLoading ? '...' : t('nav.logout')}</span>}
         </button>
       </div>
     </aside>
