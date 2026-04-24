@@ -1,4 +1,4 @@
-export type UserPlan = 'free' | 'pro' | 'admin'
+export type UserPlan = 'free' | 'pro' | 'premium' | 'mensal' | 'semestral' | 'anual' | 'admin'
 export type UserStatus = 'ativo' | 'bloqueado'
 
 export interface User {
@@ -10,8 +10,11 @@ export interface User {
   email_verified: boolean
   acesso_ate: string | null
   avatar_url: string | null
-  criado_em: string
-  atualizado_em: string
+  criado_em?: string
+  atualizado_em?: string
+  created_at?: string
+  updated_at?: string
+  telefone?: string
 }
 
 export interface Account {
