@@ -58,11 +58,10 @@ export function Sidebar({ collapsed = false, onToggle, user, mobileOpen = false,
     {
       label: t('group.ferramentas'),
       items: [
-        { action: 'panel', panel: 'grupos', href: '/dashboard/whatsapp', label: 'Extrator', icon: Download, color: '#ec4899' },
+        { action: 'panel', panel: 'extrator', href: '/dashboard/whatsapp', label: 'Extrator', icon: Download, color: '#ec4899' },
         { action: 'panel', panel: 'limpeza', href: '/dashboard/whatsapp', label: t('nav.cleaning'), icon: Eraser, color: '#06b6d4' },
         { action: 'panel', panel: 'envioGrupos', href: '/dashboard/whatsapp', label: t('nav.groups'), icon: Users, color: '#f97316' },
         { action: 'panel', panel: 'addGrupos', href: '/dashboard/whatsapp', label: t('nav.addGroups'), icon: UserPlus, color: '#6366f1' },
-        { action: 'panel', panel: 'extracao', href: '/dashboard/whatsapp', label: 'Agenda e Chats', icon: BookUser, color: '#10b981' },
         { action: 'panel', panel: 'logs', href: '/dashboard/whatsapp', label: t('nav.reports'), icon: BarChart3, color: '#14b8a6' },
       ]
     },
