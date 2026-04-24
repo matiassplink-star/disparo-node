@@ -111,7 +111,7 @@ export default function SettingsPage() {
         <h2 className="text-sm font-semibold" style={{ color: '#e8eaed' }}>Informações da conta</h2>
         <div className="text-xs space-y-1.5" style={{ color: '#6b7280' }}>
           <p><span className="font-medium" style={{ color: '#e8eaed' }}>ID:</span> <code className="px-2 py-0.5 rounded text-[10px]" style={{ background: '#1c1f24' }}>{user?.id}</code></p>
-          <p><span className="font-medium" style={{ color: '#e8eaed' }}>Criado em:</span> {user?.criado_em ? new Date(user.criado_em).toLocaleString('pt-BR') : '—'}</p>
+          <p><span className="font-medium" style={{ color: '#e8eaed' }}>Criado em:</span> {(user as any)?.created_at || (user as any)?.criado_em ? new Date((user as any).created_at || (user as any).criado_em).toLocaleString('pt-BR') : '—'}</p>
           {user?.acesso_ate && (
             <p><span className="font-medium" style={{ color: '#e8eaed' }}>Acesso até:</span>{' '}
               <span style={{ color: new Date(user.acesso_ate) > new Date() ? '#22c55e' : '#ef4444' }}>

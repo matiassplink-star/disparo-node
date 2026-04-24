@@ -163,7 +163,8 @@ export default function WhatsAppPage() {
             <p className="text-gray-500 text-sm mb-8">Escolha um dos planos abaixo para liberar todas as ferramentas de automação.</p>
             <div className="bg-[#0e0f11] rounded-2xl p-6 border border-[#2a2d34]">
               {/* Aqui o Brick de pagamento */}
-              <Wallet initialization={{ preferenceId: preferenceId || '', redirectMode: 'modal' }} />
+              {/* @ts-ignore */}
+              <Wallet initialization={{ preferenceId: preferenceId || '', redirectMode: 'self' }} />
               <a href={waLink} target="_blank" className="inline-block w-full py-3 bg-[#22c55e] text-[#0a1a10] rounded-xl font-bold text-sm mt-4 no-underline">Pagar via WhatsApp 💬</a>
             </div>
           </div>
