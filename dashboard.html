@@ -329,11 +329,11 @@ body.in-iframe .topbar { display: none !important; }
   <div class="nav-sep"></div>
   <div class="sidebar-section">
     <div class="sidebar-label">Ferramentas</div>
-    <div class="nav-item" data-panel="grupos"><span class="nav-icon">◎</span> Extração Grupos</div>
+    <div class="nav-item" data-panel="grupos"><span class="nav-icon">◎</span> Extrator</div>
     <div class="nav-item" data-panel="limpeza"><span class="nav-icon">🧹</span> Limpeza de Lista</div>
     <div class="nav-item" data-panel="envioGrupos"><span class="nav-icon">▷</span> Envio Grupos</div>
     <div class="nav-item" data-panel="addGrupos"><span class="nav-icon">⊕</span> Adicionar a Grupos</div>
-    <div class="nav-item" data-panel="extracao"><span class="nav-icon">◌</span> Extração Contatos</div>
+    <div class="nav-item" data-panel="extracao"><span class="nav-icon">◌</span> Agenda e Chats</div>
     <div class="nav-item" data-panel="logs"><span class="nav-icon">≡</span> Relatórios</div>
   </div>
   <div class="nav-sep"></div>
@@ -376,6 +376,11 @@ body.in-iframe .topbar { display: none !important; }
         <div class="card-title">Envio em Massa (Grupos)</div>
       </div>
       <div id="grupoProgresso"></div>
+      <div class="btn-row" id="ctrlGrupos" style="display:none; margin-top:10px">
+        <button class="btn btn-sm btn-warn" onclick="pausarTodos()">⏸ Pausar</button>
+        <button class="btn btn-sm btn-danger" onclick="finalizarTodos()">🛑 Parar</button>
+      </div>
+    </div>
     </div>
 
     <!-- Progresso de Adição -->
@@ -384,6 +389,11 @@ body.in-iframe .topbar { display: none !important; }
         <div class="card-title">Adição de Membros</div>
       </div>
       <div id="addProgresso"></div>
+      <div class="btn-row" id="ctrlAdd" style="display:none; margin-top:10px">
+        <button class="btn btn-sm btn-warn" onclick="pausarTodos()">⏸ Pausar</button>
+        <button class="btn btn-sm btn-danger" onclick="finalizarTodos()">🛑 Parar</button>
+      </div>
+    </div>
     </div>
 
     <!-- Progresso de Limpeza de Lista -->
@@ -393,6 +403,11 @@ body.in-iframe .topbar { display: none !important; }
         <span class="badge badge-blue" id="limpezaDashBadge">verificando...</span>
       </div>
       <div id="limpezaProgresso"></div>
+      <div class="btn-row" id="ctrlLimpeza" style="display:none; margin-top:10px">
+        <button class="btn btn-sm btn-warn" onclick="pausarTodos()">⏸ Pausar</button>
+        <button class="btn btn-sm btn-danger" onclick="finalizarTodos()">🛑 Parar</button>
+      </div>
+    </div>
     </div>
   </div>
 
@@ -638,10 +653,10 @@ body.in-iframe .topbar { display: none !important; }
     </div>
   </div>
 
-  <!-- EXTRAÇÃO GRUPOS -->
+  <!-- EXTRATOR (ANTIGO GRUPOS) -->
   <div id="panel-grupos" class="panel">
     <div class="card">
-      <div class="card-header"><div class="card-title">Extrair grupos</div></div>
+      <div class="card-header"><div class="card-title">Extrator de Contatos de Grupos</div></div>
       <div class="form-row c2" style="margin-bottom:12px">
         <div class="fg"><label>NÚMERO</label><select id="gruposNumero"><option value="">Selecionar número...</option></select></div>
         <div style="display:flex;align-items:flex-end"><button class="btn btn-ghost" onclick="extrairGrupos()">Extrair grupos</button></div>
@@ -702,6 +717,10 @@ body.in-iframe .topbar { display: none !important; }
           <span>✓ <span id="limpezaValidosCount" style="color:#22c55e">0</span> válidos</span>
           <span>✗ <span id="limpezaInvalidosCount" style="color:#ef4444">0</span> inválidos</span>
           <span>⏳ <span id="limpezaRestanteCount">0</span> restantes</span>
+        </div>
+        <div class="btn-row" style="margin-top:12px">
+          <button class="btn btn-sm btn-warn" onclick="pausarTodos()">⏸ Pausar</button>
+          <button class="btn btn-sm btn-danger" onclick="finalizarTodos()">🛑 Parar</button>
         </div>
       </div>
 
@@ -856,6 +875,10 @@ body.in-iframe .topbar { display: none !important; }
           <span>✗ <span id="envGruposFalhaCount" style="color:#ef4444">0</span> falhas</span>
           <span>⏳ <span id="envGruposRestanteCount">0</span> restantes</span>
         </div>
+        <div class="btn-row" style="margin-top:12px">
+          <button class="btn btn-sm btn-warn" onclick="pausarTodos()">⏸ Pausar</button>
+          <button class="btn btn-sm btn-danger" onclick="finalizarTodos()">🛑 Parar</button>
+        </div>
       </div>
     </div>
   </div>
@@ -932,6 +955,10 @@ body.in-iframe .topbar { display: none !important; }
           <span>✓ <span id="addGruposOkCount" style="color:#22c55e">0</span> adicionados</span>
           <span>✗ <span id="addGruposFalhaCount" style="color:#ef4444">0</span> falhas</span>
           <span>⏳ <span id="addGruposRestanteCount">0</span> restantes</span>
+        </div>
+        <div class="btn-row" style="margin-top:12px">
+          <button class="btn btn-sm btn-warn" onclick="pausarTodos()">⏸ Pausar</button>
+          <button class="btn btn-sm btn-danger" onclick="finalizarTodos()">🛑 Parar</button>
         </div>
       </div>
       
@@ -2010,8 +2037,16 @@ function atualizarProgressoGrupos(dados) {
         <div style="font-size:10px;color:var(--muted);margin-top:8px">✓ ${dados.enviados} enviados · ✗ ${dados.falhas} falhas</div>
       </div>
     `;
-    if (dados.atual >= dados.total) {
-      setTimeout(() => { cardDash.style.display = 'none'; }, 10000);
+    if (dados.atual >= dados.total || dados.status === 'concluido' || dados.status === 'parado') {
+      if (document.getElementById('ctrlGrupos')) document.getElementById('ctrlGrupos').style.display = 'none';
+      setTimeout(() => { if(cardDash) cardDash.style.display = 'none'; }, 10000);
+    } else {
+      if (document.getElementById('ctrlGrupos')) document.getElementById('ctrlGrupos').style.display = 'flex';
+    }
+    const statusBadge = dashContent.querySelector('.badge');
+    if (statusBadge) {
+      statusBadge.textContent = dados.status || 'rodando';
+      statusBadge.className = `badge ${dados.status === 'pausado' ? 'badge-warn' : 'badge-blue'}`;
     }
   }
 }
@@ -2057,8 +2092,16 @@ function atualizarProgressoAddGrupos(dados) {
         <div style="font-size:10px;color:var(--muted);margin-top:8px">✓ ${ok} adicionados · ✗ ${falhas} falhas</div>
       </div>
     `;
-    if (dados.atual >= dados.total) {
-      setTimeout(() => { cardDash.style.display = 'none'; }, 10000);
+    if (dados.atual >= dados.total || dados.status === 'concluido' || dados.status === 'parado') {
+      if (document.getElementById('ctrlAdd')) document.getElementById('ctrlAdd').style.display = 'none';
+      setTimeout(() => { if(cardDash) cardDash.style.display = 'none'; }, 10000);
+    } else {
+      if (document.getElementById('ctrlAdd')) document.getElementById('ctrlAdd').style.display = 'flex';
+    }
+    const statusBadge = dashContent.querySelector('.badge');
+    if (statusBadge) {
+      statusBadge.textContent = dados.status || 'rodando';
+      statusBadge.className = `badge ${dados.status === 'pausado' ? 'badge-warn' : 'badge-blue'}`;
     }
   }
 }
@@ -2697,13 +2740,19 @@ function atualizarProgressoLimpeza(dados) {
       <div class="disp-card">
         <div style="display:flex;justify-content:space-between;margin-bottom:8px">
           <span style="font-size:11px;font-weight:bold;color:var(--text)">Filtrando ${dados.total} números</span>
-          <span class="badge badge-blue">rodando</span>
+          <span class="badge ${dados.status === 'pausado' ? 'badge-warn' : 'badge-blue'}">${dados.status || 'rodando'}</span>
         </div>
         <div class="prog-bar"><div class="prog-fill" style="width:${perc}%;background:linear-gradient(to right,#22c55e,#16a34a)"></div></div>
         <div class="prog-labels"><span>${dados.atual} de ${dados.total}</span><span>${perc}%</span></div>
         <div style="font-size:10px;color:var(--muted);margin-top:8px">✓ ${dados.validos} válidos · ✗ ${dados.invalidos} inválidos</div>
       </div>
     `;
+    if (dados.atual >= dados.total || dados.status === 'concluido' || dados.status === 'parado') {
+      if (document.getElementById('ctrlLimpeza')) document.getElementById('ctrlLimpeza').style.display = 'none';
+      setTimeout(() => { if(cardDash) cardDash.style.display = 'none'; }, 10000);
+    } else {
+      if (document.getElementById('ctrlLimpeza')) document.getElementById('ctrlLimpeza').style.display = 'flex';
+    }
   }
 }
 
@@ -2849,6 +2898,12 @@ async function retomarTodos() {
 }
 
 async function finalizarTodos() {
+  if (!confirm('Finalizar todos os disparos e processos ativos?')) return;
+  try {
+    const res = await api.post('/api/disparos/parar-todos');
+    toast(`${res.count} processos finalizados`, 'success');
+  } catch (err) { toast('Erro: ' + err.message, 'error'); }
+}
   if (!confirm('Tem certeza que deseja FINALIZAR TODOS os disparos ativos?')) return;
   try {
     const res = await api.post('/api/disparos/parar-todos');

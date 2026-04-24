@@ -47,26 +47,35 @@ export async function POST(req: NextRequest) {
 
           if (pag) {
             let diasToAdd = 30
+            let novoPlano = pag.plano // 'mensal', 'semestral', 'anual'
+            
             if (pag.plano === 'semestral') diasToAdd = 180
             else if (pag.plano === 'anual') diasToAdd = 365
 
-            // Obter acesso_ate atual
+            // Obter dados atuais do usuário
             const { data: user } = await supabase
               .from('users')
-              .select('acesso_ate')
+              .select('acesso_ate, plano')
               .eq('id', pag.user_id)
               .single()
             
             let novoAcesso = new Date()
+            // Se o usuário já tem acesso ativo, somamos ao tempo restante
             if (user?.acesso_ate && new Date(user.acesso_ate) > new Date()) {
               novoAcesso = new Date(user.acesso_ate)
             }
             novoAcesso.setDate(novoAcesso.getDate() + diasToAdd)
 
+            // Atualiza data E plano
             await supabase
               .from('users')
-              .update({ acesso_ate: novoAcesso.toISOString() })
+              .update({ 
+                acesso_ate: novoAcesso.toISOString(),
+                plano: novoPlano 
+              })
               .eq('id', pag.user_id)
+            
+            console.log(`[PAYMENT APPROVED] User ${pag.user_id} upgraded to ${novoPlano} until ${novoAcesso.toISOString()}`)
           }
         }
       }

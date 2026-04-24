@@ -132,6 +132,8 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'dashboard.html')))
 const numeros = {};
 const disparos = {};
 const addGruposStatus = {}; // { userId: { status, total, atual, resultados } }
+const envioGruposStatus = {}; // { userId: { status, total, atual, enviados, falhas } }
+const limpezaStatus = {}; // { userId: { status, total, atual, validos, invalidos } }
 
 // ─── limites por plano ────────────────────────────────────
 const LIMITES = {
@@ -942,6 +944,18 @@ app.post('/api/disparos/pausar-todos', (req, res) => {
         count++;
     }
 
+    // Pausar envio para grupos
+    if (envioGruposStatus[userId] && envioGruposStatus[userId].status === 'rodando') {
+        envioGruposStatus[userId].status = 'pausado';
+        count++;
+    }
+
+    // Pausar limpeza de lista
+    if (limpezaStatus[userId] && limpezaStatus[userId].status === 'rodando') {
+        limpezaStatus[userId].status = 'pausado';
+        count++;
+    }
+
     broadcast(userId, 'disparos', listarDisparos(userId));
     res.json({ ok: true, count });
 });
@@ -965,6 +979,18 @@ app.post('/api/disparos/retomar-todos', (req, res) => {
         count++;
     }
 
+    // Retomar envio para grupos
+    if (envioGruposStatus[userId] && envioGruposStatus[userId].status === 'pausado') {
+        envioGruposStatus[userId].status = 'rodando';
+        count++;
+    }
+
+    // Retomar limpeza de lista
+    if (limpezaStatus[userId] && limpezaStatus[userId].status === 'pausado') {
+        limpezaStatus[userId].status = 'rodando';
+        count++;
+    }
+
     broadcast(userId, 'disparos', listarDisparos(userId));
     res.json({ ok: true, count });
 });
@@ -985,6 +1011,18 @@ app.post('/api/disparos/parar-todos', (req, res) => {
     // Parar adições de membros
     if (addGruposStatus[userId] && (addGruposStatus[userId].status === 'rodando' || addGruposStatus[userId].status === 'pausado')) {
         addGruposStatus[userId].status = 'parado';
+        count++;
+    }
+
+    // Parar envio para grupos
+    if (envioGruposStatus[userId] && (envioGruposStatus[userId].status === 'rodando' || envioGruposStatus[userId].status === 'pausado')) {
+        envioGruposStatus[userId].status = 'parado';
+        count++;
+    }
+
+    // Parar limpeza de lista
+    if (limpezaStatus[userId] && (limpezaStatus[userId].status === 'rodando' || limpezaStatus[userId].status === 'pausado')) {
+        limpezaStatus[userId].status = 'parado';
         count++;
     }
 
@@ -1142,15 +1180,19 @@ app.post('/api/grupos/enviar-massa', async (req, res) => {
         return res.status(404).json({ erro: 'Nenhum dos números selecionados está conectado.' });
     }
 
-    res.json({ ok: true, mensagem: 'Envio em massa iniciado em segundo plano' });
+    envioGruposStatus[userId] = { status: 'rodando', total: gruposIds.length, atual: 0, enviados: 0, falhas: 0 };
 
     // Função de execução
     const executarEnvioMassa = async () => {
-        let enviados = 0;
-        let falhas = 0;
-        let indiceAtual = 0;
-        let contadorTroca = 0;
+        const job = envioGruposStatus[userId];
         for (let i = 0; i < gruposIds.length; i++) {
+            if (job.status === 'parado') break;
+            while (job.status === 'pausado') {
+                if (job.status === 'parado') break;
+                await new Promise(r => setTimeout(r, 2000));
+            }
+            if (job.status === 'parado') break;
+
             // Selecionar cliente atual da rotação
             let currentNumId = numerosIds[indiceAtual];
             let fullId = `${userId}_${currentNumId}`;
@@ -1196,12 +1238,10 @@ app.post('/api/grupos/enviar-massa', async (req, res) => {
             }
 
             // Enviar progresso via WS (Sempre envia após tentativa)
-            broadcast(userId, 'progresso_grupos', { 
-                total: gruposIds.length, 
-                atual: i + 1, 
-                enviados, 
-                falhas 
-            });
+            job.atual = i + 1;
+            job.enviados = enviados;
+            job.falhas = falhas;
+            broadcast(userId, 'progresso_grupos', job);
             
             // Lógica de Rotação
             if (contadorTroca >= (trocaApos || 5) && numerosIds.length > 1) {
@@ -1220,10 +1260,16 @@ app.post('/api/grupos/enviar-massa', async (req, res) => {
             if (pausaAtiva && (enviados) % (pausaCada || 5) === 0 && enviados > 0 && i < gruposIds.length - 1) {
                 const pausaMs = (pausaTempo || 2) * 60000;
                 console.log(`⏸️ Pausa de ${pausaTempo} min após ${enviados} envios`);
-                await new Promise(r => setTimeout(r, pausaMs));
+                const tempoRestante = pausaMs;
+                const slice = 5000;
+                for(let t=0; t<tempoRestante; t+=slice) {
+                    if (job.status === 'parado' || job.status === 'pausado') break;
+                    await new Promise(r => setTimeout(r, slice));
+                }
             }
         }
-        console.log(`✅ Envio em massa concluído para usuário ${userId}`);
+        job.status = job.status === 'parado' ? 'parado' : 'concluido';
+        console.log(`✅ Envio em massa finalizado para usuário ${userId} com status: ${job.status}`);
         
         // Salvar Relatório
         const logId = `grupos_${Date.now()}`;
@@ -1463,15 +1509,23 @@ app.post('/api/listas/verificar', async (req, res) => {
     if (!n) return res.status(400).json({ erro: 'Nenhum número remetente conectado.' });
 
     // Iniciar background job para evitar timeout na API
-    res.json({ ok: true, msg: 'Verificação iniciada em background.' });
+    limpezaStatus[userId] = { status: 'rodando', total: contatos.length, atual: 0, validos: 0, invalidos: 0 };
 
     const executarVerificacao = async () => {
+        const job = limpezaStatus[userId];
         try {
             console.log(`[VERIFICAR] Validando ${contatos.length} números sequencialmente...`);
             const validos = [];
             const invalidos = [];
             
             for (let i = 0; i < contatos.length; i++) {
+                if (job.status === 'parado') break;
+                while (job.status === 'pausado') {
+                    if (job.status === 'parado') break;
+                    await new Promise(r => setTimeout(r, 2000));
+                }
+                if (job.status === 'parado') break;
+
                 const numero = contatos[i];
                 try {
                     const jid = await getCorrectJid(n.client, numero);
@@ -1483,22 +1537,22 @@ app.post('/api/listas/verificar', async (req, res) => {
                 
                 // Enviar progresso via WebSocket
                 if (i % 2 === 0 || i === contatos.length - 1) {
-                    broadcast(req.userId, 'progresso_limpeza', { 
-                        atual: i + 1, 
-                        total: contatos.length, 
-                        validos: validos.length, 
-                        invalidos: invalidos.length 
-                    });
+                    job.atual = i + 1;
+                    job.validos = validos.length;
+                    job.invalidos = invalidos.length;
+                    broadcast(req.userId, 'progresso_limpeza', job);
                 }
                 
                 await new Promise(r => setTimeout(r, 200)); // Delay p/ evitar Rate Limit
             }
             
             // Finalizado
-            broadcast(req.userId, 'limpeza_concluida', { total: contatos.length, validos, invalidos });
-            console.log(`[VERIFICAR] Concluído: ${validos.length} Válidos, ${invalidos.length} Inválidos`);
+            job.status = job.status === 'parado' ? 'parado' : 'concluido';
+            broadcast(req.userId, 'limpeza_concluida', { total: contatos.length, validos, invalidos, status: job.status });
+            console.log(`[VERIFICAR] Concluído com status ${job.status}: ${validos.length} Válidos, ${invalidos.length} Inválidos`);
         } catch (err) {
             console.error('[VERIFICAR] Erro no background:', err.message);
+            job.status = 'erro';
             broadcast(req.userId, 'limpeza_erro', { erro: err.message });
         }
     };
