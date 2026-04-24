@@ -93,6 +93,22 @@ body.in-iframe .main {
   overflow: visible !important;
 }
 
+/* Dark mode fixes for iframe */
+body.in-iframe.dark-theme .card { background: var(--surface); }
+body.in-iframe.light-theme .card { background: var(--surface); }
+.dark-theme input, .dark-theme select, .dark-theme textarea { background:var(--surface2); color:var(--text); border-color:var(--border2); }
+.dark-theme .card { background:var(--surface); }
+.dark-theme .extr-item { background:var(--surface2); }
+.dark-theme .num-card { background:var(--surface2); }
+.dark-theme .camp-card { background:var(--surface2); }
+.dark-theme .overlay .modal { background:var(--surface); border-color:var(--border2); }
+.dark-theme .upsell-modal { background:#16181c !important; }
+
+/* Locked overlay (premium blocks) */
+.locked-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:12px; cursor:pointer; z-index:5; }
+.locked-icon { font-size:28px; margin-bottom:6px; }
+.locked-text { font-size:11px; font-weight:bold; color:#f59e0b; text-transform:uppercase; letter-spacing:.05em; }
+
 .panel{display:none;flex-direction:column;gap:20px}
 .panel.active{display:flex;animation:fadeSlideIn .3s ease}
 @keyframes fadeSlideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
@@ -705,10 +721,13 @@ body.in-iframe .topbar { display: none !important; }
   </div>
 
 
-  <!-- EXTRATOR (ANTIGO GRUPOS) -->
+  <!-- EXTRATOR -->
   <div id="panel-extrator" class="panel">
     <div class="card">
-      <div class="card-header"><div class="card-title">Extrator de Contatos</div></div>
+      <div class="card-header">
+        <div class="card-title">Extrator de Contatos</div>
+        <button class="btn btn-sm btn-ghost" onclick="limparExtrator()">🧹 Limpar</button>
+      </div>
       <div class="fg" style="margin-bottom:20px">
         <label>NÚMERO REMETENTE</label>
         <select id="extratorNumero"><option value="">Selecionar número...</option></select>
@@ -745,11 +764,10 @@ body.in-iframe .topbar { display: none !important; }
         <div class="card-title">Contatos Extraídos</div>
         <div class="btn-row">
           <span id="grupoExtracaoCount" class="badge badge-blue">0 contatos</span>
-          <button class="btn btn-sm btn-primary" onclick="salvarMembrosCampanha()">Salvar como lista</button>
+          <span id="grupoExtracaoSalvo" class="badge badge-green" style="display:none">✅ Salvo</span>
           <button class="btn btn-sm btn-ghost" onclick="exportarMembrosCSV()">Exportar CSV</button>
         </div>
       </div>
-      <div class="fg" style="margin-bottom:12px"><label>NOME DA LISTA</label><input type="text" id="grupoExtracaoNomeCamp" placeholder="Ex: Contatos Extraídos"></div>
       <div id="grupoExtracaoLista" style="max-height:320px;overflow-y:auto"></div>
     </div>
   </div>
@@ -2246,13 +2264,13 @@ async function extrairMembrosGrupo(grupoId, grupoNome) {
   if (!numeroId) { toast('Selecione um número remetente', 'error'); return; }
   
   toast('Extraindo membros, aguarde...', 'success');
-  if (grupoNome) {
-      document.getElementById('grupoExtracaoNomeCamp').value = `Membros - ${grupoNome}`;
-  }
+  const nomeLista = grupoNome ? `Membros - ${grupoNome}` : `Grupo - ${grupoId.substring(0, 10)}`;
+  
   try {
     const res = await api.get(`/api/grupos/${numeroId}/${encodeURIComponent(grupoId)}/membros`);
     membrosGrupoAtual = res;
     
+    // Mostrar resultado
     document.getElementById('grupoExtracaoResultCard').style.display = 'block';
     document.getElementById('grupoExtracaoCount').textContent = res.length + ' membros';
     
@@ -2267,30 +2285,49 @@ async function extrairMembrosGrupo(grupoId, grupoNome) {
     if (res.length > 100) {
       container.innerHTML += `<div style="text-align:center;padding:10px;font-size:12px;color:var(--muted)">+${res.length - 100} membros (todos serão salvos)</div>`;
     }
+    
+    // AUTO-SAVE para Contatos
+    await autoSalvarExtracao(res, nomeLista);
+    
+    document.getElementById('grupoExtracaoResultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (err) {
     toast('Erro ao extrair membros: ' + err.message, 'error');
   }
 }
 
-async function salvarMembrosCampanha() {
-  const nome = document.getElementById('grupoExtracaoNomeCamp').value.trim();
-  if (!nome) { toast('Digite o nome da lista', 'error'); return; }
-  
+async function autoSalvarExtracao(lista, nome) {
+  if (!lista.length) return;
   const contatosUnicos = new Map();
-  let removidos = 0;
-  membrosGrupoAtual.forEach(c => {
-    if (!contatosUnicos.has(c.numero)) {
+  lista.forEach(c => {
+    if (c.numero && !contatosUnicos.has(c.numero)) {
       contatosUnicos.set(c.numero, c.nome ? `${c.numero},${c.nome}` : c.numero);
-    } else {
-      removidos++;
     }
   });
-  
   const texto = Array.from(contatosUnicos.values()).join('\n');
   try {
     const res = await api.post('/api/campanhas', { nome, texto });
-    toast(`✅ ${res.total} contatos salvos como "${nome}"${removidos > 0 ? ` (${removidos} duplicados ignorados)` : ''}`, 'success');
-  } catch (err) { toast('Erro: ' + err.message, 'error'); }
+    toast(`✅ ${res.total} contatos salvos como "${nome}"`, 'success');
+    const badge = document.getElementById('grupoExtracaoSalvo');
+    if (badge) badge.style.display = 'inline-flex';
+  } catch (err) { toast('Erro ao salvar: ' + err.message, 'error'); }
+}
+
+async function salvarMembrosCampanha() {
+  const nome = prompt('Nome da lista:', `Extração - ${new Date().toLocaleDateString()}`);
+  if (!nome) return;
+  await autoSalvarExtracao(membrosGrupoAtual, nome);
+}
+
+function limparExtrator() {
+  membrosGrupoAtual = [];
+  document.getElementById('gruposLista').innerHTML = '';
+  document.getElementById('grupoExtracaoResultCard').style.display = 'none';
+  document.getElementById('grupoExtracaoLista').innerHTML = '';
+  document.getElementById('grupoExtracaoCount').textContent = '0 contatos';
+  const badge = document.getElementById('grupoExtracaoSalvo');
+  if (badge) badge.style.display = 'none';
+  document.getElementById('manualGroupId').value = '';
+  toast('Sessão limpa', 'success');
 }
 
 async function carregarGruposParaAdd() {
@@ -2607,11 +2644,12 @@ async function extrairConversas() {
   } catch (err) { toast('Erro: ' + err.message, 'error'); }
 }
 
-function mostrarExtratorResultado(lista, tipo) {
-  membrosGrupoAtual = lista; // Reuso da variável global para salvar campanha
+async function mostrarExtratorResultado(lista, tipo) {
+  membrosGrupoAtual = lista;
+  const nomeLista = `${tipo} - ${new Date().toLocaleDateString()}`;
+  
   document.getElementById('grupoExtracaoResultCard').style.display = 'block';
   document.getElementById('grupoExtracaoCount').textContent = lista.length + ' contatos';
-  document.getElementById('grupoExtracaoNomeCamp').value = `${tipo} - ${new Date().toLocaleDateString()}`;
   
   const container = document.getElementById('grupoExtracaoLista');
   container.innerHTML = lista.slice(0, 100).map(c => `
@@ -2623,6 +2661,10 @@ function mostrarExtratorResultado(lista, tipo) {
   if (lista.length > 100) {
     container.innerHTML += `<div style="text-align:center;padding:10px;font-size:12px;color:var(--muted)">+${lista.length - 100} contatos (todos serão salvos)</div>`;
   }
+  
+  // AUTO-SAVE
+  await autoSalvarExtracao(lista, nomeLista);
+  
   document.getElementById('grupoExtracaoResultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
