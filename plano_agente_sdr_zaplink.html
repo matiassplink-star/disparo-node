@@ -1,0 +1,192 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.root{padding:1.5rem 0}
+.hd{margin-bottom:1.5rem}
+.hd h1{font-size:20px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.hd p{font-size:13px;color:var(--color-text-secondary)}
+.phases{display:flex;flex-direction:column;gap:12px}
+.phase{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.ph{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;background:var(--color-background-secondary);user-select:none}
+.ph:hover{background:var(--color-background-tertiary)}
+.pnum{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.ptitle{flex:1}
+.ptitle strong{font-size:14px;font-weight:500;color:var(--color-text-primary);display:block}
+.ptitle span{font-size:12px;color:var(--color-text-secondary)}
+.pbadge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:500;white-space:nowrap}
+.chev{font-size:11px;color:var(--color-text-tertiary);transition:transform .2s;margin-left:4px}
+.chev.open{transform:rotate(180deg)}
+.pb{display:none;padding:14px 16px;border-top:0.5px solid var(--color-border-tertiary)}
+.pb.open{display:block}
+.tasks{display:flex;flex-direction:column;gap:8px}
+.task{display:flex;gap:10px;padding:10px 12px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md)}
+.tico{font-size:15px;flex-shrink:0;margin-top:1px}
+.tc strong{font-size:13px;font-weight:500;color:var(--color-text-primary);display:block;margin-bottom:2px}
+.tc p{font-size:12px;color:var(--color-text-secondary);line-height:1.55}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.tag{font-size:11px;padding:2px 7px;border-radius:12px;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary)}
+.stack{margin-top:12px;padding:10px 12px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md)}
+.slabel{font-size:11px;color:var(--color-text-tertiary);font-weight:500;letter-spacing:.04em;text-transform:uppercase;margin-bottom:7px}
+.sitems{display:flex;flex-wrap:wrap;gap:5px}
+.sitem{font-size:12px;padding:3px 8px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);color:var(--color-text-primary)}
+.p1 .pnum{background:#E6F1FB;color:#185FA5} .p1 .pbadge{background:#E6F1FB;color:#185FA5}
+.p2 .pnum{background:#E1F5EE;color:#0F6E56} .p2 .pbadge{background:#E1F5EE;color:#0F6E56}
+.p3 .pnum{background:#FAEEDA;color:#854F0B} .p3 .pbadge{background:#FAEEDA;color:#854F0B}
+.p4 .pnum{background:#EEEDFE;color:#534AB7} .p4 .pbadge{background:#EEEDFE;color:#534AB7}
+.p5 .pnum{background:#FAECE7;color:#993C1D} .p5 .pbadge{background:#FAECE7;color:#993C1D}
+.p6 .pnum{background:#EAF3DE;color:#3B6D11} .p6 .pbadge{background:#EAF3DE;color:#3B6D11}
+.arch{margin-top:16px;padding:14px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-primary)}
+.arch-title{font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em}
+.arch-row{display:flex;gap:8px;flex-wrap:wrap}
+.arch-box{flex:1;min-width:130px;padding:10px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary)}
+.arch-box strong{font-size:12px;font-weight:500;color:var(--color-text-primary);display:block;margin-bottom:3px}
+.arch-box span{font-size:11px;color:var(--color-text-secondary)}
+</style>
+<div class="root">
+  <div class="hd">
+    <h1>Plano de ação — Agente IA SDR no ZapLink</h1>
+    <p>6 fases para evoluir o disparo-node em um agente completo de vendas com IA</p>
+  </div>
+
+  <div class="arch">
+    <div class="arch-title">Arquitetura alvo</div>
+    <div class="arch-row">
+      <div class="arch-box"><strong>ZapLink Core</strong><span>Node.js + Puppeteer (já existe)</span></div>
+      <div class="arch-box"><strong>Agente SDR</strong><span>Orquestrador com LLM + regras</span></div>
+      <div class="arch-box"><strong>Banco de dados</strong><span>Supabase (já existe) + RAG</span></div>
+      <div class="arch-box"><strong>Integrações</strong><span>Google Agenda + multi-LLM</span></div>
+    </div>
+  </div>
+
+  <div class="phases" style="margin-top:16px">
+
+    <!-- FASE 1 -->
+    <div class="phase p1">
+      <div class="ph" onclick="toggle(this)">
+        <div class="pnum">1</div>
+        <div class="ptitle"><strong>Estrutura do Agente SDR</strong><span>Cérebro e personalidade do agente</span></div>
+        <div class="pbadge">Semana 1–2</div>
+        <div class="chev">▼</div>
+      </div>
+      <div class="pb">
+        <div class="tasks">
+          <div class="task"><div class="tico">🧠</div><div class="tc"><strong>System prompt principal</strong><p>Criar o prompt base do SDR: persona, tom, objetivo, limites e fluxo de conversa. Incluir variáveis dinâmicas como nome do lead, produto e estágio do funil.</p><div class="tags"><span class="tag">prompt engineering</span><span class="tag">persona SDR</span></div></div></div>
+          <div class="task"><div class="tico">📋</div><div class="tc"><strong>Regras de atendimento</strong><p>Definir arquivo JSON/YAML com regras: horário de atendimento, tempo máximo de resposta, quantas tentativas sem resposta encerra conversa, frases proibidas, escalação para humano.</p><div class="tags"><span class="tag">rules.json</span><span class="tag">fallback humano</span></div></div></div>
+          <div class="task"><div class="tico">🔀</div><div class="tc"><strong>Máquina de estados da conversa</strong><p>Mapear estágios: NOVO → QUALIFICANDO → AGENDANDO → AGENDADO → PERDIDO. Cada estágio define quais ações o agente pode tomar e qual prompt usar.</p><div class="tags"><span class="tag">FSM</span><span class="tag">funil</span></div></div></div>
+        </div>
+        <div class="stack"><div class="slabel">Stack sugerido</div><div class="sitems"><span class="sitem">Node.js</span><span class="sitem">zod (validação de regras)</span><span class="sitem">YAML/JSON config</span></div></div>
+      </div>
+    </div>
+
+    <!-- FASE 2 -->
+    <div class="phase p2">
+      <div class="ph" onclick="toggle(this)">
+        <div class="pnum">2</div>
+        <div class="ptitle"><strong>Banco de Dados — Leads & Conversas</strong><span>Persistência e histórico completo</span></div>
+        <div class="pbadge">Semana 2–3</div>
+        <div class="chev">▼</div>
+      </div>
+      <div class="pb">
+        <div class="tasks">
+          <div class="task"><div class="tico">🗄️</div><div class="tc"><strong>Tabelas no Supabase</strong><p>Criar: <code>leads</code> (nome, telefone, origem, estágio, score), <code>conversations</code> (mensagens com role/content/timestamp), <code>appointments</code> (agendamentos), <code>agent_sessions</code> (contexto ativo por número).</p><div class="tags"><span class="tag">Supabase</span><span class="tag">PostgreSQL</span><span class="tag">RLS</span></div></div></div>
+          <div class="task"><div class="tico">📦</div><div class="tc"><strong>Camada de acesso (Repository pattern)</strong><p>Criar módulo <code>db/leads.js</code>, <code>db/conversations.js</code> etc. para isolar as queries e reutilizar em todo o sistema sem acoplamento direto ao Supabase.</p><div class="tags"><span class="tag">repository pattern</span><span class="tag">supabase-js</span></div></div></div>
+          <div class="task"><div class="tico">🔒</div><div class="tc"><strong>Isolamento por usuário/cliente</strong><p>Usar Row Level Security do Supabase para garantir que cada cliente do SaaS veja apenas seus próprios leads e conversas — já alinhado com a arquitetura atual.</p><div class="tags"><span class="tag">RLS</span><span class="tag">multi-tenant</span></div></div></div>
+        </div>
+        <div class="stack"><div class="slabel">Stack sugerido</div><div class="sitems"><span class="sitem">Supabase (já existe)</span><span class="sitem">@supabase/supabase-js</span><span class="sitem">pgvector (para RAG)</span></div></div>
+      </div>
+    </div>
+
+    <!-- FASE 3 -->
+    <div class="phase p3">
+      <div class="ph" onclick="toggle(this)">
+        <div class="pnum">3</div>
+        <div class="ptitle"><strong>Multi-LLM — Suporte a vários modelos</strong><span>OpenAI, Groq, Gemini, Anthropic e mais</span></div>
+        <div class="pbadge">Semana 3</div>
+        <div class="chev">▼</div>
+      </div>
+      <div class="pb">
+        <div class="tasks">
+          <div class="task"><div class="tico">⚡</div><div class="tc"><strong>Camada de abstração LLM</strong><p>Criar módulo <code>llm/provider.js</code> com interface única: <code>chat(messages, options)</code>. Por baixo, seleciona o provider conforme configuração do cliente.</p><div class="tags"><span class="tag">adapter pattern</span><span class="tag">provider abstraction</span></div></div></div>
+          <div class="task"><div class="tico">🔧</div><div class="tc"><strong>Providers implementados</strong><p>OpenAI GPT-4o, Groq (llama3/mixtral para resposta rápida e barata), Google Gemini 1.5 Flash, Anthropic Claude 3.5 Haiku. Cada cliente do SaaS configura qual usar no dashboard.</p><div class="tags"><span class="tag">openai</span><span class="tag">groq</span><span class="tag">gemini</span><span class="tag">anthropic</span></div></div></div>
+          <div class="task"><div class="tico">💰</div><div class="tc"><strong>Roteamento inteligente por custo</strong><p>Conversas simples vão para Groq (ultra rápido e barato). Respostas complexas ou confirmações críticas usam GPT-4o ou Claude. Configurável por regra ou automaticamente.</p><div class="tags"><span class="tag">cost routing</span><span class="tag">fallback</span></div></div></div>
+        </div>
+        <div class="stack"><div class="slabel">Libs sugeridas</div><div class="sitems"><span class="sitem">openai npm</span><span class="sitem">groq-sdk</span><span class="sitem">@google/generative-ai</span><span class="sitem">@anthropic-ai/sdk</span></div></div>
+      </div>
+    </div>
+
+    <!-- FASE 4 -->
+    <div class="phase p4">
+      <div class="ph" onclick="toggle(this)">
+        <div class="pnum">4</div>
+        <div class="ptitle"><strong>Google Agenda — Agendamento automático</strong><span>O agente agenda reuniões sozinho</span></div>
+        <div class="pbadge">Semana 4</div>
+        <div class="chev">▼</div>
+      </div>
+      <div class="pb">
+        <div class="tasks">
+          <div class="task"><div class="tico">📅</div><div class="tc"><strong>OAuth2 + Google Calendar API</strong><p>Integrar Google Calendar API com OAuth2. Cada cliente do SaaS conecta sua própria agenda pelo dashboard. Tokens salvos no Supabase com criptografia.</p><div class="tags"><span class="tag">Google OAuth2</span><span class="tag">googleapis npm</span></div></div></div>
+          <div class="task"><div class="tico">🔍</div><div class="tc"><strong>Verificar disponibilidade em tempo real</strong><p>Antes de propor horário, o agente consulta a agenda e oferece até 3 opções disponíveis dentro do horário comercial configurado. Evita conflitos automaticamente.</p><div class="tags"><span class="tag">freebusy query</span><span class="tag">slots disponíveis</span></div></div></div>
+          <div class="task"><div class="tico">✅</div><div class="tc"><strong>Criar, atualizar e cancelar eventos</strong><p>Ao lead confirmar, cria evento com: nome, telefone, produto de interesse, link do Meet gerado automaticamente. Salva appointment_id no banco para sincronização futura.</p><div class="tags"><span class="tag">events.insert</span><span class="tag">Google Meet link</span></div></div></div>
+          <div class="task"><div class="tico">🔔</div><div class="tc"><strong>Lembrete automático via WhatsApp</strong><p>24h e 1h antes da reunião, o sistema dispara mensagem de lembrete para o lead usando o próprio core de disparo do ZapLink já existente.</p><div class="tags"><span class="tag">cron job</span><span class="tag">reminder</span></div></div></div>
+        </div>
+        <div class="stack"><div class="slabel">Stack sugerido</div><div class="sitems"><span class="sitem">googleapis</span><span class="sitem">node-cron</span><span class="sitem">supabase (tokens OAuth)</span></div></div>
+      </div>
+    </div>
+
+    <!-- FASE 5 -->
+    <div class="phase p5">
+      <div class="ph" onclick="toggle(this)">
+        <div class="pnum">5</div>
+        <div class="ptitle"><strong>RAG — Agenda e base de conhecimento</strong><span>O agente consulta documentos e contexto</span></div>
+        <div class="pbadge">Semana 5</div>
+        <div class="chev">▼</div>
+      </div>
+      <div class="pb">
+        <div class="tasks">
+          <div class="task"><div class="tico">📚</div><div class="tc"><strong>Embeddings de documentos</strong><p>Indexar: FAQ do produto, scripts de vendas, políticas de preço, objeções frequentes. Cada chunk vira um vetor salvo no pgvector do Supabase.</p><div class="tags"><span class="tag">pgvector</span><span class="tag">text-embedding-3-small</span></div></div></div>
+          <div class="task"><div class="tico">🔎</div><div class="tc"><strong>Busca semântica no contexto</strong><p>A cada mensagem do lead, fazer busca vetorial nos documentos indexados e injetar os trechos relevantes no prompt do agente antes de chamar o LLM.</p><div class="tags"><span class="tag">similarity search</span><span class="tag">context injection</span></div></div></div>
+          <div class="task"><div class="tico">🗓️</div><div class="tc"><strong>RAG de agenda — horários disponíveis</strong><p>Antes de propor slots, o agente busca no RAG: feriados, bloqueios especiais, horários preferenciais do vendedor. Contexto rico antes de consultar a API do Google.</p><div class="tags"><span class="tag">calendar context</span><span class="tag">schedule RAG</span></div></div></div>
+          <div class="task"><div class="tico">🔄</div><div class="tc"><strong>Upload de documentos no dashboard</strong><p>No painel Next.js, adicionar tela onde o cliente faz upload de PDFs/textos. O sistema processa, gera embeddings e salva automaticamente na base vetorial.</p><div class="tags"><span class="tag">Next.js upload</span><span class="tag">pipeline automático</span></div></div></div>
+        </div>
+        <div class="stack"><div class="slabel">Stack sugerido</div><div class="sitems"><span class="sitem">pgvector</span><span class="sitem">openai embeddings</span><span class="sitem">langchain (opcional)</span><span class="sitem">pdf-parse</span></div></div>
+      </div>
+    </div>
+
+    <!-- FASE 6 -->
+    <div class="phase p6">
+      <div class="ph" onclick="toggle(this)">
+        <div class="pnum">6</div>
+        <div class="ptitle"><strong>Dashboard & Observabilidade</strong><span>Métricas, controles e monitoramento do agente</span></div>
+        <div class="pbadge">Semana 6</div>
+        <div class="chev">▼</div>
+      </div>
+      <div class="pb">
+        <div class="tasks">
+          <div class="task"><div class="tico">📊</div><div class="tc"><strong>Painel do agente SDR no Next.js</strong><p>Adicionar seção no dashboard: conversas ativas, leads por estágio do funil, taxa de agendamento, respostas do agente em tempo real, opção de assumir conversa manualmente.</p><div class="tags"><span class="tag">Next.js 14</span><span class="tag">Supabase Realtime</span></div></div></div>
+          <div class="task"><div class="tico">🧩</div><div class="tc"><strong>Editor de prompt e regras no painel</strong><p>O cliente pode editar o system prompt, regras de atendimento e horários diretamente no dashboard — sem precisar mexer em código. Salvo no Supabase por tenant.</p><div class="tags"><span class="tag">prompt editor</span><span class="tag">no-code config</span></div></div></div>
+          <div class="task"><div class="tico">📝</div><div class="tc"><strong>Log de todas as interações</strong><p>Registrar: qual LLM foi usado, tokens consumidos, tempo de resposta, resultado do RAG, eventos criados no Google Agenda. Base para billing e melhoria contínua.</p><div class="tags"><span class="tag">audit log</span><span class="tag">token tracking</span><span class="tag">billing</span></div></div></div>
+          <div class="task"><div class="tico">🚨</div><div class="tc"><strong>Alertas de escalação</strong><p>Quando o agente detecta: reclamação grave, cliente irritado (análise de sentimento) ou pergunta sem resposta no RAG → notifica o vendedor humano via WhatsApp ou email imediatamente.</p><div class="tags"><span class="tag">sentiment</span><span class="tag">escalation webhook</span></div></div></div>
+        </div>
+        <div class="stack"><div class="slabel">Stack sugerido</div><div class="sitems"><span class="sitem">Supabase Realtime</span><span class="sitem">Next.js Server Actions</span><span class="sitem">Resend (email)</span><span class="sitem">shadcn/ui</span></div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="margin-top:16px;padding:12px 14px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary)">
+    <p style="font-size:12px;color:var(--color-text-secondary);line-height:1.6">
+      <strong style="color:var(--color-text-primary);font-weight:500">Ordem de execução recomendada:</strong>
+      Fase 1 → 2 → 3 → 4 → 5 → 6. As fases 1 e 2 são pré-requisito para todas as demais. A fase 3 (multi-LLM) pode ser feita em paralelo com a fase 2. As fases 5 e 6 dependem de tudo anterior estar funcionando.
+    </p>
+  </div>
+
+</div>
+<script>
+function toggle(ph){
+  const body=ph.parentElement.querySelector('.pb');
+  const chev=ph.querySelector('.chev');
+  const open=body.classList.toggle('open');
+  chev.classList.toggle('open',open);
+}
+document.querySelector('.p1 .ph').click();
+</script>

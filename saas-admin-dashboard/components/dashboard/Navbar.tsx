@@ -128,5 +128,9 @@ export function Navbar({ sidebarWidth = 256 }: NavbarProps) {
         )}
       </div>
     </div>
+  </div>
   )
 }
+
+
+
