@@ -27,7 +27,6 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.users': 'Usuários',
     'nav.settings': 'Configurações',
     'nav.logout': 'Sair',
-    'nav.premium': 'Recurso Premium',
     'group.principal': 'Principal',
     'group.disparos': 'Disparos',
     'group.ferramentas': 'Ferramentas',
@@ -50,7 +49,6 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.users': 'Users',
     'nav.settings': 'Settings',
     'nav.logout': 'Logout',
-    'nav.premium': 'Premium Feature',
     'group.principal': 'Main',
     'group.disparos': 'Shooting',
     'group.ferramentas': 'Tools',
@@ -73,7 +71,6 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.users': 'Usuarios',
     'nav.settings': 'Configuraciones',
     'nav.logout': 'Salir',
-    'nav.premium': 'Función Premium',
     'group.principal': 'Principal',
     'group.disparos': 'Envíos',
     'group.ferramentas': 'Herramientas',
@@ -88,7 +85,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>('pt')
 
   useEffect(() => {
-    const saved = localStorage.getItem('zaplink-language') as Language
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('zaplink-language') as Language : 'pt'
     if (saved && ['pt', 'en', 'es'].includes(saved)) {
       setLanguageState(saved)
     }
@@ -96,7 +93,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang)
-    localStorage.setItem('zaplink-language', lang)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('zaplink-language', lang)
+    }
     
     // Notificar o iframe também
     const iframe = document.querySelector('iframe')
@@ -106,6 +105,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }
 
   const t = (key: string): string => {
+    if (!translations[language]) return translations['pt'][key] || key
     return translations[language][key] || translations['pt'][key] || key
   }
 

@@ -14,32 +14,32 @@ html {
 
 @layer base {
   :root {
-    --background: #f1f5f9; /* Um cinza azulado bem leve para o fundo */
-    --foreground: #0f172a; /* Azul escuro quase preto para o texto */
+    --background: #ffffff;
+    --foreground: #000000;
     --card: #ffffff;
-    --card-foreground: #0f172a;
+    --card-foreground: #000000;
     --popover: #ffffff;
-    --popover-foreground: #0f172a;
+    --popover-foreground: #000000;
     --primary: #22c55e;
     --primary-foreground: #ffffff;
-    --secondary: #f8fafc;
-    --secondary-foreground: #0f172a;
+    --secondary: #f1f5f9;
+    --secondary-foreground: #000000;
     --muted: #64748b;
     --muted-foreground: #64748b;
-    --accent: #f1f5f9;
-    --accent-foreground: #0f172a;
+    --accent: #f8fafc;
+    --accent-foreground: #000000;
     --destructive: #ef4444;
-    --destructive-foreground: #f8fafc;
+    --destructive-foreground: #ffffff;
     --border: #e2e8f0;
-    --input: #e2e8f0;
+    --input: #f1f5f9;
     --ring: #22c55e;
     --radius: 0.75rem;
   }
   .dark {
-    --background: #050505;
-    --foreground: #e8eaed;
-    --card: #16181c;
-    --border: #2a2d34;
+    --background: #000000;
+    --foreground: #ffffff;
+    --card: #0a0a0a;
+    --border: #1a1a1a;
   }
 }
 
