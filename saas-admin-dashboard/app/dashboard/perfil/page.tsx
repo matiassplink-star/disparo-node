@@ -309,7 +309,7 @@ export default function PerfilPage() {
                     <span className="w-2 h-2 rounded-full bg-[#22c55e] animate-pulse"></span>
                     Ambiente 100% Seguro
                   </div>
-                  <Wallet initialization={{ preferenceId, redirectMode: 'modal' }} customization={{ texts: { action: 'pay', valueProp: 'security_safety' } }} />
+                  <Wallet initialization={{ preferenceId, redirectMode: 'self' }} customization={{ texts: { action: 'pay', valueProp: 'security_safety' } }} />
                 </div>
               ) : (
                 <p className="text-orange-400 text-sm">O Mercado Pago não está configurado.</p>
