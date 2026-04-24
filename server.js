@@ -52,20 +52,31 @@ function verifyIframeToken(t) {
         const [userId, expires, signature] = parts;
         const payload = `${userId}:${expires}`;
         const expectedSig = crypto.createHmac('sha256', AUTH_TOKEN).update(payload).digest('hex');
-        if (signature !== expectedSig) return null;
-        // Adicionada tolerância de 24h para evitar quedas frequentes
-        if (Date.now() > (parseInt(expires) + 86400000)) return null;
+        if (signature !== expectedSig) {
+            console.log(`[AUTH-DEBUG] Assinatura inválida (3 partes). Expected: ${expectedSig}, Got: ${signature}`);
+            return null;
+        }
+        if (Date.now() > (parseInt(expires) + 86400000)) {
+            console.log(`[AUTH-DEBUG] Token expirado (3 partes). Expira em: ${expires}`);
+            return null;
+        }
         return { userId, plano: 'free' }; 
     } else if (parts.length === 4) {
         const [userId, expires, plano, signature] = parts;
         const payload = `${userId}:${expires}:${plano}`;
         const expectedSig = crypto.createHmac('sha256', AUTH_TOKEN).update(payload).digest('hex');
-        if (signature !== expectedSig) return null;
-        // Adicionada tolerância de 24h para evitar quedas frequentes
-        if (Date.now() > (parseInt(expires) + 86400000)) return null;
+        if (signature !== expectedSig) {
+            console.log(`[AUTH-DEBUG] Assinatura inválida (4 partes). Expected: ${expectedSig}, Got: ${signature}, Payload: ${payload}`);
+            return null;
+        }
+        if (Date.now() > (parseInt(expires) + 86400000)) {
+            console.log(`[AUTH-DEBUG] Token expirado (4 partes). Expira em: ${expires}`);
+            return null;
+        }
         return { userId, plano };
     }
     
+    console.log(`[AUTH-DEBUG] Formato de token desconhecido. Length: ${parts.length}, Token: ${t}`);
     return null;
 }
 
