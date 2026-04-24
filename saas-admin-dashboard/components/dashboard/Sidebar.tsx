@@ -111,10 +111,8 @@ export function Sidebar({ collapsed = false, onToggle, user, mobileOpen = false,
     <aside
       className={`h-screen fixed left-0 top-0 flex flex-col z-40 transition-all duration-300 
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        ${collapsed ? 'w-[68px]' : 'w-64'}
         bg-white dark:bg-[#16181c] border-r border-gray-200 dark:border-[#2a2d34] shadow-xl md:shadow-none`}
-      style={{
-        width: collapsed ? '68px' : '256px',
-      }}
     >
       {/* Header Logo */}
       <div className={`flex items-center h-[52px] border-b border-gray-100 dark:border-[#2a2d34] ${collapsed ? 'justify-center px-2' : 'justify-between px-5'}`}>

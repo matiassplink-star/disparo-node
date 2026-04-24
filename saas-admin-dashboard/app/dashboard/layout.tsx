@@ -92,17 +92,19 @@ export default function DashboardLayout({
           
           <div
             className={`flex-1 min-h-screen transition-all duration-300 relative z-10 
-              ${mobileOpen ? 'overflow-hidden h-screen' : ''}`}
-            style={{ 
-              marginLeft: typeof window !== 'undefined' && window.innerWidth < 768 ? '0' : (collapsed ? '68px' : '256px') 
-            }}
+              ${mobileOpen ? 'overflow-hidden h-screen' : ''}
+              ${collapsed ? 'md:ml-[68px]' : 'md:ml-64'} ml-0`}
           >
-            <div className="md:hidden fixed top-3 left-4 z-50">
+            <div className="md:hidden fixed top-3 left-4 z-[60]">
               <button 
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className="p-2 bg-background dark:bg-[#16181c] border border-border dark:border-[#2a2d34] rounded-lg text-foreground shadow-lg"
+                className="w-10 h-10 flex items-center justify-center bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/10 rounded-xl text-white shadow-xl hover:scale-105 active:scale-95 transition-all"
               >
-                {mobileOpen ? '✕' : '☰'}
+                {mobileOpen ? (
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current stroke-2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current stroke-2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                )}
               </button>
             </div>
             <Navbar sidebarWidth={0} />

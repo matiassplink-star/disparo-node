@@ -22,7 +22,6 @@ export default function WhatsAppPage() {
   const [preferenceId, setPreferenceId] = useState<string | null>(null)
   const [isGeneratingPref, setIsGeneratingPref] = useState(false)
 
-  const DISPARO_URL = process.env.NEXT_PUBLIC_WA_SERVER_URL || 'http://localhost:3001'
   const waLink = 'https://wa.me/5534999929764?text=Olá!%20Quero%20ativar%20meu%20acesso%20ao%20sistema%20ZapLink.'
 
   const router = useRouter()
@@ -30,6 +29,16 @@ export default function WhatsAppPage() {
   const panel = searchParams.get('panel')
 
   const [iframeHeight, setIframeHeight] = useState('calc(100vh - 160px)')
+
+  // Ajuste dinâmico da URL do servidor para acesso via rede local (celular)
+  const getDisparoUrl = () => {
+    const envUrl = process.env.NEXT_PUBLIC_WA_SERVER_URL || 'http://localhost:3001'
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && envUrl.includes('localhost')) {
+      return envUrl.replace('localhost', window.location.hostname)
+    }
+    return envUrl
+  }
+  const DISPARO_URL = getDisparoUrl()
 
   // Token e Dados Iniciais
   useEffect(() => {
@@ -49,9 +58,14 @@ export default function WhatsAppPage() {
       } catch { /* ignora */ }
 
       try {
-        await fetch(DISPARO_URL, { mode: 'no-cors' })
+        // Ping com timeout curto para detectar se o servidor está realmente respondendo
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 3000)
+        
+        await fetch(DISPARO_URL, { mode: 'no-cors', signal: controller.signal })
+        clearTimeout(timeout)
         setIsLoading(false)
-      } catch {
+      } catch (err) {
         setHasError(true)
         setIsLoading(false)
       }

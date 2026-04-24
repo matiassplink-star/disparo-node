@@ -59,12 +59,9 @@ export function Navbar({ sidebarWidth = 256 }: NavbarProps) {
 
   return (
     <div
-      className="px-6 flex items-center justify-between h-[52px] transition-all duration-300 relative z-50 bg-white/80 dark:bg-[#16181c]/80 backdrop-blur-md text-foreground border-b border-gray-200 dark:border-[#2a2d34] shadow-sm"
-      style={{
-        marginLeft: `${sidebarWidth}px`,
-      }}
+      className="px-4 sm:px-6 flex items-center justify-between h-[52px] transition-all duration-300 relative z-50 bg-white/80 dark:bg-[#16181c]/80 backdrop-blur-md text-foreground border-b border-gray-200 dark:border-[#2a2d34] shadow-sm"
     >
-      <h2 className="text-sm font-medium">ZapLink Dashboard</h2>
+      <h2 className="text-sm font-medium hidden xs:block">ZapLink Dashboard</h2>
       
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1 border-r border-border dark:border-[#2a2d34] pr-4">

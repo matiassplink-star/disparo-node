@@ -76,3 +76,16 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+@layer utilities {
+  .tap-highlight-transparent {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Fix mobile overflow horizontal issues */
+.overflow-x-hidden-mobile {
+  @media (max-width: 768px) {
+    overflow-x: hidden;
+  }
+}
