@@ -248,7 +248,7 @@ export default function TutoriaisPage() {
                           }}
                           onClick={() => {
                             if (isLocked) {
-                              setShowUpsell(true)
+                              alert('Este tutorial é exclusivo para membros VIP. Faça o upgrade no seu perfil para liberar!')
                               return
                             }
                             setSelectedVideo(t.id === selectedVideo ? null : t.id)
