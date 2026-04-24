@@ -82,14 +82,25 @@ export default function DashboardLayout({
 
           <Sidebar collapsed={collapsed} onToggle={handleToggle} user={user} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
           
+          {/* Overlay Mobile */}
+          {mobileOpen && (
+            <div 
+              className="fixed inset-0 bg-black/50 z-30 md:hidden animate-in fade-in duration-300"
+              onClick={() => setMobileOpen(false)}
+            />
+          )}
+          
           <div
-            className="flex-1 min-h-screen transition-all duration-300 relative z-10"
-            style={{ marginLeft: collapsed ? '68px' : '256px' }}
+            className={`flex-1 min-h-screen transition-all duration-300 relative z-10 
+              ${mobileOpen ? 'overflow-hidden h-screen' : ''}`}
+            style={{ 
+              marginLeft: typeof window !== 'undefined' && window.innerWidth < 768 ? '0' : (collapsed ? '68px' : '256px') 
+            }}
           >
             <div className="md:hidden fixed top-3 left-4 z-50">
               <button 
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className="p-2 bg-[#16181c] border border-[#2a2d34] rounded-lg text-white"
+                className="p-2 bg-background dark:bg-[#16181c] border border-border dark:border-[#2a2d34] rounded-lg text-foreground shadow-lg"
               >
                 {mobileOpen ? '✕' : '☰'}
               </button>

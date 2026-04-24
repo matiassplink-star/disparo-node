@@ -59,12 +59,12 @@ export function Navbar({ sidebarWidth = 256 }: NavbarProps) {
 
   return (
     <div
-      className="px-6 flex items-center justify-between h-[52px] transition-all duration-300 relative z-50 bg-background text-foreground dark:bg-[#16181c] bg-white border-b border-border dark:border-[#2a2d34]"
+      className="px-6 flex items-center justify-between h-[52px] transition-all duration-300 relative z-50 bg-background text-foreground border-b border-border"
       style={{
         marginLeft: `${sidebarWidth}px`,
       }}
     >
-      <h2 className="text-sm font-medium text-foreground">ZapLink Dashboard</h2>
+      <h2 className="text-sm font-medium">ZapLink Dashboard</h2>
       
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1 border-r border-border dark:border-[#2a2d34] pr-4">
@@ -102,24 +102,24 @@ export function Navbar({ sidebarWidth = 256 }: NavbarProps) {
         {/* Dropdown Menu */}
         {isDropdownOpen && (
           <div 
-            className="absolute right-0 mt-2 w-48 rounded-2xl bg-[#1c1f24] border border-[#2a2d34] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+            className="absolute right-0 mt-2 w-48 rounded-2xl bg-white dark:bg-[#1c1f24] border border-gray-200 dark:border-[#2a2d34] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
             style={{ zIndex: 1000 }}
           >
-            <div className="px-4 py-3 border-b border-[#2a2d34] bg-white/5">
-              <p className="text-xs font-bold text-white truncate">{user?.nome}</p>
+            <div className="px-4 py-3 border-b border-gray-200 dark:border-[#2a2d34] bg-gray-50 dark:bg-white/5">
+              <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{user?.nome}</p>
               <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
             </div>
             <div className="p-2">
               <Link 
                 href="/dashboard/perfil"
-                className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-gray-300 hover:bg-[#22c55e]/10 hover:text-[#22c55e] transition-all no-underline"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-[#22c55e]/10 hover:text-[#22c55e] transition-all no-underline"
                 onClick={() => setIsDropdownOpen(false)}
               >
                 <span className="text-base">👤</span> Meu Perfil
               </Link>
               <button 
                 onClick={handleLogout}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-red-400 hover:bg-red-400/10 transition-all text-left border-none bg-transparent"
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-red-500 hover:bg-red-400/10 transition-all text-left border-none bg-transparent"
               >
                 <span className="text-base">🚪</span> Sair da Conta
               </button>
