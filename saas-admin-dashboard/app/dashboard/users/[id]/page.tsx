@@ -226,10 +226,10 @@ export default function EditUserPage() {
 
       {/* Info card */}
       <div className="rounded-xl p-4 text-[11px] space-y-1.5" style={{ background: '#1c1f24', border: '1px solid #2a2d34', color: '#6b7280' }}>
-        <p><span className="font-medium" style={{ color: '#9ca3af' }}>ID:</span> {user.id}</p>
-        <p><span className="font-medium" style={{ color: '#9ca3af' }}>Telefone:</span> {user.telefone || 'Não informado'}</p>
-        <p><span className="font-medium" style={{ color: '#9ca3af' }}>Criado em:</span> {new Date(user.criado_em).toLocaleString('pt-BR')}</p>
-        <p><span className="font-medium" style={{ color: '#9ca3af' }}>Atualizado em:</span> {new Date(user.atualizado_em).toLocaleString('pt-BR')}</p>
+        <p><span className="font-medium" style={{ color: '#9ca3af' }}>ID:</span> {(user as any).id}</p>
+        <p><span className="font-medium" style={{ color: '#9ca3af' }}>Telefone:</span> {(user as any).telefone || 'Não informado'}</p>
+        <p><span className="font-medium" style={{ color: '#9ca3af' }}>Criado em:</span> {new Date((user as any).created_at || (user as any).criado_em).toLocaleString('pt-BR')}</p>
+        <p><span className="font-medium" style={{ color: '#9ca3af' }}>Atualizado em:</span> {new Date((user as any).updated_at || (user as any).atualizado_em).toLocaleString('pt-BR')}</p>
       </div>
     </div>
   )
