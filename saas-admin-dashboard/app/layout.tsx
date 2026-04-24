@@ -8,18 +8,22 @@ export const viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'ZapLink — Automação e Disparos em Massa no WhatsApp',
-  description: 'O ZapLink é a ferramenta definitiva para vender no automático. Rotação anti-ban, IA (ChatGPT), extração de grupos e monitor em tempo real.',
-  keywords: ['disparo em massa whatsapp', 'automação whatsapp', 'marketing whatsapp', 'vendas automático', 'zaplink', 'bot whatsapp'],
+  title: 'ZapLink — Automação e Disparos em Massa no WhatsApp (Anti-Ban)',
+  description: 'A ferramenta definitiva para vender no automático. Rotação anti-ban, IA (ChatGPT), extração de grupos e filtro de números WhatsApp. Comece agora!',
+  keywords: [
+    'zaplink', 'disparo em massa whatsapp', 'automação whatsapp', 'marketing whatsapp', 
+    'vendas automático', 'extrator de grupos whatsapp', 'filtro de números whatsapp',
+    'rotação anti-ban whatsapp', 'agente sdr ia', 'bot para whatsapp', 'limpeza de lista whatsapp'
+  ],
   authors: [{ name: 'ZapLink Team' }],
   openGraph: {
     title: 'ZapLink — Automação e Disparos em Massa no WhatsApp',
     description: 'Sistema profissional para escala de vendas. Comece grátis!',
-    url: 'https://zaplink.com.br',
+    url: 'https://zaplink.casabrokersistema.online',
     siteName: 'ZapLink',
     images: [
       {
-        url: 'https://zaplink.com.br/og-image.png',
+        url: 'https://zaplink.casabrokersistema.online/og-image.png',
         width: 1200,
         height: 630,
       },
@@ -30,6 +34,13 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   }
 }
 

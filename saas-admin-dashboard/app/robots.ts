@@ -5,8 +5,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/dashboard/', '/api/'],
+      disallow: ['/dashboard/', '/api/', '/auth/'],
     },
-    sitemap: 'https://zaplink.com.br/sitemap.xml',
+    sitemap: 'https://zaplink.casabrokersistema.online/sitemap.xml',
   }
 }
