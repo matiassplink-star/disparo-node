@@ -93,16 +93,27 @@ body.in-iframe .main {
   overflow: visible !important;
 }
 
-/* Dark mode fixes for iframe */
-body.in-iframe.dark-theme .card { background: var(--surface); }
-body.in-iframe.light-theme .card { background: var(--surface); }
-.dark-theme input, .dark-theme select, .dark-theme textarea { background:var(--surface2); color:var(--text); border-color:var(--border2); }
-.dark-theme .card { background:var(--surface); }
-.dark-theme .extr-item { background:var(--surface2); }
-.dark-theme .num-card { background:var(--surface2); }
-.dark-theme .camp-card { background:var(--surface2); }
-.dark-theme .overlay .modal { background:var(--surface); border-color:var(--border2); }
-.dark-theme .upsell-modal { background:#16181c !important; }
+/* Dark mode fixes — apply to default (:root is dark) AND .dark-theme */
+input, select, textarea { background:var(--surface2); color:var(--text); border-color:var(--border2); }
+.card { background:var(--surface); }
+.extr-item { background:var(--surface2); }
+.num-card { background:var(--surface2); }
+.camp-card { background:var(--surface2); }
+.overlay .modal { background:var(--surface); border-color:var(--border2); }
+
+/* Light theme explicit overrides (brighter tones) */
+.light-theme .card { background:#ffffff; border-color:rgba(0,0,0,0.08); }
+.light-theme .extr-item { background:#f8fafc; }
+.light-theme .num-card { background:#f8fafc; }
+.light-theme .camp-card { background:#f8fafc; }
+.light-theme .stat { background:#ffffff; border-color:rgba(0,0,0,0.08); }
+.light-theme .overlay .modal { background:#ffffff; }
+.light-theme input, .light-theme select, .light-theme textarea { background:#f8fafc; color:#000000; border-color:rgba(0,0,0,0.12); }
+.light-theme .sidebar { background:#ffffff; }
+.light-theme .main { background:#ffffff; }
+.light-theme .topbar { background:rgba(255,255,255,0.9); }
+.light-theme .disp-card { background:#f8fafc; }
+.light-theme .log-entry { background:#f8fafc; }
 
 /* Locked overlay (premium blocks) */
 .locked-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:12px; cursor:pointer; z-index:5; }
@@ -377,6 +388,8 @@ body.in-iframe .topbar { display: none !important; }
 </head>
 <body>
 <script>
+  // Default: dark-theme (pois :root é dark)
+  document.body.classList.add('dark-theme');
   if (window.location.search.includes('token=')) {
     document.body.classList.add('in-iframe');
   }
