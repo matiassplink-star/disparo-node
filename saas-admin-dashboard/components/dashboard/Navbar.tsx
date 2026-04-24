@@ -7,11 +7,16 @@ import { ThemeSwitcher } from '@/components/atualizacao/ThemeSwitcher'
 import { LanguageSwitcher } from '@/components/atualizacao/LanguageSwitcher'
 import { useRouter } from 'next/navigation'
 
+import { Menu, ChevronLeft, ChevronRight } from 'lucide-react'
+
 interface NavbarProps {
   sidebarWidth?: number
+  collapsed?: boolean
+  onToggle?: () => void
+  onMobileToggle?: () => void
 }
 
-export function Navbar({ sidebarWidth = 256 }: NavbarProps) {
+export function Navbar({ sidebarWidth = 256, collapsed, onToggle, onMobileToggle }: NavbarProps) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -61,7 +66,25 @@ export function Navbar({ sidebarWidth = 256 }: NavbarProps) {
     <div
       className="px-4 sm:px-6 flex items-center justify-between h-[52px] transition-all duration-300 relative z-50 bg-white/80 dark:bg-[#16181c]/80 backdrop-blur-md text-foreground border-b border-gray-200 dark:border-[#2a2d34] shadow-sm"
     >
-      <h2 className="text-sm font-medium hidden xs:block">ZapLink Dashboard</h2>
+      <div className="flex items-center gap-4">
+        {/* Mobile Toggle */}
+        <button 
+          onClick={onMobileToggle}
+          className="md:hidden p-2 hover:bg-white/5 rounded-lg transition-colors text-slate-400 border-none bg-transparent cursor-pointer"
+        >
+          <Menu size={20} />
+        </button>
+
+        {/* Desktop Toggle */}
+        <button 
+          onClick={onToggle}
+          className="hidden md:flex p-2 hover:bg-white/5 rounded-lg transition-colors text-slate-400 border-none bg-transparent cursor-pointer"
+        >
+          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+        </button>
+
+        <h2 className="text-sm font-medium hidden xs:block">ZapLink Dashboard</h2>
+      </div>
       
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1 border-r border-border dark:border-[#2a2d34] pr-4">

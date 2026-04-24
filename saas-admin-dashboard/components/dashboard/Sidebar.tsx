@@ -127,13 +127,6 @@ export function Sidebar({ collapsed = false, onToggle, user, mobileOpen = false,
         {collapsed && (
           <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
         )}
-        <button
-          onClick={onToggle}
-          className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
-          title={collapsed ? 'Expandir' : 'Recolher'}
-        >
-          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </button>
       </div>
 
       {/* Nav Content */}

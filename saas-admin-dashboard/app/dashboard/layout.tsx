@@ -95,19 +95,12 @@ export default function DashboardLayout({
               ${mobileOpen ? 'overflow-hidden h-screen' : ''}
               ${collapsed ? 'md:ml-[68px]' : 'md:ml-64'} ml-0`}
           >
-            <div className="md:hidden fixed top-3 left-4 z-[60]">
-              <button 
-                onClick={() => setMobileOpen(!mobileOpen)}
-                className="w-10 h-10 flex items-center justify-center bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/10 rounded-xl text-white shadow-xl hover:scale-105 active:scale-95 transition-all"
-              >
-                {mobileOpen ? (
-                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current stroke-2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                ) : (
-                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current stroke-2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-                )}
-              </button>
-            </div>
-            <Navbar sidebarWidth={0} />
+            <Navbar 
+              sidebarWidth={0} 
+              collapsed={collapsed} 
+              onToggle={handleToggle} 
+              onMobileToggle={() => setMobileOpen(!mobileOpen)} 
+            />
             <main className="h-[calc(100vh-52px)] overflow-auto">
               {children}
             </main>
