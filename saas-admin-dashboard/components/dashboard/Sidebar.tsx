@@ -4,61 +4,65 @@ import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { User } from '@/types'
+import { useLanguage } from '@/components/atualizacao/LanguageContext'
 
 interface SidebarProps {
   collapsed?: boolean
   onToggle?: () => void
   user?: User | null
+  mobileOpen?: boolean
+  setMobileOpen?: (open: boolean) => void
 }
 
-export function Sidebar({ collapsed = false, onToggle, user }: SidebarProps) {
+export function Sidebar({ collapsed = false, onToggle, user, mobileOpen = false, setMobileOpen }: SidebarProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const currentPanel = searchParams.get('panel') || 'dashboard'
   const [isLoading, setIsLoading] = useState(false)
+  const { t } = useLanguage()
 
   const menuGroups = [
     {
-      label: 'Principal',
+      label: t('group.main'),
       items: [
-        { href: '/dashboard', label: 'Visão Geral', icon: '◈' },
-        { href: '/dashboard/whatsapp', label: 'Monitor de Disparos', icon: '◫', action: 'panel', panel: 'dashboard' },
-        { href: '/dashboard/whatsapp', label: 'Conectar Números', icon: '⊕', action: 'panel', panel: 'numeros' },
+        { href: '/dashboard', label: t('nav.dashboard'), icon: '◈' },
+        { href: '/dashboard/whatsapp', label: t('nav.whatsapp'), icon: '◫', action: 'panel', panel: 'dashboard' },
+        { href: '/dashboard/whatsapp', label: t('nav.connect'), icon: '⊕', action: 'panel', panel: 'numeros' },
       ]
     },
     {
-      label: 'Disparos',
+      label: t('group.shoots'),
       items: [
-        { href: '#', label: 'Contatos', icon: '◫', action: 'panel', panel: 'contatos' },
-        { href: '#', label: 'Disparo', icon: '▶', action: 'panel', panel: 'disparo' },
+        { href: '#', label: t('nav.contacts'), icon: '◫', action: 'panel', panel: 'contatos' },
+        { href: '#', label: t('nav.shoot'), icon: '▶', action: 'panel', panel: 'disparo' },
       ]
     },
     {
-      label: 'Ferramentas',
+      label: t('group.tools'),
       items: [
-        { href: '#', label: 'Extração Grupos', icon: '◎', action: 'panel', panel: 'grupos', premium: true },
-        { href: '#', label: 'Limpeza de Lista', icon: '🧹', action: 'panel', panel: 'limpeza', premium: true },
-        { href: '#', label: 'Envio Grupos', icon: '▷', action: 'panel', panel: 'envioGrupos', premium: true },
-        { href: '#', label: 'Adicionar a Grupos', icon: '⊕', action: 'panel', panel: 'addGrupos', premium: true },
-        { href: '#', label: 'Relatórios', icon: '≡', action: 'panel', panel: 'logs' },
+        { href: '#', label: t('nav.extract'), icon: '◎', action: 'panel', panel: 'grupos', premium: true },
+        { href: '#', label: t('nav.clean'), icon: '🧹', action: 'panel', panel: 'limpeza', premium: true },
+        { href: '#', label: t('nav.send_group'), icon: '▷', action: 'panel', panel: 'envioGrupos', premium: true },
+        { href: '#', label: t('nav.add_group'), icon: '⊕', action: 'panel', panel: 'addGrupos', premium: true },
+        { href: '#', label: t('nav.reports'), icon: '≡', action: 'panel', panel: 'logs' },
       ]
     },
     {
-      label: 'Suporte',
+      label: t('group.support'),
       items: [
-        { href: '/dashboard/tutoriais', label: 'Tutoriais', icon: '▶' },
-        { href: 'https://wa.me/5534999929764', label: 'Comunidade', icon: '👥', external: true },
+        { href: '/dashboard/tutoriais', label: t('nav.tutorials'), icon: '▶' },
+        { href: 'https://wa.me/5534999929764', label: t('nav.community'), icon: '👥', external: true },
       ]
     }
   ]
 
   if (user?.plano === 'admin') {
     menuGroups.push({
-      label: 'Administração',
+      label: t('group.admin'),
       items: [
-        { href: '/dashboard/users', label: 'Usuários', icon: '◫' },
-        { href: '/dashboard/settings', label: 'Configurações', icon: '⚙' },
+        { href: '/dashboard/users', label: t('nav.users'), icon: '◫' },
+        { href: '/dashboard/settings', label: t('nav.settings'), icon: '⚙' },
       ]
     })
   }
@@ -68,6 +72,8 @@ export function Sidebar({ collapsed = false, onToggle, user }: SidebarProps) {
 
     e.preventDefault();
     
+    if (setMobileOpen) setMobileOpen(false);
+
     if (item.action === 'panel') {
       router.push('/dashboard/whatsapp?panel=' + item.panel);
     } else if (item.href && item.href !== '#') {
@@ -89,7 +95,8 @@ export function Sidebar({ collapsed = false, onToggle, user }: SidebarProps) {
 
   return (
     <aside
-      className={`h-screen fixed left-0 top-0 flex flex-col z-40 transition-all duration-300`}
+      className={`h-screen fixed left-0 top-0 flex flex-col z-40 transition-all duration-300 
+        ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
       style={{
         width: collapsed ? '68px' : '256px',
         background: '#16181c',
@@ -203,7 +210,7 @@ export function Sidebar({ collapsed = false, onToggle, user }: SidebarProps) {
           onMouseOver={(e) => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.color = 'white' }}
           onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#ef4444' }}
         >
-          {collapsed ? '✕' : isLoading ? 'Saindo...' : 'Logout'}
+          {collapsed ? '✕' : isLoading ? '...' : t('nav.logout')}
         </button>
       </div>
     </aside>

@@ -5,6 +5,8 @@ import { Sidebar } from '@/components/dashboard/Sidebar'
 import { Navbar } from '@/components/dashboard/Navbar'
 import { User } from '@/types'
 import { usePathname, useRouter } from 'next/navigation'
+import { ThemeProvider } from '@/components/atualizacao/ThemeProvider'
+import { LanguageProvider } from '@/components/atualizacao/LanguageContext'
 
 export default function DashboardLayout({
   children,
@@ -14,6 +16,7 @@ export default function DashboardLayout({
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [collapsed, setCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
 
@@ -70,22 +73,36 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen relative overflow-hidden bg-[#050505]">
-      {/* Efeito Aurora Global */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vh] bg-[#22c55e] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-pulse pointer-events-none z-0"></div>
-      <div className="absolute bottom-[-20%] right-[-10%] w-[40vw] h-[60vh] bg-[#8b5cf6] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-pulse delay-1000 pointer-events-none z-0"></div>
+    <ThemeProvider>
+      <LanguageProvider>
+        <div className="flex min-h-screen relative overflow-hidden bg-background text-foreground transition-colors duration-300 dark:bg-[#050505] bg-white">
+          {/* Efeito Aurora Global */}
+          <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vh] bg-[#22c55e] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-pulse pointer-events-none z-0"></div>
+          <div className="absolute bottom-[-20%] right-[-10%] w-[40vw] h-[60vh] bg-[#8b5cf6] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-pulse delay-1000 pointer-events-none z-0"></div>
 
-      <Sidebar collapsed={collapsed} onToggle={handleToggle} user={user} />
-      
-      <div
-        className="flex-1 min-h-screen transition-all duration-300 relative z-10"
-        style={{ marginLeft: `${sidebarWidth}px` }}
-      >
-        <Navbar sidebarWidth={0} />
-        <main className="h-[calc(100vh-52px)] overflow-auto">
-          {children}
-        </main>
-      </div>
-    </div>
+          <Sidebar collapsed={collapsed} onToggle={handleToggle} user={user} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
+          
+          <div
+            className="flex-1 min-h-screen transition-all duration-300 relative z-10"
+            style={{ marginLeft: collapsed ? '68px' : '256px' }}
+          >
+            <div className="md:hidden fixed top-3 left-4 z-50">
+              <button 
+                onClick={() => setMobileOpen(!mobileOpen)}
+                className="p-2 bg-[#16181c] border border-[#2a2d34] rounded-lg text-white"
+              >
+                {mobileOpen ? '✕' : '☰'}
+              </button>
+            </div>
+            <Navbar sidebarWidth={0} />
+            <main className="h-[calc(100vh-52px)] overflow-auto">
+              {children}
+            </main>
+          </div>
+        </div>
+      </LanguageProvider>
+    </ThemeProvider>
   )
 }
+
+

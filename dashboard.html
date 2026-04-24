@@ -17,6 +17,12 @@
   --info:#3b82f6;--info-dim:rgba(59,130,246,0.1);
   --radius:12px;--mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;
 }
+.light-theme {
+  --bg:#ffffff;--surface:rgba(248, 250, 252, 0.9);--surface2:rgba(241, 245, 249, 0.9);--surface3:rgba(226, 232, 240, 0.9);
+  --border:rgba(0, 0, 0, 0.08);--border2:rgba(0, 0, 0, 0.15);
+  --text:#1e293b;--muted:#64748b;--muted2:#94a3b8;
+  --accent:#16a34a;--accent-dim:rgba(22,163,74,0.1);--accent-border:rgba(22,163,74,0.3);
+}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;height:100vh;overflow:hidden;display:flex;flex-direction:column;position:relative}
 
 /* Aurora Background */
@@ -252,6 +258,18 @@ select option{background:var(--surface3)}
 body.in-iframe .sidebar { display: none !important; }
 body.in-iframe .layout { grid-template-columns: 1fr; padding-top: 20px; }
 body.in-iframe .topbar { display: none !important; }
+
+/* Responsividade Mobile */
+@media (max-width: 768px) {
+  .layout { display: block; padding: 10px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .form-row.c2, .form-row.c3, .form-row.c4 { grid-template-columns: 1fr; }
+  #panel-disparo > div { grid-template-columns: 1fr !important; }
+  .modal { width: 95%; padding: 16px; }
+  .btn { width: 100%; }
+  .card { padding: 16px; }
+  .stat-value { font-size: 20px; }
+}
 </style>
 </head>
 <body class="loading">
@@ -429,24 +447,24 @@ body.in-iframe .topbar { display: none !important; }
           <div class="card-header" style="margin-bottom:24px">
             <div style="display:flex; align-items:center; gap:12px">
               <div style="width:32px; height:32px; border-radius:8px; background:var(--accent-dim); display:flex; align-items:center; justify-content:center; color:var(--accent)">🚀</div>
-              <div class="card-title">Configurar Novo Disparo</div>
+              <div class="card-title" data-i18n="config_disparo">Configurar Novo Disparo</div>
             </div>
           </div>
 
           <div class="fg">
-            <label>NOME DA CAMPANHA</label>
-            <input type="text" id="dispNome" placeholder="Ex: Campanha VIP - {data}" style="padding:12px 16px; font-size:14px">
+            <label data-i18n="nome_camp">NOME DA CAMPANHA</label>
+            <input type="text" id="dispNome" data-i18n="nome_camp_placeholder" placeholder="Ex: Campanha VIP - {data}" style="padding:12px 16px; font-size:14px">
           </div>
 
           <div class="form-row c2">
             <div class="fg">
-              <label>LISTA DE CONTATOS</label>
+              <label data-i18n="lista_cont">LISTA DE CONTATOS</label>
               <select id="dispCampanha" style="padding:12px 16px; height:48px">
                 <option value="">Selecionar lista...</option>
               </select>
             </div>
             <div class="fg">
-              <label>NÚMEROS REMETENTES</label>
+              <label data-i18n="num_remet">NÚMEROS REMETENTES</label>
               <div id="dispNumerosList" style="padding:10px; background:rgba(0,0,0,0.2); border:1px solid var(--border2); border-radius:8px; min-height:48px; max-height:120px; overflow-y:auto"></div>
             </div>
           </div>
@@ -454,7 +472,7 @@ body.in-iframe .topbar { display: none !important; }
 
         <div class="card" style="padding:24px">
           <div class="card-header" style="margin-bottom:20px">
-            <div class="card-title">Conteúdo da Mensagem</div>
+            <div class="card-title" data-i18n="conteudo_msg">Conteúdo da Mensagem</div>
             <div class="badge badge-gray">Variáveis: {nome}</div>
           </div>
 
@@ -464,8 +482,8 @@ body.in-iframe .topbar { display: none !important; }
           <div style="margin-top:24px; padding-top:24px; border-top:1px solid var(--border)">
             <div class="toggle-row" style="padding:0; margin-bottom:16px">
               <div class="toggle-info">
-                <div class="tl" style="color:var(--accent); font-weight:bold">Inteligência Artificial (OpenAI)</div>
-                <div class="ts">Gera textos únicos para cada cliente</div>
+                <div class="tl" style="color:var(--accent); font-weight:bold" data-i18n="ai_label">Inteligência Artificial (OpenAI)</div>
+                <div class="ts" data-i18n="ai_desc">Gera textos únicos para cada cliente</div>
               </div>
               <div class="toggle" id="tgGPT" onclick="toggleDisp('gpt')"></div>
             </div>
@@ -501,10 +519,10 @@ body.in-iframe .topbar { display: none !important; }
           </div>
 
           <div style="margin-top:20px">
-            <label>ANEXAR MÍDIA</label>
+            <label data-i18n="anexar_midia">ANEXAR MÍDIA</label>
             <div style="display:flex; gap:10px; align-items:center">
               <label class="btn btn-ghost" style="cursor:pointer; flex:1">
-                📁 Escolher Arquivo
+                <span data-i18n="btn_midia">📁 Escolher Arquivo</span>
                 <input type="file" accept="image/*,video/*,audio/*" style="display:none" onchange="selecionarMidia(this)">
               </label>
               <div id="midiaPreview" style="display:none; margin-top:0; flex:2" class="midia-preview">
@@ -523,35 +541,35 @@ body.in-iframe .topbar { display: none !important; }
       <div style="display:flex; flex-direction:column; gap:20px">
         <div class="card" style="padding:24px; background:var(--surface3)">
           <div class="card-header" style="margin-bottom:20px">
-            <div class="card-title">⏱️ Delays de Segurança</div>
+            <div class="card-title" data-i18n="delays_seg">⏱️ Delays de Segurança</div>
           </div>
           
           <div class="fg">
-            <label>DELAY APÓS ENVIO (segundos)</label>
+            <label data-i18n="delay_apos">DELAY APÓS ENVIO (segundos)</label>
             <input type="number" id="dispDelayEnvio" value="5" style="text-align:center">
           </div>
           
           <div class="form-row c2">
             <div class="fg">
-              <label>MÍNIMO (ms)</label>
+              <label data-i18n="minimo">MÍNIMO (ms)</label>
               <input type="number" id="dispDelayMin" value="8000" style="text-align:center">
             </div>
             <div class="fg">
-              <label>MÁXIMO (ms)</label>
+              <label data-i18n="maximo">MÁXIMO (ms)</label>
               <input type="number" id="dispDelayMax" value="15000" style="text-align:center">
             </div>
           </div>
           
           <div style="margin-top:10px; font-size:11px; color:var(--muted); line-height:1.4">
-            * O sistema usará um delay aleatório entre o mínimo e máximo para simular comportamento humano.
+            <span data-i18n="delay_obs">* O sistema usará um delay aleatório entre o mínimo e máximo para simular comportamento humano.</span>
           </div>
         </div>
 
         <div class="card" style="padding:24px">
           <div class="toggle-row" style="padding:0; margin-bottom:16px">
             <div class="toggle-info">
-              <div class="tl">Rotação de Números</div>
-              <div class="ts">Evita banimentos</div>
+              <div class="tl" data-i18n="rotacao">Rotação de Números</div>
+              <div class="ts" data-i18n="rot_desc">Evita banimentos</div>
             </div>
             <div class="toggle on" id="tgRotacao" onclick="toggleRotacao()"></div>
           </div>
@@ -569,8 +587,8 @@ body.in-iframe .topbar { display: none !important; }
         <div class="card" style="padding:24px">
           <div class="toggle-row" style="padding:0; margin-bottom:16px">
             <div class="toggle-info">
-              <div class="tl">Pausa Automática</div>
-              <div class="ts">Cooldown entre blocos</div>
+              <div class="tl" data-i18n="pausa_auto">Pausa Automática</div>
+              <div class="ts" data-i18n="pausa_desc">Cooldown entre blocos</div>
             </div>
             <div class="toggle" id="tgPausa" onclick="toggleDisp('pausa')"></div>
           </div>
@@ -587,7 +605,7 @@ body.in-iframe .topbar { display: none !important; }
         </div>
 
         <button class="btn btn-primary" id="btnIniciarDisparo" style="height:60px; font-size:16px; width:100%" onclick="iniciarDisparo()">
-          🚀 LANÇAR DISPARO AGORA
+          <span data-i18n="btn_disparar">🚀 LANÇAR DISPARO AGORA</span>
         </button>
       </div>
     </div>
@@ -1016,6 +1034,91 @@ let disparoPendente = null;
 let logAtual = [];
 let userPlano = 'free'; // default
 
+// ─── dicionário de idiomas ───────────────────────────────────────
+const dics = {
+  pt: {
+    'config_disparo': 'Configurar Novo Disparo',
+    'nome_camp': 'NOME DA CAMPANHA',
+    'lista_cont': 'LISTA DE CONTATOS',
+    'num_remet': 'NÚMEROS REMETENTES',
+    'conteudo_msg': 'CONTEÚDO DA MENSAGEM',
+    'ai_label': 'Inteligência Artificial (OpenAI)',
+    'ai_desc': 'Gera textos únicos para cada cliente',
+    'anexar_midia': 'ANEXAR MÍDIA',
+    'btn_midia': 'Escolher Arquivo',
+    'delays_seg': 'DELAYS DE SEGURANÇA',
+    'delay_apos': 'DELAY APÓS ENVIO (segundos)',
+    'minimo': 'MÍNIMO (s)',
+    'maximo': 'MÁXIMO (s)',
+    'delay_obs': '* O sistema usará um delay aleatório entre o mínimo e máximo para simular comportamento humano.',
+    'rotacao': 'Rotação de Números',
+    'rot_desc': 'Evita banimentos',
+    'pausa_auto': 'Pausa Automática',
+    'pausa_desc': 'Cooldown entre blocos',
+    'btn_disparar': '🚀 LANÇAR DISPARO AGORA',
+    'nome_camp_placeholder': 'Ex: Campanha VIP - {data}'
+  },
+  en: {
+    'config_disparo': 'Configure New Shoot',
+    'nome_camp': 'CAMPAIGN NAME',
+    'lista_cont': 'CONTACT LIST',
+    'num_remet': 'SENDER NUMBERS',
+    'conteudo_msg': 'MESSAGE CONTENT',
+    'ai_label': 'Artificial Intelligence (OpenAI)',
+    'ai_desc': 'Generates unique texts for each client',
+    'anexar_midia': 'ATTACH MEDIA',
+    'btn_midia': 'Choose File',
+    'delays_seg': 'SECURITY DELAYS',
+    'delay_apos': 'DELAY AFTER SEND (seconds)',
+    'minimo': 'MINIMUM (s)',
+    'maximo': 'MAXIMUM (s)',
+    'delay_obs': '* The system will use a random delay between minimum and maximum to simulate human behavior.',
+    'rotacao': 'Number Rotation',
+    'rot_desc': 'Prevents bans',
+    'pausa_auto': 'Automatic Pause',
+    'pausa_desc': 'Cooldown between blocks',
+    'btn_disparar': '🚀 LAUNCH SHOOT NOW',
+    'nome_camp_placeholder': 'Ex: VIP Campaign - {date}'
+  },
+  es: {
+    'config_disparo': 'Configurar Nuevo Envío',
+    'nome_camp': 'NOMBRE DE LA CAMPAÑA',
+    'lista_cont': 'LISTA DE CONTACTOS',
+    'num_remet': 'NÚMEROS REMITENTES',
+    'conteudo_msg': 'CONTENIDO DEL MENSAJE',
+    'ai_label': 'Inteligencia Artificial (OpenAI)',
+    'ai_desc': 'Genera textos únicos para cada cliente',
+    'anexar_midia': 'ADJUNTAR MULTIMEDIA',
+    'btn_midia': 'Elegir Archivo',
+    'delays_seg': 'RETRASOS DE SEGURIDAD',
+    'delay_apos': 'RETRASO TRAS EL ENVÍO (segundos)',
+    'minimo': 'MÍNIMO (s)',
+    'maximo': 'MÁXIMO (s)',
+    'delay_obs': '* El sistema utilizará un retraso aleatorio entre el mínimo y máximo para simular comportamiento humano.',
+    'rotacao': 'Rotación de Números',
+    'rot_desc': 'Evita bloqueos',
+    'pausa_auto': 'Pausa Automática',
+    'pausa_desc': 'Cooldown entre bloques',
+    'btn_disparar': '🚀 LANZAR ENVÍO AHORA',
+    'nome_camp_placeholder': 'Ej: Campaña VIP - {fecha}'
+  }
+};
+let langCode = 'pt';
+
+function applyLang() {
+  const d = dics[langCode] || dics['pt'];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (d[key]) {
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+        el.placeholder = d[key];
+      } else {
+        el.innerText = d[key];
+      }
+    }
+  });
+}
+
 // ─── bloqueios de plano ─────────────────────────────────────────
 function mostrarUpsell(recurso) {
   const modal = document.getElementById('upsellModal');
@@ -1097,6 +1200,19 @@ window.addEventListener('message', (e) => {
     navegar(e.data.panel);
     // Enviar altura após a troca de painel
     setTimeout(reportHeight, 100);
+  }
+  if (e.data?.action === 'setTheme') {
+    if (e.data.theme === 'light') {
+      document.body.classList.remove('dark-theme');
+      document.body.classList.add('light-theme');
+    } else {
+      document.body.classList.remove('light-theme');
+      document.body.classList.add('dark-theme');
+    }
+  }
+  if (e.data?.action === 'setLanguage') {
+    langCode = e.data.language;
+    applyLang();
   }
 });
 

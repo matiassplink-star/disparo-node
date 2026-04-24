@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { User } from '@/types'
 import Link from 'next/link'
+import { ThemeSwitcher } from '@/components/atualizacao/ThemeSwitcher'
+import { LanguageSwitcher } from '@/components/atualizacao/LanguageSwitcher'
 import { useRouter } from 'next/navigation'
 
 interface NavbarProps {
@@ -57,16 +59,20 @@ export function Navbar({ sidebarWidth = 256 }: NavbarProps) {
 
   return (
     <div
-      className="px-6 flex items-center justify-between h-[52px] transition-all duration-300 relative z-50"
+      className="px-6 flex items-center justify-between h-[52px] transition-all duration-300 relative z-50 bg-background text-foreground dark:bg-[#16181c] bg-white border-b border-border dark:border-[#2a2d34]"
       style={{
         marginLeft: `${sidebarWidth}px`,
-        background: '#16181c',
-        borderBottom: '1px solid #2a2d34',
       }}
     >
-      <h2 className="text-sm font-medium" style={{ color: '#e8eaed' }}>ZapLink Dashboard</h2>
+      <h2 className="text-sm font-medium text-foreground">ZapLink Dashboard</h2>
       
-      <div className="relative" ref={dropdownRef}>
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-1 border-r border-border dark:border-[#2a2d34] pr-4">
+          <ThemeSwitcher />
+          <LanguageSwitcher />
+        </div>
+
+        <div className="relative" ref={dropdownRef}>
         <div 
           className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-all p-1.5 rounded-xl hover:bg-white/5"
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
