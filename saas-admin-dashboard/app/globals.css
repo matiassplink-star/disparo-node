@@ -14,10 +14,26 @@ html {
 
 @layer base {
   :root {
-    --background: #ffffff;
-    --foreground: #1e293b;
-    --card: #f8fafc;
+    --background: #f1f5f9; /* Um cinza azulado bem leve para o fundo */
+    --foreground: #0f172a; /* Azul escuro quase preto para o texto */
+    --card: #ffffff;
+    --card-foreground: #0f172a;
+    --popover: #ffffff;
+    --popover-foreground: #0f172a;
+    --primary: #22c55e;
+    --primary-foreground: #ffffff;
+    --secondary: #f8fafc;
+    --secondary-foreground: #0f172a;
+    --muted: #64748b;
+    --muted-foreground: #64748b;
+    --accent: #f1f5f9;
+    --accent-foreground: #0f172a;
+    --destructive: #ef4444;
+    --destructive-foreground: #f8fafc;
     --border: #e2e8f0;
+    --input: #e2e8f0;
+    --ring: #22c55e;
+    --radius: 0.75rem;
   }
   .dark {
     --background: #050505;

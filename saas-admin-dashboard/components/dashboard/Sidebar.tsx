@@ -97,7 +97,7 @@ export function Sidebar({ collapsed = false, onToggle, user, mobileOpen = false,
     <aside
       className={`h-screen fixed left-0 top-0 flex flex-col z-40 transition-all duration-300 
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        bg-white dark:bg-[#16181c] border-r border-gray-200 dark:border-[#2a2d34]`}
+        bg-white dark:bg-[#16181c] border-r border-gray-200 dark:border-[#2a2d34] shadow-xl md:shadow-none`}
       style={{
         width: collapsed ? '68px' : '256px',
       }}
@@ -152,9 +152,8 @@ export function Sidebar({ collapsed = false, onToggle, user, mobileOpen = false,
                       title={collapsed ? item.label : ''}
                       className={`flex items-center gap-2.5 rounded-xl transition-all text-[13px] no-underline group relative ${
                         collapsed ? 'justify-center px-2 py-2.5' : 'px-4 py-2.5'
-                      } ${isActive ? 'text-green-600 dark:text-white font-semibold' : 'text-gray-500 dark:text-[#8b949e] hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'}`}
+                      } ${isActive ? 'text-green-700 dark:text-white font-semibold bg-green-500/10 dark:bg-green-500/20' : 'text-slate-600 dark:text-[#8b949e] hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'}`}
                       style={{
-                        background: isActive ? 'linear-gradient(90deg, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.02) 100%)' : 'transparent',
                         cursor: 'pointer',
                       }}
                     >

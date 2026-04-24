@@ -59,7 +59,7 @@ export function Navbar({ sidebarWidth = 256 }: NavbarProps) {
 
   return (
     <div
-      className="px-6 flex items-center justify-between h-[52px] transition-all duration-300 relative z-50 bg-background text-foreground border-b border-border"
+      className="px-6 flex items-center justify-between h-[52px] transition-all duration-300 relative z-50 bg-white/80 dark:bg-[#16181c]/80 backdrop-blur-md text-foreground border-b border-gray-200 dark:border-[#2a2d34] shadow-sm"
       style={{
         marginLeft: `${sidebarWidth}px`,
       }}
