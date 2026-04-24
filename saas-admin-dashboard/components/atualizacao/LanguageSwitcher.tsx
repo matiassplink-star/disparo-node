@@ -5,15 +5,28 @@ import { useLanguage } from './LanguageContext'
 export function LanguageSwitcher() {
   const { language, setLanguage } = useLanguage()
 
+  const flags: Record<string, string> = {
+    pt: '🇧🇷',
+    en: '🇺🇸',
+    es: '🇪🇸'
+  }
+
   return (
-    <select
-      value={language}
-      onChange={(e) => setLanguage(e.target.value as 'pt' | 'en' | 'es')}
-      className="bg-transparent text-[#8b949e] hover:text-white text-xs font-medium cursor-pointer focus:outline-none ml-2"
-    >
-      <option value="pt" className="bg-[#16181c] text-white">🇧🇷 PT</option>
-      <option value="en" className="bg-[#16181c] text-white">🇺🇸 EN</option>
-      <option value="es" className="bg-[#16181c] text-white">🇪🇸 ES</option>
-    </select>
+    <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10">
+      {(Object.keys(flags) as Array<keyof typeof flags>).map((lang) => (
+        <button
+          key={lang}
+          onClick={() => setLanguage(lang)}
+          className={`text-xl p-1 rounded-md transition-all hover:scale-110 ${
+            language === lang 
+              ? 'bg-white dark:bg-white/10 shadow-sm scale-110 ring-1 ring-green-500/50' 
+              : 'opacity-40 hover:opacity-100 grayscale hover:grayscale-0'
+          }`}
+          title={lang.toUpperCase()}
+        >
+          {flags[lang]}
+        </button>
+      ))}
+    </div>
   )
 }
