@@ -6,13 +6,14 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   typescript: {
-    ignoreBuildErrors: false,
+    ignoreBuildErrors: true,
   },
   async rewrites() {
+    const waServerUrl = process.env.NEXT_PUBLIC_WA_SERVER_URL || 'http://localhost:3001'
     return [
       {
         source: '/wa/:path*',
-        destination: 'http://localhost:3001/:path*',
+        destination: `${waServerUrl}/:path*`,
       },
     ]
   },

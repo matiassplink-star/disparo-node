@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 // GET — listar tutoriais
 export async function GET() {
   try {
+    const supabase = getSupabase()
     const { data, error } = await supabase
       .from('tutoriais')
       .select('*')
@@ -27,6 +30,7 @@ export async function GET() {
 // POST — criar tutorial (admin only)
 export async function POST(req: NextRequest) {
   try {
+    const supabase = getSupabase()
     const token = req.cookies.get('sb-access-token')?.value
     if (!token) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })

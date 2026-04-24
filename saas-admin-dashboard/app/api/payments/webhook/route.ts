@@ -2,16 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { MercadoPagoConfig, Payment } from 'mercadopago'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
-const mpAccessToken = process.env.MP_ACCESS_TOKEN || ''
-const client = new MercadoPagoConfig({ accessToken: mpAccessToken })
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 export async function POST(req: NextRequest) {
   try {
+    const supabase = getSupabase()
+    const mpAccessToken = process.env.MP_ACCESS_TOKEN || ''
+    const client = new MercadoPagoConfig({ accessToken: mpAccessToken })
+
     const url = new URL(req.url)
     const topic = url.searchParams.get('topic') || url.searchParams.get('type')
     const id = url.searchParams.get('data.id') || url.searchParams.get('id')

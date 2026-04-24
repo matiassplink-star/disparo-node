@@ -2,18 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { MercadoPagoConfig, Preference } from 'mercadopago'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
-// Configuração do Mercado Pago
-// Usar a chave de teste por padrão até o usuário trocar
-const mpAccessToken = process.env.MP_ACCESS_TOKEN || ''
-const client = new MercadoPagoConfig({ accessToken: mpAccessToken })
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 export async function POST(req: NextRequest) {
   try {
+    const supabase = getSupabase()
+    const mpAccessToken = process.env.MP_ACCESS_TOKEN || ''
+
     const token = req.cookies.get('sb-access-token')?.value
     if (!token) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
 
@@ -42,6 +42,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Mercado Pago não configurado. Entre em contato com o administrador.' }, { status: 500 })
     }
 
+    const client = new MercadoPagoConfig({ accessToken: mpAccessToken })
+
     // Criar registro de pagamento pendente
     const { data: pagamento, error: insertError } = await supabase
       .from('pagamentos')
@@ -59,8 +61,6 @@ export async function POST(req: NextRequest) {
     // Criar Preferência no Mercado Pago
     const preference = new Preference(client)
     
-    // O Webhook url precisa ser público. Em localhost, não funciona a notificação automática,
-    // mas o brick ainda processa o pagamento.
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
     const pref = await preference.create({
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
           email: userData.email,
           name: userData.nome,
         },
-        external_reference: pagamento.id, // Para identificar o pagamento no webhook
+        external_reference: pagamento.id,
       }
     })
 
