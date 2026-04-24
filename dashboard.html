@@ -1210,6 +1210,7 @@ function navegar(panel) {
   const btn = document.querySelector(`.nav-item[data-panel="${panel}"]`);
   if (btn && btn.dataset.locked === 'true') {
     mostrarUpsell(panel === 'grupos' ? 'Extrator de Grupos' : 'Recurso Premium');
+    window.parent.postMessage({ action: 'navigate', url: '/dashboard/whatsapp' }, '*');
     return;
   }
   document.querySelectorAll('.nav-item[data-panel]').forEach(n => n.classList.toggle('active', n.dataset.panel === panel));
