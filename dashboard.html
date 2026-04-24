@@ -283,11 +283,6 @@ body.in-iframe .topbar { display: none !important; }
   if (window.location.search.includes('token=')) {
     document.body.classList.add('in-iframe');
   }
-  window.addEventListener('message', (event) => {
-    if (event.data.action === 'changePanel') {
-      navegar(event.data.panel);
-    }
-  });
 </script>
 
 <div class="topbar">
@@ -1230,9 +1225,13 @@ function aplicarBloqueiosPlano() {
 // Ouvinte para trocar painéis vindo do SaaS pai
 window.addEventListener('message', (e) => {
   if (e.data?.action === 'changePanel' && e.data.panel) {
-    navegar(e.data.panel);
-    // Enviar altura após a troca de painel
-    setTimeout(reportHeight, 100);
+    if (typeof navegar === 'function') {
+      navegar(e.data.panel);
+      // Enviar altura após a troca de painel
+      setTimeout(reportHeight, 100);
+    } else {
+      console.warn('Função navegar ainda não carregada');
+    }
   }
   if (e.data?.action === 'setTheme') {
     if (e.data.theme === 'light') {
@@ -1245,7 +1244,7 @@ window.addEventListener('message', (e) => {
   }
   if (e.data?.action === 'setLanguage') {
     langCode = e.data.language;
-    applyLang();
+    if (typeof applyLang === 'function') applyLang();
   }
 });
 
