@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { User } from '@/types'
-import { initMercadoPago, Wallet } from '@mercadopago/sdk-react'
+import { initMercadoPago } from '@mercadopago/sdk-react'
 import { useSearchParams, useRouter } from 'next/navigation'
 
 // Inicializa o MP com a chave pública.
@@ -15,7 +15,7 @@ function WhatsAppPageInner() {
   const [user, setUser] = useState<User | null>(null)
   const [iframeToken, setIframeToken] = useState<string | null>(null)
   
-  const [, setPreferenceId] = useState<string | null>(null)
+  
 
   const waLink = 'https://wa.me/5534999929764?text=Olá!%20Quero%20ativar%20meu%20acesso%20ao%20sistema%20ZapLink.'
 
@@ -102,30 +102,6 @@ function WhatsAppPageInner() {
     }
   }, [panel, iframeUrl])
 
-  const _handleSelectPlan = async (plano: 'mensal' | 'semestral' | 'anual') => {
-    _setSelectedPlan(plano)
-    setPreferenceId(null)
-    _setIsGeneratingPref(true)
-    
-    try {
-      const res = await fetch('/api/payments/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plano })
-      })
-      const data = await res.json()
-      if (res.ok && data.preferenceId) {
-        setPreferenceId(data.preferenceId)
-      } else {
-        alert(data.error || 'Erro ao gerar checkout')
-      }
-    } catch {
-      alert('Erro de conexão ao gerar checkout')
-    } finally {
-      _setIsGeneratingPref(false)
-    }
-  }
-  void _handleSelectPlan // mantido para uso futuro
 
   const isAdmin = user?.plano === 'admin'
   const acessoAtivo = isAdmin || (user?.acesso_ate && new Date(user.acesso_ate) > new Date())
