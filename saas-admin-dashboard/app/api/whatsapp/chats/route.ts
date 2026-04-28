@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     if (authError || !user) return NextResponse.json({ error: 'Sessão inválida' }, { status: 401 })
 
-    // Busca contatos com chat_status = 'open' ou 'paused_ai'
+    // Busca TODOS os contatos que têm mensagens (sem filtro de chat_status)
     const { data: contacts, error } = await supabase
       .from('contacts')
       .select(`
@@ -18,9 +18,8 @@ export async function GET(request: NextRequest) {
         messages:messages(content, created_at, from_me, message_type)
       `)
       .eq('user_id', user.id)
-      .in('chat_status', ['open', 'paused_ai'])
       .order('created_at', { foreignTable: 'messages', ascending: false })
-      .limit(1, { foreignTable: 'messages' }) // Pega só a última mensagem de cada contato
+      .limit(1, { foreignTable: 'messages' })
 
     if (error) throw error
 

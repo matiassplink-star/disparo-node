@@ -78,6 +78,39 @@ export async function sendTextMessage(instanceName: string, number: string, text
   return res.json()
 }
 
+// Busca lista de chats da instância (para sync manual)
+export async function getChats(instanceName: string) {
+  const res = await fetch(`${EVOLUTION_URL}/chat/findChats/${instanceName}`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({}),
+  })
+  if (!res.ok) return []
+  const data = await res.json()
+  return Array.isArray(data) ? data : []
+}
+
+// Busca últimas mensagens de um contato específico
+export async function getMessages(
+  instanceName: string,
+  remoteJid: string,
+  limit = 30
+) {
+  const res = await fetch(`${EVOLUTION_URL}/chat/findMessages/${instanceName}`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({
+      where: { key: { remoteJid } },
+      limit,
+    }),
+  })
+  if (!res.ok) return []
+  const data = await res.json()
+  // A Evolution retorna { messages: { records: [...] } }
+  return data?.messages?.records || data?.records || (Array.isArray(data) ? data : [])
+}
+
+
 export async function sendMediaMessage(
   instanceName: string,
   number: string,

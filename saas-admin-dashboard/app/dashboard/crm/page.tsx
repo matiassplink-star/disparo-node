@@ -308,13 +308,35 @@ export default function CRMPage() {
             <LayoutDashboard size={13} />
             Kanban
           </button>
-          <button
-            onClick={fetchChats}
-            title="Atualizar"
-            className="ml-auto p-1.5 rounded-lg text-[#64748b] hover:text-white hover:bg-[#1e2028] transition-colors"
-          >
-            <RefreshCw size={13} />
-          </button>
+          <div className="ml-auto flex gap-1">
+            <button
+              onClick={async () => {
+                setIsLoadingChats(true)
+                try {
+                  const res = await fetch('/api/whatsapp/sync', { method: 'POST' })
+                  if (res.ok) {
+                    const data = await res.json()
+                    alert(data.message)
+                  } else {
+                    alert('Erro ao sincronizar conversas.')
+                  }
+                } finally {
+                  fetchChats()
+                }
+              }}
+              title="Sincronizar com Evolution API"
+              className="p-1.5 rounded-lg text-[#3b82f6] hover:text-white hover:bg-[#3b82f6]/20 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M12 12v9"></path><path d="m8 17 4 4 4-4"></path></svg>
+            </button>
+            <button
+              onClick={fetchChats}
+              title="Atualizar"
+              className="p-1.5 rounded-lg text-[#64748b] hover:text-white hover:bg-[#1e2028] transition-colors"
+            >
+              <RefreshCw size={13} />
+            </button>
+          </div>
         </div>
 
         {/* Search */}
