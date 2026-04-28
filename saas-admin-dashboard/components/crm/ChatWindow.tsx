@@ -75,8 +75,7 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
       if (!res.ok) return
       const data = await res.json() as Message[]
       setMessages(prev => {
-        const optimistic = prev.filter(m => String(m.id).startsWith('opt-'))
-        return mergeMessages(data, optimistic)
+        return mergeMessages(prev, data)
       })
     } catch {
       // silencioso — polling vai tentar de novo
