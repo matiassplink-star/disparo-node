@@ -46,20 +46,12 @@ export async function POST(request: NextRequest) {
       const name: string = chat.name || chat.pushName || phone
 
       // Upsert contato
-      const { data: contact } = await supabase
+      await supabase
         .from('contacts')
         .upsert(
-          {
-            user_id: user.id,
-            instance_id: instance.id,
-            phone,
-            name,
-            chat_status: 'open',
-          },
+          { user_id: user.id, instance_id: instance.id, phone, name, chat_status: 'open' },
           { onConflict: 'user_id,phone', ignoreDuplicates: false }
         )
-        .select('id')
-        .maybeSingle()
 
       syncedChats++
 
