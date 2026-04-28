@@ -66,9 +66,9 @@ export default function WhatsAppPage() {
       } else {
         setStatus(data.status || 'disconnected')
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err)
-      alert(err.message || 'Falha na conexão. Tente novamente.')
+      alert((err as Error).message || 'Falha na conexão. Tente novamente.')
       setStatus('disconnected')
     } finally {
       setIsActionLoading(false)

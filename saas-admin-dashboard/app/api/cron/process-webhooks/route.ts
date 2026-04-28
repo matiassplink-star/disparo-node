@@ -21,7 +21,7 @@ export async function GET() {
 
     for (const log of logs) {
       try {
-        const payload = log.payload as Record<string, any>
+        const payload = log.payload as Record<string, unknown>
         const { instance: instanceName, event, data } = payload
 
         if (instanceName && event) {
@@ -53,7 +53,7 @@ export async function GET() {
 
             // ─── messages.upsert | messages.set ──────────────────────
             if (event === 'messages.upsert' || event === 'messages.set') {
-              let messagesArray: Record<string, any>[] = []
+              let messagesArray: Record<string, unknown>[] = []
               if (Array.isArray(data)) messagesArray = data
               else if (data?.messages && Array.isArray(data.messages)) messagesArray = data.messages
               else if (data?.message && typeof data.message === 'object' && data.message.key) messagesArray = [data.message]
@@ -172,7 +172,7 @@ export async function GET() {
           .update({ processed: true, processing: false, error: null })
           .eq('id', log.id)
 
-      } catch (logError: any) {
+      } catch (logError: unknown) {
         // Falha: Incrementa retry_count
         const nextRetry = (log.retry_count || 0) + 1;
         const willRetry = nextRetry < 3;
@@ -184,7 +184,7 @@ export async function GET() {
             retry_count: nextRetry,
             processed: false, // só marca como true quando da sucesso
             failed: !willRetry, // se passou de 3, manda pra dead letter
-            error: logError.message || 'Erro desconhecido' 
+            error: (logError as Error)?.message || 'Erro desconhecido' 
           })
           .eq('id', log.id)
       }

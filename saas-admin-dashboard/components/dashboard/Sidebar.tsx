@@ -31,7 +31,7 @@ export function Sidebar({ collapsed = false, onToggle: _onToggle, user, mobileOp
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const currentPanel = searchParams.get('panel') || 'dashboard'
+
   const [isLoading, setIsLoading] = useState(false)
   const { t } = useLanguage()
 

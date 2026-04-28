@@ -64,13 +64,13 @@ export default function DashboardPage() {
       {/* MÉTRICAS PRINCIPAIS (Inspirado na Landing Page) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
         {[
-          { label: 'Mensagens Enviadas', value: '12.487', color: 'text-[#22c55e]', icon: <Send size={18} /> },
-          { label: 'Taxa de Entrega', value: '99.2%', color: 'text-cyan-500 dark:text-cyan-400', icon: <CheckCircle2 size={18} /> },
-          { label: 'Taxa de Resposta', value: '34.8%', color: 'text-yellow-500 dark:text-yellow-400', icon: <Activity size={18} /> },
-          { label: 'Leads Extraídos', value: '3.842', color: 'text-purple-500 dark:text-purple-400', icon: <Users size={18} /> },
+          { label: 'Mensagens Enviadas', value: '12.487', color: 'text-[#22c55e]', hex: '#22c55e', icon: <Send size={18} /> },
+          { label: 'Taxa de Entrega', value: '99.2%', color: 'text-cyan-500 dark:text-cyan-400', hex: '#06b6d4', icon: <CheckCircle2 size={18} /> },
+          { label: 'Taxa de Resposta', value: '34.8%', color: 'text-yellow-500 dark:text-yellow-400', hex: '#eab308', icon: <Activity size={18} /> },
+          { label: 'Leads Extraídos', value: '3.842', color: 'text-purple-500 dark:text-purple-400', hex: '#a855f7', icon: <Users size={18} /> },
         ].map((s, i) => (
           <div key={i} className="group bg-white dark:bg-[#16181c] border border-gray-200 dark:border-[#2a2d34] rounded-3xl p-5 hover:border-[#22c55e]/50 transition-all shadow-sm dark:shadow-xl dark:shadow-black/20 relative overflow-hidden">
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-current opacity-[0.03] dark:opacity-5 rounded-full group-hover:scale-150 transition-transform duration-500" style={{ color: s.color.replace(/text-|dark:text-/g, '') }} />
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-current opacity-[0.03] dark:opacity-5 rounded-full group-hover:scale-150 transition-transform duration-500" style={{ color: s.hex }} />
             <div className="flex items-center gap-3 mb-3">
               <div className={`p-2 rounded-xl bg-slate-50 dark:bg-white/5 ${s.color}`}>
                 {s.icon}
