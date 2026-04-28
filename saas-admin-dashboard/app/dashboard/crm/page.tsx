@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+// ⚠️ Este arquivo usa useRef para evitar dupla criação de colunas em dev (React StrictMode)
+
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabaseClient } from '@/lib/supabase'
 import ChatWindow from '@/components/crm/ChatWindow'
 import KanbanBoard from '@/components/crm/KanbanBoard'
@@ -41,7 +43,7 @@ interface KanbanColumn {
 const DEFAULT_COLUMNS = [
   { title: 'Novo Lead', color: '#3b82f6' },
   { title: 'Em Atendimento', color: '#f59e0b' },
-  { title: 'Proposta Enviada', color: '#8b5cf6' },
+  { title: 'Proposta Enviada', color: '#06b6d4' },
   { title: 'Fechado ✓', color: '#22c55e' },
 ]
 
@@ -117,6 +119,8 @@ export default function CRMPage() {
   const [search, setSearch] = useState('')
   const [isLoadingChats, setIsLoadingChats] = useState(true)
   const [isLoadingKanban, setIsLoadingKanban] = useState(true)
+  // Guard contra dupla execução em dev (React StrictMode)
+  const isCreatingColumns = useRef(false)
 
   const supabase = supabaseClient
 
@@ -141,7 +145,9 @@ export default function CRMPage() {
       if (res.ok) {
         const data = await res.json()
         if (data.length === 0) {
-          // Cria colunas padrão na primeira vez
+          // Evita criar colunas duplicadas (React StrictMode roda 2x em dev)
+          if (isCreatingColumns.current) return
+          isCreatingColumns.current = true
           for (let i = 0; i < DEFAULT_COLUMNS.length; i++) {
             await fetch('/api/crm/columns', {
               method: 'POST',
@@ -151,6 +157,7 @@ export default function CRMPage() {
           }
           const res2 = await fetch('/api/crm/columns')
           if (res2.ok) setColumns(await res2.json())
+          isCreatingColumns.current = false
         } else {
           setColumns(data)
         }

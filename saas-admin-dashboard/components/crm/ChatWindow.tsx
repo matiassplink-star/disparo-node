@@ -62,6 +62,17 @@ export default function ChatWindow({ activeChat }: { activeChat: any }) {
     setInputText('')
     setIsSending(true)
 
+    // Inserir mensagem otimisticamente (aparece antes da confirmação)
+    const optimisticMsg = {
+      id: `opt-${Date.now()}`,
+      content: textToSend,
+      from_me: true,
+      created_at: new Date().toISOString(),
+      status: 'sent',
+      message_type: 'text',
+    }
+    setMessages(prev => [...prev, optimisticMsg])
+
     try {
       const res = await fetch('/api/whatsapp/send', {
         method: 'POST',
@@ -72,17 +83,16 @@ export default function ChatWindow({ activeChat }: { activeChat: any }) {
         })
       })
 
-      if (!res.ok) {
-        throw new Error('Falha ao enviar')
-      }
-      
-      // Obs: A mensagem vai aparecer na tela porque o Supabase Realtime vai capturar o INSERT 
-      // feito pela nossa API route /api/whatsapp/send. Mas se o webhook da Evolution estivesse ativo,
-      // ele duplicaria. Como a API send já faz o INSERT, não precisamos adicionar no state manualmente.
+      if (!res.ok) throw new Error('Falha ao enviar')
 
-    } catch (err) {
+      // Atualiza com dados reais do banco (substitui otimístico)
+      await fetchMessages()
+
+    } catch {
+      // Remove a mensagem otimística e devolve o texto
+      setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id))
       alert('Erro ao enviar mensagem. Verifique a conexão com o WhatsApp.')
-      setInputText(textToSend) // Volta o texto pra caixa
+      setInputText(textToSend)
     } finally {
       setIsSending(false)
     }
