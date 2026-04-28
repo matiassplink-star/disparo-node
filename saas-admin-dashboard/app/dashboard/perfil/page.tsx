@@ -308,7 +308,7 @@ export default function PerfilPage() {
                     <span className="w-2 h-2 rounded-full bg-[#22c55e] animate-pulse"></span>
                     Ambiente 100% Seguro
                   </div>
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error — Wallet types incomplete in current SDK version */}
                   <Wallet initialization={{ preferenceId, redirectMode: 'self' }} />
                 </div>
               ) : (

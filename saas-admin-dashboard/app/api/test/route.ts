@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
 // Healthcheck interno — não expõe informações sensíveis
 export async function GET() {

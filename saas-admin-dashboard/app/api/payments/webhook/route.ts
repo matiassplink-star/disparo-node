@@ -11,7 +11,7 @@ function getSupabase() {
 }
 
 /** Verifica assinatura HMAC do Mercado Pago (Fix #49) */
-function verifyMpSignature(req: NextRequest, rawBody: string): boolean {
+function verifyMpSignature(req: NextRequest): boolean {
   const secret = process.env.MP_WEBHOOK_SECRET
   if (!secret) return true // Sem secret configurado, pula verificação (modo dev)
 
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   try { await req.text() } catch { /* ignora */ }
 
   // Fix #49: verificação de assinatura MP
-  if (!verifyMpSignature(req, '')) {
+  if (!verifyMpSignature(req)) {
     console.warn('[WEBHOOK] Assinatura inválida — requisição rejeitada')
     return NextResponse.json({ success: true }) // Fix #60: sempre 200 para MP
   }

@@ -15,10 +15,7 @@ function WhatsAppPageInner() {
   const [user, setUser] = useState<User | null>(null)
   const [iframeToken, setIframeToken] = useState<string | null>(null)
   
-  const [_showCheckout, _setShowCheckout] = useState(false)
-  const [_selectedPlan, _setSelectedPlan] = useState<'mensal' | 'semestral' | 'anual' | null>(null)
-  const [_preferenceId, setPreferenceId] = useState<string | null>(null)
-  const [_isGeneratingPref, _setIsGeneratingPref] = useState(false)
+  const [, setPreferenceId] = useState<string | null>(null)
 
   const waLink = 'https://wa.me/5534999929764?text=Olá!%20Quero%20ativar%20meu%20acesso%20ao%20sistema%20ZapLink.'
 
