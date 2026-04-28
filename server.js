@@ -1746,4 +1746,21 @@ server.listen(PORT, () => {
             })();
         }
     }
+
+    // ─── Worker de Webhooks (Tempo Real) ──────────────────────
+    console.log(`⚡ Worker de Webhooks ativado! Checando mensagens a cada 3s em ${SAAS_ORIGIN}`);
+    setInterval(async () => {
+        try {
+            const url = `${SAAS_ORIGIN}/api/cron/process-webhooks`;
+            const res = await fetch(url, { method: 'GET' });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.processed_count > 0) {
+                    console.log(`✅ [WORKER] Processou ${data.processed_count} webhooks com sucesso!`);
+                }
+            }
+        } catch (e) {
+            // Ignorar erros de rede para não poluir o terminal
+        }
+    }, 3000);
 });
