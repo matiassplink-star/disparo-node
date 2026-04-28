@@ -76,8 +76,9 @@ export async function POST(request: NextRequest) {
           (videoMsg?.caption as string) ||
           '[Mídia]'
 
-        const phone = remoteJid.replace('@s.whatsapp.net', '').replace('@c.us', '')
-        const pushName = (msg.pushName as string) || phone
+        const phone = remoteJid.replace('@s.whatsapp.net', '').replace('@c.us', '').replace('@lid', '')
+        const rawPushName = (msg.pushName as string) || phone
+        const pushName = rawPushName.replace('@s.whatsapp.net', '').replace('@c.us', '').replace('@lid', '')
         const fromMe = (key.fromMe as boolean) || false
         // ID único da mensagem na Evolution/WhatsApp — previne duplicatas
         const externalId = (key.id as string) || null
@@ -165,10 +166,11 @@ export async function POST(request: NextRequest) {
     if (event === 'contacts.set' || event === 'contacts.upsert') {
       const contactsArray = Array.isArray(data) ? data : (data?.contacts || [])
       for (const c of contactsArray) {
-        const phone = ((c.id as string) || '').replace('@s.whatsapp.net', '').replace('@c.us', '')
+        const phone = ((c.id as string) || '').replace('@s.whatsapp.net', '').replace('@c.us', '').replace('@lid', '')
         if (!phone || phone.endsWith('@g.us')) continue
 
-        const name = (c.pushName as string) || (c.notify as string) || phone
+        const rawName = (c.pushName as string) || (c.notify as string) || phone
+        const name = rawName.replace('@s.whatsapp.net', '').replace('@c.us', '').replace('@lid', '')
 
         await supabase
           .from('contacts')

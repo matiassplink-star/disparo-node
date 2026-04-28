@@ -6,7 +6,19 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabaseClient } from '@/lib/supabase'
 import ChatWindow from '@/components/crm/ChatWindow'
 import KanbanBoard from '@/components/crm/KanbanBoard'
-import { MessageSquare, LayoutDashboard, Search, RefreshCw } from 'lucide-react'
+import { MessageSquare, LayoutDashboard, Search, RefreshCw, User } from 'lucide-react'
+
+// Helper para formatar número se o nome não existir
+function formatPhoneAsName(name: string): string {
+  if (/^\d+$/.test(name)) {
+    // Formata números de telefone ex: +55 (34) 9999-9999
+    if (name.startsWith('55') && name.length >= 12) {
+      return `+55 (${name.substring(2, 4)}) ${name.substring(4, 9)}-${name.substring(9)}`
+    }
+    return `+${name}`
+  }
+  return name
+}
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -60,33 +72,36 @@ function ChatItem({ chat, active, onClick }: { chat: Chat; active: boolean; onCl
     closed: 'bg-slate-500',
   }
 
+  const displayName = formatPhoneAsName(chat.name)
+  const isNumber = /^\+?\d+$/.test(displayName)
+
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left px-4 py-3.5 border-b border-[#1e2028] transition-all group ${
+      className={`w-full text-left px-4 py-3 border-b border-[#1e2028] transition-all group ${
         active
           ? 'bg-[#1c2333] border-l-2 border-l-[#3b82f6]'
           : 'hover:bg-[#13161b] border-l-2 border-l-transparent'
       }`}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-center gap-3">
         {/* Avatar */}
         <div className="relative shrink-0">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1e2028] to-[#2a2d34] border border-[#2a2d34] flex items-center justify-center text-base font-bold text-white">
-            {chat.name.charAt(0).toUpperCase()}
+          <div className={`w-11 h-11 rounded-full flex items-center justify-center text-lg font-bold ${isNumber ? 'bg-[#1e2028] text-[#64748b]' : 'bg-gradient-to-br from-[#3b82f6] to-[#2563eb] text-white shadow-sm'}`}>
+            {isNumber ? <User size={20} /> : chat.name.charAt(0).toUpperCase()}
           </div>
           <span
-            className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#0d0f12] ${statusColor[chat.chat_status] || 'bg-slate-500'}`}
+            className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#0d0f12] ${statusColor[chat.chat_status] || 'bg-slate-500'}`}
           />
         </div>
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="flex justify-between items-baseline mb-0.5">
-            <span className="text-sm font-semibold text-white truncate pr-2">{chat.name}</span>
-            <span className="text-[10px] text-[#64748b] shrink-0">{time}</span>
+          <div className="flex justify-between items-center mb-0.5">
+            <span className="text-sm font-semibold text-gray-100 truncate pr-2">{displayName}</span>
+            <span className="text-[10px] font-medium text-[#64748b] shrink-0">{time}</span>
           </div>
-          <p className="text-[12px] text-[#64748b] truncate">
+          <p className="text-[12px] text-[#94a3b8] truncate">
             {chat.lastMessage
               ? `${chat.lastMessage.from_me ? 'Você: ' : ''}${chat.lastMessage.content || '📎 Mídia'}`
               : 'Nenhuma mensagem'}
@@ -501,10 +516,20 @@ export default function CRMPage() {
           activeChat ? (
             <ChatWindow activeChat={activeChat} />
           ) : (
-            <div className="flex flex-col h-full items-center justify-center text-[#64748b]">
-              <div className="text-6xl mb-6 opacity-10">💬</div>
-              <h2 className="text-xl font-bold text-white mb-2">ZapLink CRM</h2>
-              <p className="text-sm">Selecione uma conversa para começar.</p>
+            <div className="flex flex-col h-full items-center justify-center bg-[#0b141a] text-[#8696a0] border-b-[6px] border-b-emerald-500">
+              <div className="w-80 max-w-[80%] mx-auto text-center">
+                <div className="mx-auto w-24 h-24 mb-8 bg-[#202c33] rounded-full flex items-center justify-center shadow-lg">
+                  <MessageSquare size={36} className="text-[#8696a0]" />
+                </div>
+                <h2 className="text-[32px] font-light text-[#e9edef] mb-4">ZapLink CRM</h2>
+                <p className="text-[14px] leading-relaxed">
+                  Selecione uma conversa ao lado ou inicie uma nova para começar a gerenciar seus leads e clientes.
+                </p>
+                <div className="mt-10 flex items-center justify-center gap-2 text-[12px]">
+                  <span className="w-3 h-3 text-emerald-500"><svg viewBox="0 0 10 12" fill="currentColor"><path d="M5 0L10 5L5 10V6C2.23858 6 0 8.23858 0 11C0 7.68629 2.68629 5 6 5V0Z"/></svg></span>
+                  Protegido com criptografia de ponta-a-ponta
+                </div>
+              </div>
             </div>
           )
         ) : (

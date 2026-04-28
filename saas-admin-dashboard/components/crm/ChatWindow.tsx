@@ -3,6 +3,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabaseClient } from '@/lib/supabase'
 import MessageBubble from './MessageBubble'
+import { User } from 'lucide-react'
+
+// Helper para formatar número
+function formatPhoneAsName(name: string): string {
+  if (/^\d+$/.test(name)) {
+    if (name.startsWith('55') && name.length >= 12) {
+      return `+55 (${name.substring(2, 4)}) ${name.substring(4, 9)}-${name.substring(9)}`
+    }
+    return `+${name}`
+  }
+  return name
+}
 
 interface Message {
   id: string
@@ -175,39 +187,43 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
     }
   }
 
-  const displayName = (activeChat.name as string) || cleanJid(activeChat.remote_jid)
+  const rawDisplayName = (activeChat.name as string) || cleanJid(activeChat.remote_jid)
+  const displayName = formatPhoneAsName(rawDisplayName)
+  const isNumber = /^\+?\d+$/.test(displayName)
   const displayJid = cleanJid(activeChat.remote_jid)
 
   return (
-    <div className="flex flex-col h-full w-full bg-gray-900/50">
+    <div className="flex flex-col h-full w-full bg-[#0b141a]">
 
       {/* Header */}
-      <div className="h-16 border-b border-gray-800 px-6 flex items-center justify-between bg-gray-900 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-lg">
-            {displayName.charAt(0).toUpperCase()}
+      <div className="h-[68px] px-6 flex items-center justify-between bg-[#202c33] shrink-0">
+        <div className="flex items-center gap-4">
+          <div className={`w-11 h-11 rounded-full flex items-center justify-center text-lg font-bold shadow-sm ${isNumber ? 'bg-[#1e2028] text-[#64748b]' : 'bg-gradient-to-br from-[#3b82f6] to-[#2563eb] text-white'}`}>
+            {isNumber ? <User size={20} /> : rawDisplayName.charAt(0).toUpperCase()}
           </div>
           <div>
-            <h3 className="font-bold text-white">{displayName}</h3>
-            <p className="text-xs text-gray-400">{displayJid}</p>
+            <h3 className="font-semibold text-gray-100 text-[15px] leading-tight">{displayName}</h3>
+            <p className="text-[13px] text-[#8696a0] mt-0.5">{displayJid.startsWith('55') ? `+55 (${displayJid.substring(2,4)}) ${displayJid.substring(4,9)}-${displayJid.substring(9)}` : `+${displayJid}`}</p>
           </div>
         </div>
         <div className="flex gap-2">
-          <button className="px-3 py-1.5 rounded-md bg-gray-800 text-gray-300 text-sm hover:text-white transition-colors">
+          <button className="px-3 py-1.5 rounded-md bg-[#2a3942] text-[#8696a0] text-[13px] hover:text-white transition-colors">
             ⏸️ Pausar IA
           </button>
-          <button className="px-3 py-1.5 rounded-md bg-green-500/10 text-green-500 text-sm hover:bg-green-500/20 transition-colors">
+          <button className="px-3 py-1.5 rounded-md bg-emerald-500/10 text-emerald-500 text-[13px] hover:bg-emerald-500/20 transition-colors">
             ✔️ Resolver
           </button>
         </div>
       </div>
 
       {/* Mensagens */}
-      <div className="flex-1 overflow-y-auto p-6 scroll-smooth bg-[#0b141a]">
+      <div className="flex-1 overflow-y-auto p-6 scroll-smooth" style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundRepeat: 'repeat', backgroundSize: '400px' }}>
         {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-2">
-            <span className="text-3xl">💬</span>
-            <p className="text-sm">Nenhuma mensagem nesta conversa ainda.</p>
+          <div className="h-full flex flex-col items-center justify-center text-[#8696a0] gap-3">
+            <div className="w-16 h-16 rounded-full bg-[#202c33] flex items-center justify-center">
+              <span className="text-2xl">💬</span>
+            </div>
+            <p className="text-[13px] bg-[#202c33] px-4 py-1.5 rounded-full shadow-sm">Nenhuma mensagem nesta conversa ainda.</p>
           </div>
         ) : (
           messages.map(msg => <MessageBubble key={msg.external_id || msg.id} message={msg} />)
@@ -216,25 +232,25 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
       </div>
 
       {/* Input */}
-      <div className="p-4 bg-gray-900 border-t border-gray-800 shrink-0">
-        <form onSubmit={handleSend} className="flex gap-2">
-          <button type="button" className="p-3 text-gray-400 hover:text-white rounded-full hover:bg-gray-800 transition-colors">
-            📎
+      <div className="p-4 bg-[#202c33] shrink-0">
+        <form onSubmit={handleSend} className="flex gap-3 max-w-5xl mx-auto">
+          <button type="button" className="p-3 text-[#8696a0] hover:text-gray-300 rounded-full hover:bg-[#2a3942] transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
           </button>
           <input
             type="text"
             value={inputText}
             onChange={e => setInputText(e.target.value)}
-            placeholder="Digite sua mensagem..."
-            className="flex-1 bg-gray-800 text-white rounded-full px-6 py-3 focus:outline-none focus:ring-1 focus:ring-primary"
+            placeholder="Digite uma mensagem"
+            className="flex-1 bg-[#2a3942] text-gray-100 rounded-lg px-4 py-3 text-[15px] focus:outline-none placeholder-[#8696a0]"
             disabled={isSending}
           />
           <button
             type="submit"
             disabled={!inputText.trim() || isSending}
-            className="p-3 bg-primary text-white rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50"
+            className="p-3 text-[#8696a0] hover:text-gray-300 rounded-full hover:bg-[#2a3942] transition-colors disabled:opacity-50"
           >
-            {isSending ? '⏳' : '➤'}
+            {isSending ? '⏳' : <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>}
           </button>
         </form>
       </div>
