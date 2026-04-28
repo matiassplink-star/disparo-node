@@ -39,22 +39,36 @@ function cleanJid(jid: string): string {
     .replace('@lid', '')
 }
 
-// Merge sem duplicatas por id ou external_id
+// Merge profissional com proteção contra regressão de estado e colisões de chaves
 function mergeMessages(prev: Message[], incoming: Message[]): Message[] {
-  const seen = new Set<string>()
-  const result: Message[] = []
-  for (const m of [...prev, ...incoming]) {
+  const map = new Map<string, Message>()
+
+  // 1. Sempre manter o que já existe no estado local
+  prev.forEach(m => {
     const key = m.external_id || m.id
-    if (!seen.has(key)) {
-      seen.add(key)
-      result.push(m)
+    map.set(key, m)
+  })
+
+  // 2. Mesclar de forma segura com o que vem do backend
+  incoming.forEach(m => {
+    const key = m.external_id || m.id
+    const existing = map.get(key)
+
+    if (!existing) {
+      map.set(key, m)
     } else {
-      // Substituir a versão mais antiga pela mais nova (ex: status atualizado)
-      const idx = result.findIndex(r => (r.external_id || r.id) === key)
-      if (idx !== -1) result[idx] = m
+      // Substitui se for uma mensagem otimista que agora é real,
+      // ou se o backend trouxe um status/versão mais recente.
+      if (
+        String(existing.id).startsWith('opt-') ||
+        new Date(m.created_at) >= new Date(existing.created_at)
+      ) {
+        map.set(key, m)
+      }
     }
-  }
-  return result.sort(
+  })
+
+  return Array.from(map.values()).sort(
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   )
 }
@@ -69,7 +83,7 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
   const fetchMessages = useCallback(async () => {
     if (!activeChat?.remote_jid) return
     try {
-      const res = await fetch(`/api/whatsapp/messages?remote_jid=${encodeURIComponent(activeChat.remote_jid)}&limit=60&t=${Date.now()}`, {
+      const res = await fetch(`/api/whatsapp/messages?remote_jid=${encodeURIComponent(activeChat.remote_jid)}&limit=60`, {
         cache: 'no-store'
       })
       if (!res.ok) return
@@ -83,20 +97,20 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
   }, [activeChat])
 
   useEffect(() => {
-    if (!activeChat) return
+    if (!activeChat?.remote_jid) return
 
-    // Limpa mensagens imediatamente ao trocar de conversa
-    setMessages([])
+    // Garante que o polling anterior morra completamente
+    if (pollRef.current) clearInterval(pollRef.current)
+
+    // NÃO LIMPA AS MENSAGENS AQUI: setMessages([]) causava regressão visual/piscar
     fetchMessages()
 
-    // Polling de 3s — necessário pois supabaseClient usa auth customizado
-    // (não Supabase Auth nativo), impossibilitando Realtime com RLS
     pollRef.current = setInterval(fetchMessages, 3000)
 
     return () => {
       if (pollRef.current) clearInterval(pollRef.current)
     }
-  }, [activeChat, fetchMessages])
+  }, [activeChat?.remote_jid, fetchMessages])
 
   // Auto-scroll sem usar scrollIntoView (para não scrollar o layout main acidentalmente)
   useEffect(() => {
@@ -117,6 +131,7 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
     const optId = `opt-${Date.now()}`
     const optimisticMsg: Message = {
       id: optId,
+      external_id: optId, // Força a chave para o merge funcionar perfeitamente depois
       content: textToSend,
       from_me: true,
       created_at: new Date().toISOString(),
@@ -135,13 +150,22 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
         }),
       })
 
+      const responseData = await res.json().catch(() => ({}))
+
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}))
-        throw new Error(errData.error || 'Falha ao enviar')
+        throw new Error(responseData.error || 'Falha ao enviar')
       }
 
-      // Remove otimística — a mensagem real chega via polling
-      setTimeout(fetchMessages, 1000)
+      // Reconciliação do Optimistic: Se a API devolveu a chave real, atualiza
+      const realExternalId = responseData?.message?.key?.id || responseData?.key?.id
+      if (realExternalId) {
+        setMessages(prev => prev.map(m => 
+          m.id === optId ? { ...m, external_id: realExternalId } : m
+        ))
+      }
+
+      // Chama fetchMessages de forma segura para atualizar o status sem bugar
+      fetchMessages()
 
     } catch (err) {
       setMessages(prev => prev.filter(m => m.id !== optId))
