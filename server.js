@@ -1574,13 +1574,13 @@ app.get('/api/extracao/agenda/:numeroId', async (req, res) => {
     if (!n || n.status !== 'conectado') return res.status(404).json({ erro: 'Número não conectado' });
     try {
         const contatos = await n.client.getContacts();
-        res.json(
-            contatos
-                .filter(c => c.isMyContact && c.number)
-                .map(c => ({ numero: c.number, nome: c.name || c.pushname || '' }))
-        );
+        const lista = contatos
+            .filter(c => c.isMyContact && (c.number || (c.id && c.id.user)))
+            .map(c => ({ numero: c.number || c.id.user, nome: c.name || c.pushname || 'Contato' }));
+        res.json(lista);
     } catch (err) {
-        res.status(500).json({ erro: err.message });
+        console.error('[EXTRAIR AGENDA] Erro:', err);
+        res.status(500).json({ erro: err.message || 'Erro interno ao extrair contatos' });
     }
 });
 
@@ -1590,13 +1590,13 @@ app.get('/api/extracao/conversas/:numeroId', async (req, res) => {
     if (!n || n.status !== 'conectado') return res.status(404).json({ erro: 'Número não conectado' });
     try {
         const chats = await n.client.getChats();
-        res.json(
-            chats
-                .filter(c => !c.isGroup && c.id?.user)
-                .map(c => ({ numero: c.id.user, nome: c.name || c.pushname || '' }))
-        );
+        const lista = chats
+            .filter(c => !c.isGroup && c.id && c.id.user)
+            .map(c => ({ numero: c.id.user, nome: c.name || c.pushname || 'Contato' }));
+        res.json(lista);
     } catch (err) {
-        res.status(500).json({ erro: err.message });
+        console.error('[EXTRAIR CONVERSAS] Erro:', err);
+        res.status(500).json({ erro: err.message || 'Erro interno ao extrair conversas' });
     }
 });
 
