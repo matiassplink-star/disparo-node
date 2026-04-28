@@ -4,6 +4,9 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import MessageBubble from './MessageBubble'
 import { User, Mic, Paperclip, Send, Calendar, UserPlus, ArrowRightLeft, Bot, CheckCircle2 } from 'lucide-react'
 
+import { useChatStore, Message } from '@/store/useChatStore'
+import { supabaseClient } from '@/lib/supabase'
+
 // Helper para formatar número
 function formatPhoneAsName(name: string): string {
   if (/^\d+$/.test(name)) {
@@ -13,17 +16,6 @@ function formatPhoneAsName(name: string): string {
     return `+${name}`
   }
   return name
-}
-
-interface Message {
-  id: string
-  external_id?: string
-  content: string
-  from_me: boolean
-  created_at: string
-  status?: string
-  message_type?: string
-  media_url?: string
 }
 
 interface ActiveChat {
@@ -39,46 +31,15 @@ function cleanJid(jid: string): string {
     .replace('@lid', '')
 }
 
-// Merge profissional com proteção contra regressão de estado e colisões de chaves
-function mergeMessages(prev: Message[], incoming: Message[]): Message[] {
-  const map = new Map<string, Message>()
-
-  // 1. Sempre manter o que já existe no estado local
-  prev.forEach(m => {
-    const key = m.external_id || m.id
-    map.set(key, m)
-  })
-
-  // 2. Mesclar de forma segura com o que vem do backend
-  incoming.forEach(m => {
-    const key = m.external_id || m.id
-    const existing = map.get(key)
-
-    if (!existing) {
-      map.set(key, m)
-    } else {
-      // Substitui se for uma mensagem otimista que agora é real,
-      // ou se o backend trouxe um status/versão mais recente.
-      if (
-        String(existing.id).startsWith('opt-') ||
-        new Date(m.created_at) >= new Date(existing.created_at)
-      ) {
-        map.set(key, m)
-      }
-    }
-  })
-
-  return Array.from(map.values()).sort(
-    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-  )
-}
-
 export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
-  const [messages, setMessages] = useState<Message[]>([])
+  const messages = useChatStore(state => state.messagesByChat[activeChat.remote_jid] || [])
+  const setMessages = useChatStore(state => state.setMessages)
+  const addMessage = useChatStore(state => state.addMessage)
+  const updateMessage = useChatStore(state => state.updateMessage)
+
   const [inputText, setInputText] = useState('')
   const [isSending, setIsSending] = useState(false)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const fetchMessages = useCallback(async () => {
     if (!activeChat?.remote_jid) return
@@ -88,29 +49,45 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
       })
       if (!res.ok) return
       const data = await res.json() as Message[]
-      setMessages(prev => {
-        return mergeMessages(prev, data)
-      })
+      setMessages(activeChat.remote_jid, data)
     } catch {
-      // silencioso — polling vai tentar de novo
+      // Falha no fetch silenciada
     }
-  }, [activeChat])
+  }, [activeChat?.remote_jid, setMessages])
 
+  // Realtime puro + Fetch Inicial
   useEffect(() => {
     if (!activeChat?.remote_jid) return
 
-    // Garante que o polling anterior morra completamente
-    if (pollRef.current) clearInterval(pollRef.current)
-
-    // NÃO LIMPA AS MENSAGENS AQUI: setMessages([]) causava regressão visual/piscar
+    // 1. Puxa o histórico inicial
     fetchMessages()
 
-    pollRef.current = setInterval(fetchMessages, 3000)
+    // 2. Conecta no Realtime nativo do Supabase
+    const channel = supabaseClient
+      .channel(`chat_${activeChat.remote_jid}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Escuta INSERT e UPDATE (para status de leitura/entrega)
+          schema: 'public',
+          table: 'messages',
+          filter: `remote_jid=eq.${activeChat.remote_jid}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            addMessage(activeChat.remote_jid, payload.new as Message)
+          } else if (payload.eventType === 'UPDATE') {
+            const updated = payload.new as Message
+            updateMessage(activeChat.remote_jid, updated.external_id || updated.id, updated)
+          }
+        }
+      )
+      .subscribe()
 
     return () => {
-      if (pollRef.current) clearInterval(pollRef.current)
+      supabaseClient.removeChannel(channel)
     }
-  }, [activeChat?.remote_jid, fetchMessages])
+  }, [activeChat?.remote_jid, fetchMessages, addMessage, updateMessage])
 
   // Auto-scroll sem usar scrollIntoView (para não scrollar o layout main acidentalmente)
   useEffect(() => {
@@ -122,7 +99,7 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inputText.trim() || isSending) return
+    if (!inputText.trim() || isSending || !activeChat?.remote_jid) return
 
     const textToSend = inputText
     setInputText('')
@@ -131,14 +108,16 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
     const optId = `opt-${Date.now()}`
     const optimisticMsg: Message = {
       id: optId,
-      external_id: optId, // Força a chave para o merge funcionar perfeitamente depois
+      external_id: optId, // Força a chave
       content: textToSend,
       from_me: true,
       created_at: new Date().toISOString(),
       status: 'sent',
       message_type: 'text',
     }
-    setMessages(prev => [...prev, optimisticMsg])
+    
+    // Adiciona otimista direto na Store Global
+    addMessage(activeChat.remote_jid, optimisticMsg)
 
     try {
       const res = await fetch('/api/whatsapp/send', {
@@ -159,16 +138,12 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
       // Reconciliação do Optimistic: Se a API devolveu a chave real, atualiza
       const realExternalId = responseData?.message?.key?.id || responseData?.key?.id
       if (realExternalId) {
-        setMessages(prev => prev.map(m => 
-          m.id === optId ? { ...m, external_id: realExternalId } : m
-        ))
+        updateMessage(activeChat.remote_jid, optId, { external_id: realExternalId })
       }
 
-      // Chama fetchMessages de forma segura para atualizar o status sem bugar
-      fetchMessages()
-
     } catch (err) {
-      setMessages(prev => prev.filter(m => m.id !== optId))
+      // Remove da Store se der erro
+      useChatStore.getState().removeMessage(activeChat.remote_jid, optId)
       const msg = err instanceof Error ? err.message : 'Erro ao enviar mensagem'
       alert(`❌ ${msg}`)
       setInputText(textToSend)
