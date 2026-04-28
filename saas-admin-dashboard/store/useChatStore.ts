@@ -31,12 +31,19 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   setActiveChat: (id) => set({ activeChatId: id }),
 
   setMessages: (chatId, messages) => {
-    set((state) => ({
-      messagesByChat: {
-        ...state.messagesByChat,
-        [chatId]: messages.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()),
-      },
-    }))
+    set((state) => {
+      const existing = state.messagesByChat[chatId] || []
+      // Preserva mensagens otimísticas (opt-) que ainda não chegaram do backend
+      const optimistics = existing.filter(m => String(m.id).startsWith('opt-'))
+      const backendKeys = new Set(messages.map(m => m.external_id || m.id))
+      const safeOptimistics = optimistics.filter(m => !backendKeys.has(m.external_id || m.id))
+      const merged = [...messages, ...safeOptimistics].sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      )
+      return {
+        messagesByChat: { ...state.messagesByChat, [chatId]: merged },
+      }
+    })
   },
 
   addMessage: (chatId, msg) => {

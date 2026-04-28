@@ -1,3 +1,5 @@
+'use client'
+
 interface Message {
   id: string
   external_id?: string
@@ -8,6 +10,8 @@ interface Message {
   message_type?: string
   media_url?: string
 }
+
+
 
 function StatusIcon({ status }: { status?: string }) {
   if (status === 'read') {

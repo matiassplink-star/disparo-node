@@ -40,12 +40,11 @@ export async function POST(request: NextRequest) {
       // Tenta enviar com número normal primeiro
       evoRes = await sendTextMessage(instance.instance_name, remoteJid, text)
     } catch (try1Error: unknown) {
-      // A abstração sendTextMessage lança Erro se o status for 400 (ex: número não existe)
-      const errStr = try1Error.message || String(try1Error)
+      const errStr = try1Error instanceof Error ? try1Error.message : String(try1Error)
       if (errStr.includes('"exists":false') || errStr.includes('not found') || errStr.includes('Bad Request')) {
         tryLidFallback = true
       } else {
-        throw try1Error // Repassa o erro se for timeout, etc
+        throw try1Error
       }
     }
 

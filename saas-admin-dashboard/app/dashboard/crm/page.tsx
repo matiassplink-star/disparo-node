@@ -195,14 +195,22 @@ export default function CRMPage() {
 
   useEffect(() => {
     let debounceTimer: ReturnType<typeof setTimeout> | null = null
+    let userId: string | null = null
+
+    // Busca o userId do cookie para filtrar eventos apenas do usuário atual
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(u => { userId = u?.id ?? null })
+      .catch(() => {})
 
     const channel = supabase
       .channel('crm_new_messages')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages' },
-        () => {
-          // Debounce de 2s — evita 5000 chamadas durante Deep Sync
+        (payload) => {
+          // Filtra cliente-side se user_id não bater (proteção extra além do RLS)
+          if (userId && payload.new?.user_id && payload.new.user_id !== userId) return
           if (debounceTimer) clearTimeout(debounceTimer)
           debounceTimer = setTimeout(() => fetchChats(), 2000)
         }

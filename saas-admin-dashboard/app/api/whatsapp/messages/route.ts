@@ -24,12 +24,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'remote_jid é obrigatório' }, { status: 400 })
     }
 
+    // Normaliza o JID — busca com e sem @s.whatsapp.net para compatibilidade
+    const normalizedJid = remoteJid.includes('@') ? remoteJid : `${remoteJid}@s.whatsapp.net`
+    const cleanJid = remoteJid.replace(/@.*$/, '')
+
     const { data: messages, error } = await supabase
       .from('messages')
       .select('id, external_id, remote_jid, content, from_me, status, message_type, created_at')
       .eq('user_id', user.id)
-      .eq('remote_jid', remoteJid)
-      .order('created_at', { ascending: false })
+      .or(`remote_jid.eq.${cleanJid},remote_jid.eq.${normalizedJid},remote_jid.eq.${cleanJid}@c.us`)
+      .order('created_at', { ascending: true })
       .limit(limit)
 
     if (error) {
@@ -37,8 +41,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Falha ao carregar mensagens' }, { status: 500 })
     }
 
-    // Retorna em ordem cronológica (mais antigas primeiro)
-    return NextResponse.json((messages ?? []).reverse())
+    // Já em ordem cronológica (ASC) — sem precisar de .reverse()
+    return NextResponse.json(messages ?? [])
+
 
   } catch (err) {
     console.error('[/api/whatsapp/messages] Erro:', err)

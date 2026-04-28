@@ -39,10 +39,12 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
 
   const [inputText, setInputText] = useState('')
   const [isSending, setIsSending] = useState(false)
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
 
   const fetchMessages = useCallback(async () => {
     if (!activeChat?.remote_jid) return
+    setIsLoadingMessages(true)
     try {
       const res = await fetch(`/api/whatsapp/messages?remote_jid=${encodeURIComponent(activeChat.remote_jid)}&limit=200`, {
         cache: 'no-store'
@@ -52,6 +54,8 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
       setMessages(activeChat.remote_jid, data)
     } catch {
       // Falha no fetch silenciada
+    } finally {
+      setIsLoadingMessages(false)
     }
   }, [activeChat?.remote_jid, setMessages])
 
@@ -198,7 +202,11 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto p-6 scroll-smooth bg-[#0d0f12]" 
       >
-        {messages.length === 0 ? (
+        {isLoadingMessages ? (
+          <div className="h-full flex items-center justify-center">
+            <div className="animate-spin w-8 h-8 border-4 border-[#3b82f6] border-t-transparent rounded-full" />
+          </div>
+        ) : messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-[#64748b] gap-3">
             <div className="w-16 h-16 rounded-full bg-[#13161b] flex items-center justify-center border border-[#1e2028]">
               <span className="text-2xl">💬</span>
