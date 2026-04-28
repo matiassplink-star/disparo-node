@@ -50,8 +50,8 @@ export async function POST(request: NextRequest) {
         .eq('id', instance.id)
     }
 
-    // ─── Evento: Nova mensagem recebida ──────────────────────
-    if (event === 'messages.upsert') {
+    // ─── Evento: Nova mensagem ou Histórico de Mensagens ──────
+    if (event === 'messages.upsert' || event === 'messages.set') {
       // Evolution API pode enviar um array em data.messages, ou data.message, ou o objeto direto
       let messagesArray: any[] = []
       if (Array.isArray(data)) messagesArray = data

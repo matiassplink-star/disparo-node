@@ -153,10 +153,20 @@ export async function setInstanceWebhook(instanceName: string, webhookUrl: strin
         webhookByEvents: false,
         webhookBase64: false,
         events: [
-          'MESSAGES_UPSERT',
+          'APPLICATION_STARTUP',
           'CONNECTION_UPDATE',
           'QRCODE_UPDATED',
+          'CHATS_SET',
+          'CHATS_UPSERT',
+          'CHATS_UPDATE',
+          'MESSAGES_SET',
+          'MESSAGES_UPSERT',
+          'MESSAGES_UPDATE',
           'MESSAGES_DELETE',
+          'CONTACTS_SET',
+          'CONTACTS_UPSERT',
+          'CONTACTS_UPDATE',
+          'PRESENCE_UPDATE'
         ],
       }
     }),
