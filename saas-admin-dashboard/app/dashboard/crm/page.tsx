@@ -366,9 +366,9 @@ export default function CRMPage() {
             <button
               onClick={() => setShowNewChat(true)}
               title="Iniciar nova conversa"
-              className="p-1.5 rounded-lg text-[#22c55e] hover:text-white hover:bg-[#22c55e]/20 transition-colors flex items-center gap-1 text-xs px-2 font-semibold"
+              className="p-1.5 rounded-lg text-[#22c55e] hover:text-white hover:bg-[#22c55e]/20 transition-colors flex items-center gap-1 text-xs px-2 font-semibold shrink-0"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
               <span>Novo</span>
             </button>
             <button
@@ -388,10 +388,9 @@ export default function CRMPage() {
                 }
               }}
               title="Sincronização Profunda (Histórico Completo)"
-              className="p-1.5 rounded-lg text-[#f59e0b] hover:text-white hover:bg-[#f59e0b]/20 transition-colors flex items-center gap-1 text-xs px-2"
+              className="p-1.5 rounded-lg text-[#f59e0b] hover:text-white hover:bg-[#f59e0b]/20 transition-colors flex items-center justify-center shrink-0"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              <span>Deep Sync</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             </button>
             <button
               onClick={async () => {
@@ -409,17 +408,16 @@ export default function CRMPage() {
                 }
               }}
               title="Sincronização Rápida (Mensagens Recentes)"
-              className="p-1.5 rounded-lg text-[#3b82f6] hover:text-white hover:bg-[#3b82f6]/20 transition-colors flex items-center gap-1 text-xs px-2"
+              className="p-1.5 rounded-lg text-[#3b82f6] hover:text-white hover:bg-[#3b82f6]/20 transition-colors flex items-center justify-center shrink-0"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M12 12v9"></path><path d="m8 17 4 4 4-4"></path></svg>
-              <span>Sync</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M12 12v9"></path><path d="m8 17 4 4 4-4"></path></svg>
             </button>
             <button
               onClick={fetchChats}
               title="Atualizar UI"
-              className="p-1.5 rounded-lg text-[#64748b] hover:text-white hover:bg-[#1e2028] transition-colors"
+              className="p-1.5 rounded-lg text-[#64748b] hover:text-white hover:bg-[#1e2028] transition-colors shrink-0"
             >
-              <RefreshCw size={13} />
+              <RefreshCw size={16} />
             </button>
           </div>
         </div>
