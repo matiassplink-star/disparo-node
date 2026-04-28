@@ -64,7 +64,7 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputText, setInputText] = useState('')
   const [isSending, setIsSending] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const supabase = supabaseClient
 
@@ -138,9 +138,12 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
     }
   }, [activeChat, fetchMessages, supabase])
 
-  // Auto-scroll
+  // Auto-scroll sem usar scrollIntoView (para não scrollar o layout main acidentalmente)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (messagesContainerRef.current) {
+      const el = messagesContainerRef.current
+      el.scrollTop = el.scrollHeight
+    }
   }, [messages])
 
   const handleSend = async (e: React.FormEvent) => {
@@ -217,7 +220,11 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
       </div>
 
       {/* Mensagens */}
-      <div className="flex-1 overflow-y-auto p-6 scroll-smooth" style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundRepeat: 'repeat', backgroundSize: '400px' }}>
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-6 scroll-smooth" 
+        style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundRepeat: 'repeat', backgroundSize: '400px' }}
+      >
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-[#8696a0] gap-3">
             <div className="w-16 h-16 rounded-full bg-[#202c33] flex items-center justify-center">
@@ -228,7 +235,6 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
         ) : (
           messages.map(msg => <MessageBubble key={msg.external_id || msg.id} message={msg} />)
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}

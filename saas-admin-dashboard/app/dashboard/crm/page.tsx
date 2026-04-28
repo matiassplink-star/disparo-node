@@ -329,7 +329,7 @@ export default function CRMPage() {
   // ─── Render ────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-[calc(100vh-56px)] w-full overflow-hidden bg-[#0d0f12]">
+    <div className="flex h-full w-full overflow-hidden bg-[#0d0f12]">
 
       {/* ── PAINEL ESQUERDO ── */}
       <div
