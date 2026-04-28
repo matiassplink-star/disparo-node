@@ -416,6 +416,19 @@ function criarCliente(userId, baseId, proxyUrl) {
         console.log(`[PROXY] Iniciando cliente ${id} sem proxy`);
     }
 
+    // Remove Chromium locks to prevent crash (Code 21) after abrupt restart
+    const sessionDir = path.join('./sessoes', `session-${id}`);
+    const lockFiles = [
+        path.join(sessionDir, 'SingletonLock'),
+        path.join(sessionDir, 'Default', 'SingletonLock')
+    ];
+    for (const lockFile of lockFiles) {
+        if (fs.existsSync(lockFile)) {
+            try { fs.unlinkSync(lockFile); console.log(`[PROXY] Lock removido: ${lockFile}`); }
+            catch (e) { console.error(`[PROXY] Erro ao remover lock ${lockFile}:`, e.message); }
+        }
+    }
+
     const client = new Client({
         authStrategy: new LocalAuth({ clientId: id, dataPath: './sessoes' }),
         puppeteer: {
