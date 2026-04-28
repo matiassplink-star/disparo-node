@@ -211,21 +211,21 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
         </div>
         <div className="flex gap-2">
           {/* Ações Futuras (UI) */}
-          <button title="Transferir Atendimento" className="p-2 rounded-md bg-[#1e2028] text-[#64748b] hover:text-white hover:bg-[#2a2d34] transition-colors">
+          <button onClick={() => alert('Transferência de lead em breve.')} title="Transferir Atendimento" className="p-2 rounded-md bg-[#1e2028] text-[#64748b] hover:text-white hover:bg-[#2a2d34] transition-colors">
             <ArrowRightLeft size={14} />
           </button>
-          <button title="Agendar Follow-up" className="p-2 rounded-md bg-[#1e2028] text-[#64748b] hover:text-white hover:bg-[#2a2d34] transition-colors">
+          <button onClick={() => alert('Agendamento de follow-up em breve.')} title="Agendar Follow-up" className="p-2 rounded-md bg-[#1e2028] text-[#64748b] hover:text-white hover:bg-[#2a2d34] transition-colors">
             <Calendar size={14} />
           </button>
-          <button title="Adicionar Cliente" className="p-2 rounded-md bg-[#1e2028] text-[#64748b] hover:text-white hover:bg-[#2a2d34] transition-colors">
+          <button onClick={() => alert('Gestão de cliente em breve.')} title="Adicionar Cliente" className="p-2 rounded-md bg-[#1e2028] text-[#64748b] hover:text-white hover:bg-[#2a2d34] transition-colors">
             <UserPlus size={14} />
           </button>
           <div className="w-[1px] h-6 bg-[#2a2d34] mx-1 self-center"></div>
           
-          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#1e2028] text-[#64748b] text-[13px] font-medium hover:text-white hover:bg-[#2a2d34] transition-colors">
+          <button onClick={() => alert('Pausa de automação em breve.')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#1e2028] text-[#64748b] text-[13px] font-medium hover:text-white hover:bg-[#2a2d34] transition-colors">
             <Bot size={14} /> Pausar IA
           </button>
-          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-500/10 text-emerald-500 text-[13px] font-medium hover:bg-emerald-500/20 transition-colors">
+          <button onClick={() => alert('Resolução de ticket em breve.')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-500/10 text-emerald-500 text-[13px] font-medium hover:bg-emerald-500/20 transition-colors">
             <CheckCircle2 size={14} /> Resolver
           </button>
         </div>
@@ -251,7 +251,7 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
       {/* Input */}
       <div className="p-3 bg-[#0d0f12] border-t border-[#1e2028] shrink-0">
         <form onSubmit={handleSend} className="flex gap-2 max-w-5xl mx-auto items-center">
-          <button type="button" title="Anexar arquivo" className="p-2.5 text-[#64748b] hover:text-gray-300 rounded-full hover:bg-[#1e2028] transition-colors">
+          <button type="button" onClick={() => alert('Envio de anexos em breve.')} title="Anexar arquivo" className="p-2.5 text-[#64748b] hover:text-gray-300 rounded-full hover:bg-[#1e2028] transition-colors">
             <Paperclip size={20} />
           </button>
           <input
@@ -273,7 +273,8 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
           ) : (
             <button
               type="button"
-              title="Gravar Áudio (Em breve)"
+              onClick={() => alert('Gravação de áudio em breve.')}
+              title="Gravar Áudio"
               className="p-2.5 text-[#64748b] hover:text-emerald-500 rounded-full hover:bg-[#1e2028] transition-colors"
             >
               <Mic size={20} />
