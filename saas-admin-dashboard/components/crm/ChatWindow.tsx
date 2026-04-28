@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabaseClient } from '@/lib/supabase'
 import MessageBubble from './MessageBubble'
-import { User } from 'lucide-react'
+import { User, Mic, Paperclip, Send, Calendar, UserPlus, ArrowRightLeft, Bot, CheckCircle2 } from 'lucide-react'
 
 // Helper para formatar número
 function formatPhoneAsName(name: string): string {
@@ -210,11 +210,23 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
           </div>
         </div>
         <div className="flex gap-2">
-          <button className="px-3 py-1.5 rounded-md bg-[#1e2028] text-[#64748b] text-[13px] hover:text-white transition-colors">
-            ⏸️ Pausar IA
+          {/* Ações Futuras (UI) */}
+          <button title="Transferir Atendimento" className="p-2 rounded-md bg-[#1e2028] text-[#64748b] hover:text-white hover:bg-[#2a2d34] transition-colors">
+            <ArrowRightLeft size={14} />
           </button>
-          <button className="px-3 py-1.5 rounded-md bg-emerald-500/10 text-emerald-500 text-[13px] hover:bg-emerald-500/20 transition-colors">
-            ✔️ Resolver
+          <button title="Agendar Follow-up" className="p-2 rounded-md bg-[#1e2028] text-[#64748b] hover:text-white hover:bg-[#2a2d34] transition-colors">
+            <Calendar size={14} />
+          </button>
+          <button title="Adicionar Cliente" className="p-2 rounded-md bg-[#1e2028] text-[#64748b] hover:text-white hover:bg-[#2a2d34] transition-colors">
+            <UserPlus size={14} />
+          </button>
+          <div className="w-[1px] h-6 bg-[#2a2d34] mx-1 self-center"></div>
+          
+          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#1e2028] text-[#64748b] text-[13px] font-medium hover:text-white hover:bg-[#2a2d34] transition-colors">
+            <Bot size={14} /> Pausar IA
+          </button>
+          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-500/10 text-emerald-500 text-[13px] font-medium hover:bg-emerald-500/20 transition-colors">
+            <CheckCircle2 size={14} /> Resolver
           </button>
         </div>
       </div>
@@ -237,26 +249,36 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
       </div>
 
       {/* Input */}
-      <div className="p-4 bg-[#0d0f12] border-t border-[#1e2028] shrink-0">
-        <form onSubmit={handleSend} className="flex gap-3 max-w-5xl mx-auto">
-          <button type="button" className="p-3 text-[#64748b] hover:text-gray-300 rounded-full hover:bg-[#1e2028] transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+      <div className="p-3 bg-[#0d0f12] border-t border-[#1e2028] shrink-0">
+        <form onSubmit={handleSend} className="flex gap-2 max-w-5xl mx-auto items-center">
+          <button type="button" title="Anexar arquivo" className="p-2.5 text-[#64748b] hover:text-gray-300 rounded-full hover:bg-[#1e2028] transition-colors">
+            <Paperclip size={20} />
           </button>
           <input
             type="text"
             value={inputText}
             onChange={e => setInputText(e.target.value)}
-            placeholder="Digite uma mensagem"
+            placeholder="Digite uma mensagem..."
             className="flex-1 bg-[#13161b] border border-[#1e2028] text-gray-100 rounded-lg px-4 py-3 text-[15px] focus:outline-none focus:border-[#3b82f6] placeholder-[#64748b]"
             disabled={isSending}
           />
-          <button
-            type="submit"
-            disabled={!inputText.trim() || isSending}
-            className="p-3 text-[#3b82f6] hover:text-blue-400 rounded-full hover:bg-[#3b82f6]/10 transition-colors disabled:opacity-50"
-          >
-            {isSending ? '⏳' : <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>}
-          </button>
+          {inputText.trim() ? (
+            <button
+              type="submit"
+              disabled={isSending}
+              className="p-2.5 bg-[#3b82f6] text-white rounded-full hover:bg-blue-600 transition-colors shadow-lg disabled:opacity-50"
+            >
+              {isSending ? <span className="text-[20px]">⏳</span> : <Send size={18} className="ml-0.5" />}
+            </button>
+          ) : (
+            <button
+              type="button"
+              title="Gravar Áudio (Em breve)"
+              className="p-2.5 text-[#64748b] hover:text-emerald-500 rounded-full hover:bg-[#1e2028] transition-colors"
+            >
+              <Mic size={20} />
+            </button>
+          )}
         </form>
       </div>
 
