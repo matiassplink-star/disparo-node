@@ -19,10 +19,13 @@ export async function GET(request: NextRequest) {
 
     // Usa a view v_chat_list que aplica DISTINCT ON no banco
     // Muito mais eficiente que carregar todas as mensagens em JS
+    // Usa a view v_chat_list que aplica DISTINCT ON no banco
     const { data: rows, error } = await supabase
       .from('v_chat_list')
       .select('*')
       .eq('user_id', user.id)
+      .not('remote_jid', 'like', '%@g.us')
+      .not('remote_jid', 'eq', 'status@broadcast')
       .order('last_message_at', { ascending: false })
       .limit(200)
 

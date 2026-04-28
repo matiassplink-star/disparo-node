@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const remoteJid = searchParams.get('remote_jid')
-    const limit = Math.min(parseInt(searchParams.get('limit') || '60'), 200)
+    // Puxa somente as ultimas 5 msgs
+    const limit = Math.min(parseInt(searchParams.get('limit') || '5'), 50)
 
     if (!remoteJid) {
       return NextResponse.json({ error: 'remote_jid é obrigatório' }, { status: 400 })
