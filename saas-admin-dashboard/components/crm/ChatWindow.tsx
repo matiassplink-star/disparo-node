@@ -69,7 +69,9 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
   const fetchMessages = useCallback(async () => {
     if (!activeChat?.remote_jid) return
     try {
-      const res = await fetch(`/api/whatsapp/messages?remote_jid=${encodeURIComponent(activeChat.remote_jid)}&limit=60`)
+      const res = await fetch(`/api/whatsapp/messages?remote_jid=${encodeURIComponent(activeChat.remote_jid)}&limit=60&t=${Date.now()}`, {
+        cache: 'no-store'
+      })
       if (!res.ok) return
       const data = await res.json() as Message[]
       setMessages(prev => {

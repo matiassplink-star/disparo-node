@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * GET /api/whatsapp/messages?remote_jid=553499929764&limit=60
  * Busca histórico de mensagens de uma conversa via service role (bypassa RLS do browser)
