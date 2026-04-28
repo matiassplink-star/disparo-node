@@ -39,7 +39,7 @@ const metaSalva = carregarMetadadosContas();
 app.use(express.json({ limit: '50mb' }));
 
 // ─── proteção: bloqueia acesso direto e faz isolamento ─────────
-const SAAS_ORIGIN = process.env.SAAS_URL || 'https://zaplink.casalbrokersistema.online';
+const SAAS_ORIGIN = process.env.SAAS_URL || 'https://disparo-node.vercel.app';
 if (!process.env.WA_AUTH_TOKEN) {
     console.warn('⚠️ AVISO: WA_AUTH_TOKEN não está definido. Usando token padrão (inseguro). Configure a variável de ambiente no Coolify quando puder.');
 }
