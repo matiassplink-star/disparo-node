@@ -86,9 +86,9 @@ export default function DashboardPage() {
           <p className="text-2xl font-black text-white uppercase">{user?.plano}</p>
         </div>
 
-        <div className="group rounded-3xl p-6 bg-gradient-to-br from-[#16181c] to-[#0e0f11] border border-[#2a2d34] hover:border-[#8b5cf6]/30 transition-all duration-300 shadow-xl shadow-black/20">
+        <div className="group rounded-3xl p-6 bg-gradient-to-br from-[#16181c] to-[#0e0f11] border border-[#2a2d34] hover:border-[#3b82f6]/30 transition-all duration-300 shadow-xl shadow-black/20">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 rounded-2xl bg-[#8b5cf6]/10 flex items-center justify-center text-[#8b5cf6] text-xl group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 rounded-2xl bg-[#3b82f6]/10 flex items-center justify-center text-[#3b82f6] text-xl group-hover:scale-110 transition-transform">
               ⏳
             </div>
             <span className="text-[10px] font-bold text-gray-600 tracking-widest uppercase">Validade</span>

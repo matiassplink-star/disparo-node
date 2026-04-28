@@ -8,16 +8,43 @@ function getSupabase() {
   )
 }
 
-// GET — listar tutoriais
-export async function GET() {
+// GET — listar tutoriais (Fix #42: requer autenticação, filtra por plano)
+export async function GET(req: NextRequest) {
   try {
     const supabase = getSupabase()
-    const { data, error } = await supabase
+
+    const token = req.cookies.get('sb-access-token')?.value
+    if (!token) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+    }
+
+    const { data: { user: authUser } } = await supabase.auth.getUser(token)
+    if (!authUser) {
+      return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
+    }
+
+    const { data: userData } = await supabase
+      .from('users')
+      .select('plano, acesso_ate')
+      .eq('id', authUser.id)
+      .single()
+
+    const isAdmin = userData?.plano === 'admin'
+    const isPaid = userData?.acesso_ate && new Date(userData.acesso_ate) > new Date()
+    const isPremium = isAdmin || isPaid
+
+    let query = supabase
       .from('tutoriais')
-      .select('*')
+      .select('id, titulo, descricao, youtube_url, ordem, categoria, nivel_acesso')
       .order('ordem', { ascending: true })
       .order('criado_em', { ascending: true })
 
+    // Usuários free só veem tutoriais gratuitos
+    if (!isPremium) {
+      query = query.eq('nivel_acesso', 'free')
+    }
+
+    const { data, error } = await query
     if (error) throw error
 
     return NextResponse.json({ tutoriais: data || [] })
@@ -36,7 +63,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
     }
 
-    // Verificar se é admin
     const { data: { user: authUser } } = await supabase.auth.getUser(token)
     if (!authUser) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
@@ -58,7 +84,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Título e URL são obrigatórios' }, { status: 400 })
     }
 
-    // Pegar próxima ordem
     const { data: last } = await supabase
       .from('tutoriais')
       .select('ordem')

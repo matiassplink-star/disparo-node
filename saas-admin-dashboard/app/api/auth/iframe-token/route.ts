@@ -39,7 +39,11 @@ export async function GET(req: NextRequest) {
     }
 
     // Gerar token seguro para o iframe (HMAC do userId + timestamp + plano)
-    const secret = process.env.WA_AUTH_TOKEN || 'disparo-saas-2025'
+    const secret = process.env.WA_AUTH_TOKEN
+    if (!secret) {
+      console.error('[iframe-token] WA_AUTH_TOKEN não configurado.')
+      return NextResponse.json({ error: 'Servidor não configurado. Contate o administrador.' }, { status: 500 })
+    }
     const expires = Date.now() + 1000 * 60 * 60 // 1 hora de validade
     const payload = `${user.id}:${expires}:${userData.plano}`
     const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex')

@@ -7,7 +7,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-[#050505]">
       {/* Efeito Aurora */}
       <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vh] bg-[#22c55e] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-pulse pointer-events-none"></div>
-      <div className="absolute bottom-[-20%] right-[-10%] w-[40vw] h-[60vh] bg-[#8b5cf6] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-pulse delay-1000 pointer-events-none"></div>
+      <div className="absolute bottom-[-20%] right-[-10%] w-[40vw] h-[60vh] bg-[#3b82f6] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-pulse delay-1000 pointer-events-none"></div>
 
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">

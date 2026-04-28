@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { User } from '@/types'
 import { initMercadoPago, Wallet } from '@mercadopago/sdk-react'
 import Link from 'next/link'
@@ -10,7 +10,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 const pk = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY || ''
 if (pk) initMercadoPago(pk, { locale: 'pt-BR' })
 
-export default function WhatsAppPage() {
+function WhatsAppPageInner() {
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
   const [user, setUser] = useState<User | null>(null)
@@ -177,9 +177,13 @@ export default function WhatsAppPage() {
             </h2>
             <p className="text-gray-500 text-sm mb-8">Escolha um dos planos abaixo para liberar todas as ferramentas de automação.</p>
             <div className="bg-[#0e0f11] rounded-2xl p-6 border border-[#2a2d34]">
-              {/* Aqui o Brick de pagamento */}
-              {/* @ts-ignore */}
-              <Wallet initialization={{ preferenceId: preferenceId || '', redirectMode: 'self' }} />
+              {/* Fix #52: Wallet só renderiza quando há um preferenceId válido */}
+              {preferenceId && pk ? (
+                // @ts-ignore
+                <Wallet initialization={{ preferenceId, redirectMode: 'self' }} />
+              ) : (
+                <p className="text-sm text-[#6b7280] py-4">Selecione um plano abaixo para continuar.</p>
+              )}
               <a href={waLink} target="_blank" className="inline-block w-full py-3 bg-[#22c55e] text-[#0a1a10] rounded-xl font-bold text-sm mt-4 no-underline">Pagar via WhatsApp 💬</a>
             </div>
           </div>
@@ -217,5 +221,19 @@ export default function WhatsAppPage() {
         )}
       </div>
     </div>
+  )
+}
+
+// Fix #48: Suspense wrapper necessário para useSearchParams
+export default function WhatsAppPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center gap-4 h-[400px]">
+        <div className="animate-spin h-10 w-10 border-4 border-[#22c55e] border-t-transparent rounded-full"></div>
+        <p className="text-gray-500 text-xs font-mono uppercase tracking-widest">Iniciando ZapLink...</p>
+      </div>
+    }>
+      <WhatsAppPageInner />
+    </Suspense>
   )
 }

@@ -2,12 +2,6 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   async rewrites() {
     const waServerUrl = process.env.NEXT_PUBLIC_WA_SERVER_URL || 'http://localhost:3001'
     return [

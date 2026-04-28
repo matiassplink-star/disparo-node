@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     // Verificar se o usuário existe na tabela users
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('*')
+      .select('id, email, nome, plano, status')
       .eq('id', authData.user.id)
       .single()
 
@@ -61,14 +61,25 @@ export async function POST(req: NextRequest) {
       { status: 200 }
     )
 
-    // Definir cookie HTTP-only com o token
-    response.cookies.set('sb-access-token', authData.session?.access_token || '', {
+    // Cookie de acesso (curta duração)
+    response.cookies.set('sb-access-token', authData.session.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 dias
       path: '/',
     })
+
+    // Fix #28: salvar refresh_token para renovação de sessão
+    if (authData.session.refresh_token) {
+      response.cookies.set('sb-refresh-token', authData.session.refresh_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 30, // 30 dias
+        path: '/',
+      })
+    }
 
     return response
   } catch (error) {

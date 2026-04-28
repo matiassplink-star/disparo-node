@@ -1,6 +1,13 @@
 import React from 'react'
 import type { Metadata } from 'next'
+import { DM_Sans } from 'next/font/google'
 import './globals.css'
+
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-dm-sans',
+})
 
 export const viewport = {
   width: 'device-width',
@@ -50,11 +57,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" className={dmSans.variable}>
       <head>
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className="antialiased selection:bg-green-500/30">
+      <body className={`antialiased selection:bg-green-500/30 ${dmSans.className}`}>
         {children}
       </body>
     </html>

@@ -85,7 +85,7 @@ export default function Home() {
     <div className="min-h-screen text-[#e8eaed] relative overflow-hidden bg-[#050505]">
       {/* Efeito Aurora Global */}
       <div className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vh] bg-[#22c55e] rounded-full mix-blend-screen filter blur-[140px] opacity-15 animate-pulse pointer-events-none z-0"></div>
-      <div className="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[70vh] bg-[#8b5cf6] rounded-full mix-blend-screen filter blur-[140px] opacity-15 animate-pulse delay-1000 pointer-events-none z-0"></div>
+      <div className="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[70vh] bg-[#3b82f6] rounded-full mix-blend-screen filter blur-[140px] opacity-15 animate-pulse delay-1000 pointer-events-none z-0"></div>
 
       <div className="relative z-10">
         {/* Header */}
@@ -119,12 +119,12 @@ export default function Home() {
           <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight text-white tracking-tight">
             Venda no automático com
             <br />
-            <span className="bg-gradient-to-r from-[#22c55e] to-[#8b5cf6] bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(139,92,246,0.3)]">
+            <span className="bg-gradient-to-r from-[#22c55e] to-[#3b82f6] bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(34,197,94,0.3)]">
               Disparos em Massa
             </span>
           </h1>
           <p className="text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed text-[#8b949e]">
-            A solução completa para escala: Rotação Anti-Ban, Inteligência Artificial, Extração de Grupos e **Gestor de Proxies Automático**.
+            A solução completa para escala: Rotação Anti-Ban, Inteligência Artificial, Extração de Grupos e <strong className="text-white">Gestor de Proxies Automático</strong>.
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
             <Link href="/auth/register"

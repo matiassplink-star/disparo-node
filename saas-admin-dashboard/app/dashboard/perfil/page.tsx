@@ -144,7 +144,7 @@ export default function PerfilPage() {
     <div className="min-h-screen bg-[#050505] text-[#e8eaed] p-6 lg:p-12 relative overflow-hidden flex flex-col">
       {/* Efeito Aurora */}
       <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vh] bg-[#22c55e] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-pulse pointer-events-none"></div>
-      <div className="absolute bottom-[-20%] right-[-10%] w-[40vw] h-[60vh] bg-[#8b5cf6] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-pulse delay-1000 pointer-events-none"></div>
+      <div className="absolute bottom-[-20%] right-[-10%] w-[40vw] h-[60vh] bg-[#3b82f6] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-pulse delay-1000 pointer-events-none"></div>
 
       <div className="max-w-4xl mx-auto w-full z-10 space-y-6 flex-1 flex flex-col">
 
@@ -265,7 +265,7 @@ export default function PerfilPage() {
           <div className="mt-8 bg-[#16181c]/90 backdrop-blur-xl border border-[#22c55e]/30 rounded-3xl p-6 lg:p-10 shadow-2xl shadow-[#22c55e]/10 animate-fade-in relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#22c55e]/10 rounded-full filter blur-[80px] pointer-events-none"></div>
 
-            <h2 className="text-2xl font-extrabold mb-8 text-center bg-gradient-to-r from-[#22c55e] to-[#8b5cf6] bg-clip-text text-transparent">Evolua seu Nível no ZapLink</h2>
+            <h2 className="text-2xl font-extrabold mb-8 text-center bg-gradient-to-r from-[#22c55e] to-[#3b82f6] bg-clip-text text-transparent">Evolua seu Nível no ZapLink</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
               {[

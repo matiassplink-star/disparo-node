@@ -40,7 +40,11 @@ app.use(express.json({ limit: '50mb' }));
 
 // ─── proteção: bloqueia acesso direto e faz isolamento ─────────
 const SAAS_ORIGIN = process.env.SAAS_URL || 'https://zaplink.casalbrokersistema.online';
-const AUTH_TOKEN = process.env.WA_AUTH_TOKEN || 'disparo-saas-2025';
+if (!process.env.WA_AUTH_TOKEN) {
+    console.error('❌ FATAL: WA_AUTH_TOKEN não está definido. Configure a variável de ambiente antes de iniciar o servidor.');
+    process.exit(1);
+}
+const AUTH_TOKEN = process.env.WA_AUTH_TOKEN;
 
 function verifyIframeToken(t) {
     if (!t) return null;
@@ -1185,6 +1189,10 @@ app.post('/api/grupos/enviar-massa', async (req, res) => {
     // Função de execução
     const executarEnvioMassa = async () => {
         const job = envioGruposStatus[userId];
+        let indiceAtual = 0;      // Fix #21: declaração que estava faltando
+        let contadorTroca = 0;    // Fix #21: declaração que estava faltando
+        let enviados = 0;
+        let falhas = 0;
         for (let i = 0; i < gruposIds.length; i++) {
             if (job.status === 'parado') break;
             while (job.status === 'pausado') {

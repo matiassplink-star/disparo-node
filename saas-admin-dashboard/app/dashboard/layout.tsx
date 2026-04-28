@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, useEffect, useState } from 'react'
+import { ReactNode, Suspense, useEffect, useState } from 'react'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { Navbar } from '@/components/dashboard/Navbar'
 import { User } from '@/types'
@@ -56,11 +56,16 @@ export default function DashboardLayout({
   }
 
   const isAdmin = user?.plano === 'admin'
-  const sidebarWidth = collapsed ? 68 : 256
 
-  // Proteção de rotas para usuários comuns
+  // Fix #59: Adicionada /dashboard/settings às rotas permitidas
   if (!isAdmin) {
-    const rotasPermitidas = ['/dashboard', '/dashboard/whatsapp', '/dashboard/tutoriais', '/dashboard/perfil']
+    const rotasPermitidas = [
+      '/dashboard',
+      '/dashboard/whatsapp',
+      '/dashboard/tutoriais',
+      '/dashboard/perfil',
+      '/dashboard/settings',
+    ]
     const pathSemQuery = pathname.split('?')[0]
     if (!rotasPermitidas.includes(pathSemQuery)) {
       router.replace('/dashboard/whatsapp')
@@ -76,30 +81,33 @@ export default function DashboardLayout({
     <ThemeProvider>
       <LanguageProvider>
         <div className="flex min-h-screen relative overflow-hidden bg-background text-foreground transition-colors duration-300 dark:bg-[#050505] bg-white">
-          {/* Efeito Aurora Global */}
+          {/* Efeito Aurora — Fix #44: substituído roxo por azul */}
           <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vh] bg-[#22c55e] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-pulse pointer-events-none z-0"></div>
-          <div className="absolute bottom-[-20%] right-[-10%] w-[40vw] h-[60vh] bg-[#8b5cf6] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-pulse delay-1000 pointer-events-none z-0"></div>
+          <div className="absolute bottom-[-20%] right-[-10%] w-[40vw] h-[60vh] bg-[#3b82f6] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-pulse delay-1000 pointer-events-none z-0"></div>
 
-          <Sidebar collapsed={collapsed} onToggle={handleToggle} user={user} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
-          
+          {/* Fix #48/54: Sidebar envolto em Suspense (usa useSearchParams internamente) */}
+          <Suspense fallback={<div className="w-64 bg-[#16181c] border-r border-[#2a2d34]" />}>
+            <Sidebar collapsed={collapsed} onToggle={handleToggle} user={user} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
+          </Suspense>
+
           {/* Overlay Mobile */}
           {mobileOpen && (
-            <div 
+            <div
               className="fixed inset-0 bg-black/50 z-30 md:hidden animate-in fade-in duration-300"
               onClick={() => setMobileOpen(false)}
             />
           )}
-          
+
           <div
             className={`flex-1 min-h-screen transition-all duration-300 relative z-10 
               ${mobileOpen ? 'overflow-hidden h-screen' : ''}
               ${collapsed ? 'md:ml-[68px]' : 'md:ml-64'} ml-0`}
           >
-            <Navbar 
-              sidebarWidth={0} 
-              collapsed={collapsed} 
-              onToggle={handleToggle} 
-              onMobileToggle={() => setMobileOpen(!mobileOpen)} 
+            <Navbar
+              sidebarWidth={0}
+              collapsed={collapsed}
+              onToggle={handleToggle}
+              onMobileToggle={() => setMobileOpen(!mobileOpen)}
             />
             <main className="h-[calc(100vh-52px)] overflow-auto">
               {children}
@@ -110,5 +118,3 @@ export default function DashboardLayout({
     </ThemeProvider>
   )
 }
-
-

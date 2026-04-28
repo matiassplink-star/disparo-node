@@ -100,7 +100,7 @@ export function Navbar({ sidebarWidth = 256, collapsed, onToggle, onMobileToggle
           {user && (
             <div className="text-right hidden sm:block">
               <p className="text-xs font-bold" style={{ color: '#e8eaed' }}>{user.nome || 'Usuário'}</p>
-              <p className="text-[10px]" style={{ color: '#6b7280' }}>{user.email || 'suporte.splinkagencia@gmail.com'}</p>
+              <p className="text-[10px]" style={{ color: '#6b7280' }}>{user.email}</p>
             </div>
           )}
           <div

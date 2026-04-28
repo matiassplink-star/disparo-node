@@ -33,8 +33,9 @@ export default function SettingsPage() {
     if (!user) return
     setIsSaving(true)
     try {
-      const res = await fetch(`/api/users/${user.id}`, {
-        method: 'PATCH',
+      // Fix #40: usar /api/users/update (rota do próprio usuário) em vez da rota admin
+      const res = await fetch('/api/users/update', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nome }),
       })

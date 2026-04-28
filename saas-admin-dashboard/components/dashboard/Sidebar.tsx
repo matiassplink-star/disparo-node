@@ -51,7 +51,7 @@ export function Sidebar({ collapsed = false, onToggle, user, mobileOpen = false,
     {
       label: t('group.disparos'),
       items: [
-        { action: 'panel', panel: 'contatos', href: '/dashboard/whatsapp', label: t('nav.contacts'), icon: BookUser, color: '#8b5cf6' },
+        { action: 'panel', panel: 'contatos', href: '/dashboard/whatsapp', label: t('nav.contacts'), icon: BookUser, color: '#6366f1' },
         { action: 'panel', panel: 'disparo', href: '/dashboard/whatsapp', label: t('nav.send'), icon: Send, color: '#10b981' },
       ]
     },
@@ -160,8 +160,8 @@ export function Sidebar({ collapsed = false, onToggle, user, mobileOpen = false,
                       <Icon 
                         size={18} 
                         strokeWidth={2.5}
-                        className={`transition-all duration-300 ${isActive ? 'text-green-500 scale-110' : 'text-slate-400 dark:text-slate-500 group-hover:scale-110'}`}
-                        style={{ color: isActive ? undefined : undefined }}
+                        className={`transition-all duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}
+                        style={{ color: isActive ? '#22c55e' : (item as any).color || '#64748b' }}
                       />
                       {!collapsed && (
                         <div className="flex justify-between items-center w-full">

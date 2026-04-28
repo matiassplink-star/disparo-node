@@ -2,6 +2,7 @@ node_modules
 npm-debug.log
 .env
 .env.local
+!.env.example
 .DS_Store
 
 # WhatsApp data (must be kept local or on server volumes, not on git)

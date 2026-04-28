@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET() {
-  return NextResponse.json({ message: 'OK' })
+// Healthcheck interno — não expõe informações sensíveis
+export async function GET(req: NextRequest) {
+  return NextResponse.json({ status: 'ok', ts: Date.now() })
 }

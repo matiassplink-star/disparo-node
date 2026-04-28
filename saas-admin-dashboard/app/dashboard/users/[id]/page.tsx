@@ -128,8 +128,10 @@ export default function EditUserPage() {
             onFocus={(e) => { e.currentTarget.style.borderColor = '#22c55e' }}
             onBlur={(e) => { e.currentTarget.style.borderColor = '#2a2d34' }}
           >
-            <option value="free">Free</option>
-            <option value="pro">Pro</option>
+            <option value="free">Free (Trial)</option>
+            <option value="mensal">Mensal — Soldado do Disparo</option>
+            <option value="semestral">Semestral — Comandante de Escala</option>
+            <option value="anual">Anual — General das Vendas</option>
             <option value="admin">Admin</option>
           </select>
         </div>
