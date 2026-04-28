@@ -29,7 +29,14 @@ export async function POST(request: NextRequest) {
       console.error('[/api/webhook/evolution] Erro ao salvar log:', error.message);
     }
 
-    // 🔥 RESPONDER 200 RÁPIDO (Menos de 1 segundo)
+    // 🔥 GATILHO EM TEMPO REAL (Vercel Serverless)
+    // Dispara o worker "fire-and-forget" para processar a fila imediatamente.
+    // Assim a Vercel abre um processo paralelo e o chat fica instantâneo!
+    const host = request.headers.get('host') || 'disparo-node.vercel.app';
+    const workerUrl = `https://${host}/api/cron/process-webhooks`;
+    fetch(workerUrl, { method: 'GET', cache: 'no-store' }).catch(() => {});
+
+    // 🔥 RESPONDER 200 RÁPIDO (Menos de 100ms)
     // Sempre respondemos 200 para a Evolution não re-tentar loucamente e derrubar a fila
     return NextResponse.json({ ok: true, received: true });
 
