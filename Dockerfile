@@ -56,7 +56,7 @@ RUN mkdir -p logs sessoes contatos midia && \
     chmod -R 777 logs sessoes contatos midia
 
 # Expor a porta que o servidor usa
-EXPOSE 3001
+EXPOSE 3000
 
 # Comando para iniciar
 CMD ["npm", "start"]
