@@ -173,7 +173,7 @@ export async function DELETE(
     await supabase.from('contacts').delete().eq('user_id', params.id)
 
     // Buscar instâncias para tentar deletar na Evolution API (opcional, ignora erro)
-    const { data: instances } = await supabase.from('whatsapp_instances').select('instance_name').eq('user_id', params.id)
+    const { data: _instances } = await supabase.from('whatsapp_instances').select('instance_name').eq('user_id', params.id)
     
     // Deletar instâncias do banco
     await supabase.from('whatsapp_instances').delete().eq('user_id', params.id)

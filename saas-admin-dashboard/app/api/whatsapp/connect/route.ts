@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     let qrData;
     try {
       qrData = await getQRCode(instanceName)
-    } catch (error) {
+    } catch (_error) {
       console.warn(`[Evolution] Instância ${instanceName} falhou ao buscar QR Code. Tentando recriar...`)
       // Se falhar (ex: deletado na Evolution API mas não no banco), tenta recriar
       await createInstance(instanceName)
