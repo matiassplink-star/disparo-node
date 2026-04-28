@@ -4,8 +4,7 @@ import { getChats, getMessages } from '@/lib/evolution-api'
 
 /**
  * POST /api/whatsapp/sync-deep
- * Sincronização Profunda: busca histórico completo direto na Evolution API.
- * Usa external_id para evitar duplicatas em cada execução.
+ * Sincronização Profunda: busca as conversas mais recentes da Evolution API.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -26,30 +25,47 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Nenhuma instância encontrada' }, { status: 404 })
     }
 
-    // 1. Busca todos os chats disponíveis na instância
     const chats = await getChats(instance.instance_name)
 
     if (!Array.isArray(chats) || chats.length === 0) {
       return NextResponse.json({
         synced: 0,
         messages: 0,
-        message: 'Nenhum chat encontrado na Evolution API. Verifique se o WhatsApp está conectado.',
+        message: 'Nenhum chat encontrado. Verifique se o WhatsApp está conectado.',
       })
     }
 
+    // ── Filtrar chats individuais e ordenar pelos mais recentes ──
+    const individualChats = chats
+      .filter((c: Record<string, unknown>) => {
+        // Usar remoteJid (JID real) — não o id interno da Evolution
+        const jid = (c.remoteJid as string) || ''
+        return jid && !jid.endsWith('@g.us') && !jid.endsWith('@broadcast')
+      })
+      .sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
+        // Ordenar pelos mais recentes primeiro (updatedAt)
+        const ta = new Date((a.updatedAt as string) || 0).getTime()
+        const tb = new Date((b.updatedAt as string) || 0).getTime()
+        return tb - ta
+      })
+      .slice(0, 50) // Máximo 50 para não dar timeout no Vercel
+
     let syncedChats = 0
     let syncedMessages = 0
-    // Limitar a 50 para não causar timeout no Vercel (max 10s Hobby / 60s Pro)
-    const topChats = chats.slice(0, 50)
 
-    for (const chat of topChats) {
-      const rawJid: string = (chat.id as string) || (chat.remoteJid as string) || ''
-      if (!rawJid || rawJid.endsWith('@g.us') || rawJid.endsWith('@broadcast')) continue
+    for (const chat of individualChats) {
+      // ─── Usar remoteJid real (não o id interno) ───
+      const remoteJid = (chat.remoteJid as string) || ''
+      if (!remoteJid) continue
 
-      const phone = rawJid.replace('@s.whatsapp.net', '').replace('@c.us', '')
-      const name: string = (chat.name as string) || (chat.pushName as string) || phone
+      const phone = remoteJid
+        .replace('@s.whatsapp.net', '')
+        .replace('@c.us', '')
+        .replace('@lid', '')
 
-      // Cria/Atualiza contato sem conflict
+      // pushName = nome real do contato no WhatsApp
+      const name: string = (chat.pushName as string) || (chat.name as string) || phone
+
       await supabase
         .from('contacts')
         .upsert(
@@ -59,12 +75,12 @@ export async function POST(request: NextRequest) {
 
       syncedChats++
 
-      // 2. Busca até 100 mensagens do chat
-      const msgs = await getMessages(instance.instance_name, rawJid, 100)
+      // ─── Mensagens: usar o remoteJid completo para a API ───
+      const msgs = await getMessages(instance.instance_name, remoteJid, 50)
+
       if (!Array.isArray(msgs)) continue
 
       for (const msg of msgs) {
-        // Extrair texto com os principais tipos de mensagem
         const msgContent = msg.message as Record<string, unknown> | undefined
         const extText = (msgContent?.extendedTextMessage as Record<string, unknown>)?.text as string | undefined
         const imageCaption = (msgContent?.imageMessage as Record<string, unknown>)?.caption as string | undefined
@@ -72,17 +88,14 @@ export async function POST(request: NextRequest) {
 
         const messageText =
           (msgContent?.conversation as string) ||
-          extText ||
-          imageCaption ||
-          videoCaption ||
-          (msg.body as string) ||
-          ''
+          extText || imageCaption || videoCaption ||
+          (msg.body as string) || ''
 
         if (!messageText && !msg.hasMedia) continue
 
         const key = msg.key as Record<string, unknown> | undefined
-        const fromMe: boolean = (key?.fromMe as boolean) ?? (msg.fromMe as boolean) ?? false
-        const externalId: string | null = (key?.id as string) || null
+        const fromMe = (key?.fromMe as boolean) ?? false
+        const externalId = (key?.id as string) || null
         const ts = msg.messageTimestamp as number | undefined
         const createdAt = ts ? new Date(ts * 1000).toISOString() : new Date().toISOString()
 
@@ -111,7 +124,7 @@ export async function POST(request: NextRequest) {
       success: true,
       synced: syncedChats,
       messages: syncedMessages,
-      message: `✅ Sincronização completa: ${syncedChats} contatos e ${syncedMessages} mensagens históricas salvas!`,
+      message: `✅ ${syncedChats} conversas recentes e ${syncedMessages} mensagens sincronizadas!`,
     })
   } catch (err) {
     console.error('[/api/whatsapp/sync-deep] Erro:', err)

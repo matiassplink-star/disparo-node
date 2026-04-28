@@ -37,13 +37,30 @@ export async function POST(request: NextRequest) {
     let syncedChats = 0
     let syncedMessages = 0
 
-    for (const chat of chats) {
-      // Ignorar grupos (@g.us)
-      const remoteJid: string = chat.id || chat.remoteJid || ''
-      if (!remoteJid || remoteJid.endsWith('@g.us') || remoteJid.endsWith('@broadcast')) continue
+    // Ordenar pelos mais recentes e filtrar individuais
+    const individualChats = chats
+      .filter((c: Record<string, unknown>) => {
+        const jid = (c.remoteJid as string) || ''
+        return jid && !jid.endsWith('@g.us') && !jid.endsWith('@broadcast')
+      })
+      .sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
+        const ta = new Date((a.updatedAt as string) || 0).getTime()
+        const tb = new Date((b.updatedAt as string) || 0).getTime()
+        return tb - ta
+      })
 
-      const phone = remoteJid.replace('@s.whatsapp.net', '').replace('@c.us', '')
-      const name: string = chat.name || chat.pushName || phone
+    for (const chat of individualChats) {
+      // Usar remoteJid real — não o id interno da Evolution
+      const remoteJid = (chat.remoteJid as string) || ''
+      if (!remoteJid) continue
+
+      const phone = remoteJid
+        .replace('@s.whatsapp.net', '')
+        .replace('@c.us', '')
+        .replace('@lid', '')
+
+      // pushName = nome real do contato
+      const name: string = (chat.pushName as string) || (chat.name as string) || phone
 
       // Upsert contato
       await supabase
