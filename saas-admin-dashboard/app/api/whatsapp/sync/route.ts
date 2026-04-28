@@ -78,28 +78,28 @@ export async function POST(request: NextRequest) {
         if (!messageText && !msg.hasMedia) continue
 
         const fromMe: boolean = msg.key?.fromMe ?? msg.fromMe ?? false
-        const msgId: string = msg.key?.id || msg.id || ''
+        const externalId: string | null = msg.key?.id || msg.id || null
+        const ts: number | undefined = msg.messageTimestamp
+        const createdAt = ts ? new Date(ts * 1000).toISOString() : new Date().toISOString()
 
-        // Usa upsert com ID externo para não duplicar
         await supabase.from('messages').upsert(
           {
             user_id: user.id,
             instance_id: instance.id,
             remote_jid: phone,
+            external_id: externalId,
             content: messageText || '[Mídia]',
             from_me: fromMe,
             message_type: 'text',
             status: 'sent',
+            created_at: createdAt,
           },
-          // Sem constraint de ID externo ainda — inserir e ignorar se similar recente existir
-          { ignoreDuplicates: false }
+          {
+            onConflict: externalId ? 'user_id,external_id' : 'id',
+            ignoreDuplicates: true,
+          }
         )
         syncedMessages++
-
-        // Evitar rate limiting
-        if (syncedMessages % 50 === 0) {
-          await new Promise(r => setTimeout(r, 100))
-        }
       }
     }
 
