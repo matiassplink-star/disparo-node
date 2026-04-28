@@ -415,22 +415,23 @@ function criarCliente(userId, baseId, proxyUrl) {
         console.log(`[PROXY] Iniciando cliente ${id} sem proxy`);
     }
 
-    // Remove Chromium locks to prevent crash (Code 21) after abrupt restart
+    // Remove ALL Chromium lock files recursively to prevent crash (Code 21) after Docker restart
     const sessionDir = path.join('./sessoes', `session-${id}`);
-    const lockFiles = [
-        path.join(sessionDir, 'SingletonLock'),
-        path.join(sessionDir, 'SingletonCookie'),
-        path.join(sessionDir, 'SingletonSocket'),
-        path.join(sessionDir, 'Default', 'SingletonLock'),
-        path.join(sessionDir, 'Default', 'SingletonCookie'),
-        path.join(sessionDir, 'Default', 'SingletonSocket')
-    ];
-    for (const lockFile of lockFiles) {
-        if (fs.existsSync(lockFile)) {
-            try { fs.unlinkSync(lockFile); }
-            catch (e) {}
-        }
+    function removeLockFilesRecursive(dir) {
+        if (!fs.existsSync(dir)) return;
+        try {
+            const entries = fs.readdirSync(dir, { withFileTypes: true });
+            for (const entry of entries) {
+                const fullPath = path.join(dir, entry.name);
+                if (entry.isDirectory()) {
+                    removeLockFilesRecursive(fullPath);
+                } else if (entry.name.startsWith('Singleton')) {
+                    try { fs.unlinkSync(fullPath); } catch (e) {}
+                }
+            }
+        } catch (e) {}
     }
+    removeLockFilesRecursive(sessionDir);
 
     const client = new Client({
         authStrategy: new LocalAuth({ clientId: id, dataPath: './sessoes' }),
@@ -1705,36 +1706,44 @@ app.post('/api/users/ai-settings', (req, res) => {
     }
 });
 
-// ─── start ─────────────────────────────────────────────────
-if (fs.existsSync('./sessoes')) {
-    const sessoes = fs.readdirSync('./sessoes').filter(f => f.startsWith('session-'));
-    if (sessoes.length > 0) {
-        console.log(`\n♻️ Recuperando ${sessoes.length} sessões salvas do WhatsApp sequencialmente...`);
-        
-        (async () => {
-            for (const s of sessoes) {
-                const id = s.replace('session-', '');
-                const separatorIndex = id.indexOf('_');
-                if (separatorIndex !== -1) {
-                    const userId = id.substring(0, separatorIndex);
-                    const baseId = id.substring(separatorIndex + 1);
-                    const meta = metaSalva[id] || {};
-                    criarCliente(userId, baseId, meta.proxy);
-                    
-                    // Delay de 3 segundos para não sobrecarregar a CPU/RAM e evitar ProtocolError do Puppeteer
-                    await new Promise(r => setTimeout(r, 3000));
-                }
-            }
-        })();
-    }
-}
+// ─── healthcheck endpoint (required by Coolify/Docker) ─────
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'ok', uptime: process.uptime() });
+});
 
+// ─── start ─────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log('');
     console.log('╔═══════════════════════════════════╗');
     console.log('║   🚀 ZAPLINK — INICIADO           ║');
-    console.log('║   http://localhost:3001           ║');
+    console.log(`║   http://localhost:${PORT}           ║`);
     console.log('╚═══════════════════════════════════╝');
     console.log('');
+
+    // Recuperar sessões DEPOIS do servidor estar escutando
+    if (fs.existsSync('./sessoes')) {
+        const sessoes = fs.readdirSync('./sessoes').filter(f => f.startsWith('session-'));
+        if (sessoes.length > 0) {
+            console.log(`♻️ Recuperando ${sessoes.length} sessões salvas do WhatsApp sequencialmente...`);
+            
+            (async () => {
+                for (const s of sessoes) {
+                    const id = s.replace('session-', '');
+                    const separatorIndex = id.indexOf('_');
+                    if (separatorIndex !== -1) {
+                        const userId = id.substring(0, separatorIndex);
+                        const baseId = id.substring(separatorIndex + 1);
+                        const meta = metaSalva[id] || {};
+                        try {
+                            criarCliente(userId, baseId, meta.proxy);
+                        } catch (err) {
+                            console.error(`❌ Erro ao recuperar sessão ${id}:`, err.message);
+                        }
+                        await new Promise(r => setTimeout(r, 3000));
+                    }
+                }
+            })();
+        }
+    }
 });
