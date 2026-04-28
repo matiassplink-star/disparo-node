@@ -419,12 +419,16 @@ function criarCliente(userId, baseId, proxyUrl) {
     const sessionDir = path.join('./sessoes', `session-${id}`);
     const lockFiles = [
         path.join(sessionDir, 'SingletonLock'),
-        path.join(sessionDir, 'Default', 'SingletonLock')
+        path.join(sessionDir, 'SingletonCookie'),
+        path.join(sessionDir, 'SingletonSocket'),
+        path.join(sessionDir, 'Default', 'SingletonLock'),
+        path.join(sessionDir, 'Default', 'SingletonCookie'),
+        path.join(sessionDir, 'Default', 'SingletonSocket')
     ];
     for (const lockFile of lockFiles) {
         if (fs.existsSync(lockFile)) {
-            try { fs.unlinkSync(lockFile); console.log(`[PROXY] Lock removido: ${lockFile}`); }
-            catch (e) { console.error(`[PROXY] Erro ao remover lock ${lockFile}:`, e.message); }
+            try { fs.unlinkSync(lockFile); }
+            catch (e) {}
         }
     }
 
