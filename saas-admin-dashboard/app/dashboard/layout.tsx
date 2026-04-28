@@ -84,9 +84,9 @@ export default function DashboardLayout({
     <ThemeProvider>
       <LanguageProvider>
         <div className="flex min-h-screen relative overflow-hidden bg-background text-foreground transition-colors duration-300 dark:bg-[#050505] bg-white">
-          {/* Efeito Aurora — Fix #44: substituído roxo por azul */}
-          <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vh] bg-[#22c55e] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-pulse pointer-events-none z-0"></div>
-          <div className="absolute bottom-[-20%] right-[-10%] w-[40vw] h-[60vh] bg-[#3b82f6] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-pulse delay-1000 pointer-events-none z-0"></div>
+          {/* Efeito Aurora — Adaptado para Dark e Light mode para combinar com a Landing */}
+          <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vh] bg-[#22c55e] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-20 dark:opacity-10 animate-pulse pointer-events-none z-0"></div>
+          <div className="absolute bottom-[-20%] right-[-10%] w-[40vw] h-[60vh] bg-[#3b82f6] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-20 dark:opacity-10 animate-pulse delay-1000 pointer-events-none z-0"></div>
 
           {/* Fix #48/54: Sidebar envolto em Suspense (usa useSearchParams internamente) */}
           <Suspense fallback={<div className="w-64 bg-[#16181c] border-r border-[#2a2d34]" />}>

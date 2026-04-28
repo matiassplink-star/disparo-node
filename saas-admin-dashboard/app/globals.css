@@ -36,10 +36,25 @@ html {
     --radius: 0.75rem;
   }
   .dark {
-    --background: #000000;
-    --foreground: #ffffff;
-    --card: #0a0a0a;
-    --border: #1a1a1a;
+    --background: #050505;
+    --foreground: #e8eaed;
+    --card: #16181c;
+    --card-foreground: #e8eaed;
+    --popover: #16181c;
+    --popover-foreground: #e8eaed;
+    --primary: #22c55e;
+    --primary-foreground: #0a1a10;
+    --secondary: #2a2d34;
+    --secondary-foreground: #e8eaed;
+    --muted: #2a2d34;
+    --muted-foreground: #8b949e;
+    --accent: #1e2028;
+    --accent-foreground: #e8eaed;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --border: #2a2d34;
+    --input: #16181c;
+    --ring: #22c55e;
   }
 }
 
