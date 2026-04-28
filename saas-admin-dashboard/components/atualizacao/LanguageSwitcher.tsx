@@ -16,7 +16,7 @@ export function LanguageSwitcher() {
       {(Object.keys(flags) as Array<keyof typeof flags>).map((lang) => (
         <button
           key={lang}
-          onClick={() => setLanguage(lang)}
+          onClick={() => setLanguage(lang as 'pt' | 'en' | 'es')}
           className={`text-xl p-1 rounded-md transition-all hover:scale-110 ${
             language === lang 
               ? 'bg-white dark:bg-white/10 shadow-sm scale-110 ring-1 ring-green-500/50' 

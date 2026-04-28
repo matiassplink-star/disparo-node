@@ -130,35 +130,22 @@ function WhatsAppPageInner() {
     )
   }
 
-  if (!acessoAtivo || showCheckout) {
-    const dataExpiracao = user?.acesso_ate ? new Date(user.acesso_ate).toLocaleDateString('pt-BR') : null
-    void dataExpiracao // usado implicitamente no template — suprime lint
+  if (!acessoAtivo) {
     return (
       <div className="flex items-center justify-center p-6">
-        <div className="max-w-2xl w-full">
+        <div className="max-w-md w-full">
           <div className="bg-[#16181c] border border-[#2a2d34] rounded-3xl p-8 text-center shadow-2xl">
             <div className="w-16 h-16 bg-orange-500/10 border border-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
               <span className="text-3xl">⏳</span>
             </div>
-            {acessoAtivo && (
-              <button onClick={() => setShowCheckout(false)} className="mb-6 text-xs font-bold px-4 py-2 rounded-xl border border-[#2a2d34] text-[#9ca3af] hover:text-[#e8eaed] hover:bg-[#2a2d34] transition-all">
-                ← Voltar ao painel
-              </button>
-            )}
-            <h2 className="text-2xl font-black text-[#e8eaed] mb-2 uppercase">
-              {acessoAtivo ? 'Renovar Assinatura' : 'Acesso Expirado'}
-            </h2>
-            <p className="text-gray-500 text-sm mb-8">Escolha um dos planos abaixo para liberar todas as ferramentas de automação.</p>
-            <div className="bg-[#0e0f11] rounded-2xl p-6 border border-[#2a2d34]">
-              {/* Fix #52: Wallet só renderiza quando há um preferenceId válido */}
-              {preferenceId && pk ? (
-                // @ts-expect-error — Wallet types incomplete in current SDK version
-                <Wallet initialization={{ preferenceId, redirectMode: 'self' }} />
-              ) : (
-                <p className="text-sm text-[#6b7280] py-4">Selecione um plano abaixo para continuar.</p>
-              )}
-              <a href={waLink} target="_blank" className="inline-block w-full py-3 bg-[#22c55e] text-[#0a1a10] rounded-xl font-bold text-sm mt-4 no-underline">Pagar via WhatsApp 💬</a>
-            </div>
+            <h2 className="text-2xl font-black text-[#e8eaed] mb-2 uppercase">Acesso Expirado</h2>
+            <p className="text-gray-500 text-sm mb-6">Renove sua assinatura para continuar usando as ferramentas de automação.</p>
+            <a href="/dashboard/perfil" className="inline-block w-full py-3 bg-[#22c55e] text-[#0a1a10] rounded-xl font-bold text-sm no-underline hover:opacity-90 transition-all">
+              Ver Planos e Renovar →
+            </a>
+            <a href={waLink} target="_blank" className="inline-block w-full py-3 mt-3 rounded-xl font-bold text-sm no-underline border border-[#2a2d34] text-[#9ca3af] hover:text-[#e8eaed] hover:bg-[#2a2d34] transition-all">
+              Falar com Suporte 💬
+            </a>
           </div>
         </div>
       </div>
@@ -176,7 +163,7 @@ function WhatsAppPageInner() {
           diasRestantes <= 3 ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-green-500/10 text-green-400 border-green-500/20'
         }`}>
           <div>{diasRestantes <= 3 ? '⚠️' : '✅'} Acesso: {new Date(user!.acesso_ate!).toLocaleDateString('pt-BR')} ({diasRestantes} dias)</div>
-          <button onClick={() => setShowCheckout(true)} className="px-4 py-1 bg-[#22c55e] text-[#0a1a10] rounded-lg font-black uppercase">Fazer Upgrade ⚡</button>
+          <a href="/dashboard/perfil" className="px-4 py-1 bg-[#22c55e] text-[#0a1a10] rounded-lg font-black uppercase no-underline text-[11px]">Fazer Upgrade ⚡</a>
         </div>
       )}
       <div className="flex-1 w-full overflow-visible">
