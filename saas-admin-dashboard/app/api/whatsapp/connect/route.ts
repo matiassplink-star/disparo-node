@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
 import { createInstance, getQRCode, setInstanceWebhook } from '@/lib/evolution-api'
 
-// URL base do app (Vercel) para o webhook
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://app.splinkapp.com.br'
+// URL base do app para o webhook — usa variável de ambiente ou fallback para URL do Vercel
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://disparo-node-mwrtptvgn-matiassplink-stars-projects.vercel.app'
 const WEBHOOK_URL = `${APP_URL}/api/webhook/evolution`
 
 export async function POST(request: NextRequest) {
