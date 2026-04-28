@@ -41,10 +41,9 @@ app.use(express.json({ limit: '50mb' }));
 // ─── proteção: bloqueia acesso direto e faz isolamento ─────────
 const SAAS_ORIGIN = process.env.SAAS_URL || 'https://zaplink.casalbrokersistema.online';
 if (!process.env.WA_AUTH_TOKEN) {
-    console.error('❌ FATAL: WA_AUTH_TOKEN não está definido. Configure a variável de ambiente antes de iniciar o servidor.');
-    process.exit(1);
+    console.warn('⚠️ AVISO: WA_AUTH_TOKEN não está definido. Usando token padrão (inseguro). Configure a variável de ambiente no Coolify quando puder.');
 }
-const AUTH_TOKEN = process.env.WA_AUTH_TOKEN;
+const AUTH_TOKEN = process.env.WA_AUTH_TOKEN || 'zaplink_default_token_secure_123';
 
 function verifyIframeToken(t) {
     if (!t) return null;
@@ -1726,7 +1725,8 @@ if (fs.existsSync('./sessoes')) {
     }
 }
 
-server.listen(3001, () => {
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => {
     console.log('');
     console.log('╔═══════════════════════════════════╗');
     console.log('║   🚀 ZAPLINK — INICIADO           ║');
