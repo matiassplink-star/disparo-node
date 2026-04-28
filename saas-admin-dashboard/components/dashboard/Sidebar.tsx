@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { User } from '@/types'
 import { useLanguage } from '@/components/atualizacao/LanguageContext'
 import { 
@@ -30,8 +30,6 @@ interface SidebarProps {
 export function Sidebar({ collapsed = false, onToggle: _onToggle, user, mobileOpen = false, setMobileOpen }: SidebarProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
-
   const [isLoading, setIsLoading] = useState(false)
   const { t } = useLanguage()
 

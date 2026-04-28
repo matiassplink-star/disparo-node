@@ -33,13 +33,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'WhatsApp não está conectado.' }, { status: 400 })
     }
 
-    let evoRes: any
+    let evoRes: unknown
     let tryLidFallback = false
 
     try {
       // Tenta enviar com número normal primeiro
       evoRes = await sendTextMessage(instance.instance_name, remoteJid, text)
-    } catch (try1Error: any) {
+    } catch (try1Error: unknown) {
       // A abstração sendTextMessage lança Erro se o status for 400 (ex: número não existe)
       const errStr = try1Error.message || String(try1Error)
       if (errStr.includes('"exists":false') || errStr.includes('not found') || errStr.includes('Bad Request')) {
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     if (tryLidFallback) {
       try {
         evoRes = await sendTextMessage(instance.instance_name, `${remoteJid}@lid`, text)
-      } catch (try2Error: any) {
+      } catch (try2Error: unknown) {
         // Se a tentativa com @lid tbm falhar, joga o erro pro catch global mostrar
         throw try2Error
       }
