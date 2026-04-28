@@ -128,13 +128,11 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
       })
       .subscribe()
 
-    // Polling de 5s como fallback
-    pollRef.current = setInterval(fetchMessages, 5000)
+    // Sem polling — o Realtime + setTimeout(1s) pós-envio são suficientes
 
     return () => {
       supabase.removeChannel(insertChannel)
       supabase.removeChannel(updateChannel)
-      if (pollRef.current) clearInterval(pollRef.current)
     }
   }, [activeChat, fetchMessages, supabase])
 

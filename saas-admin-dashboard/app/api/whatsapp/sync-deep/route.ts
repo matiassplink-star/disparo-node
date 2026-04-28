@@ -122,12 +122,17 @@ export async function POST(request: NextRequest) {
       if (!Array.isArray(msgs)) continue
 
       for (const msg of msgs) {
-        // Validação ESTREMA: Evolution API tem bug e pode retornar msgs globais!
+        // Validação: normalizar AMBOS os JIDs antes de comparar
+        // remoteJid pode ser "7911413706962@lid" e msgJid pode ser "7911413706962@s.whatsapp.net"
         const msgKey = msg.key as Record<string, unknown> | undefined
-        const msgJid = (msgKey?.remoteJid as string) || (msg.remoteJid as string) || ''
+        const rawMsgJid = (msgKey?.remoteJid as string) || (msg.remoteJid as string) || ''
+        const normalizedMsgJid = rawMsgJid
+          .replace('@s.whatsapp.net', '')
+          .replace('@c.us', '')
+          .replace('@lid', '')
         
-        if (msgJid && msgJid !== remoteJid) {
-          // Ignora mensagens vazadas de outras conversas/grupos
+        if (normalizedMsgJid && normalizedMsgJid !== phone) {
+          // JIDs diferentes após normalização = vazamento de outra conversa
           continue
         }
 
