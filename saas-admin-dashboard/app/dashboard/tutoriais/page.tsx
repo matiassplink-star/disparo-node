@@ -203,7 +203,7 @@ export default function TutoriaisPage() {
         <div className="text-center py-16 rounded-lg" style={{ background: '#16181c', border: '1px solid #2a2d34' }}>
           <div className="text-3xl mb-3 opacity-30">▶</div>
           <p className="text-xs" style={{ color: '#6b7280' }}>Nenhum tutorial cadastrado</p>
-          {isAdmin && <p className="text-[10px] mt-1" style={{ color: '#4b5563' }}>Clique em "+ Novo Tutorial" para começar</p>}
+          {isAdmin && <p className="text-[10px] mt-1" style={{ color: '#4b5563' }}>Clique em &ldquo;+ Novo Tutorial&rdquo; para começar</p>}
         </div>
       ) : (
         <div className="space-y-10">

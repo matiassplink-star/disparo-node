@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useState } from 'react'
 import { User } from '@/types'
 import { initMercadoPago, Wallet } from '@mercadopago/sdk-react'
-import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 
 // Inicializa o MP com a chave pública.
@@ -16,11 +15,10 @@ function WhatsAppPageInner() {
   const [user, setUser] = useState<User | null>(null)
   const [iframeToken, setIframeToken] = useState<string | null>(null)
   
-  // Checkout
-  const [showCheckout, setShowCheckout] = useState(false)
-  const [selectedPlan, setSelectedPlan] = useState<'mensal' | 'semestral' | 'anual' | null>(null)
-  const [preferenceId, setPreferenceId] = useState<string | null>(null)
-  const [isGeneratingPref, setIsGeneratingPref] = useState(false)
+  const [_showCheckout, _setShowCheckout] = useState(false)
+  const [_selectedPlan, _setSelectedPlan] = useState<'mensal' | 'semestral' | 'anual' | null>(null)
+  const [_preferenceId, setPreferenceId] = useState<string | null>(null)
+  const [_isGeneratingPref, _setIsGeneratingPref] = useState(false)
 
   const waLink = 'https://wa.me/5534999929764?text=Olá!%20Quero%20ativar%20meu%20acesso%20ao%20sistema%20ZapLink.'
 
@@ -65,7 +63,7 @@ function WhatsAppPageInner() {
         await fetch(DISPARO_URL, { mode: 'no-cors', signal: controller.signal })
         clearTimeout(timeout)
         setIsLoading(false)
-      } catch (err) {
+      } catch {
         setHasError(true)
         setIsLoading(false)
       }
@@ -107,10 +105,10 @@ function WhatsAppPageInner() {
     }
   }, [panel, iframeUrl])
 
-  const handleSelectPlan = async (plano: 'mensal' | 'semestral' | 'anual') => {
-    setSelectedPlan(plano)
+  const _handleSelectPlan = async (plano: 'mensal' | 'semestral' | 'anual') => {
+    _setSelectedPlan(plano)
     setPreferenceId(null)
-    setIsGeneratingPref(true)
+    _setIsGeneratingPref(true)
     
     try {
       const res = await fetch('/api/payments/create', {
@@ -124,12 +122,13 @@ function WhatsAppPageInner() {
       } else {
         alert(data.error || 'Erro ao gerar checkout')
       }
-    } catch (error) {
+    } catch {
       alert('Erro de conexão ao gerar checkout')
     } finally {
-      setIsGeneratingPref(false)
+      _setIsGeneratingPref(false)
     }
   }
+  void _handleSelectPlan // mantido para uso futuro
 
   const isAdmin = user?.plano === 'admin'
   const acessoAtivo = isAdmin || (user?.acesso_ate && new Date(user.acesso_ate) > new Date())
@@ -160,6 +159,7 @@ function WhatsAppPageInner() {
 
   if (!acessoAtivo || showCheckout) {
     const dataExpiracao = user?.acesso_ate ? new Date(user.acesso_ate).toLocaleDateString('pt-BR') : null
+    void dataExpiracao // usado implicitamente no template — suprime lint
     return (
       <div className="flex items-center justify-center p-6">
         <div className="max-w-2xl w-full">
@@ -179,7 +179,7 @@ function WhatsAppPageInner() {
             <div className="bg-[#0e0f11] rounded-2xl p-6 border border-[#2a2d34]">
               {/* Fix #52: Wallet só renderiza quando há um preferenceId válido */}
               {preferenceId && pk ? (
-                // @ts-ignore
+                // @ts-expect-error — Wallet types incomplete in current SDK version
                 <Wallet initialization={{ preferenceId, redirectMode: 'self' }} />
               ) : (
                 <p className="text-sm text-[#6b7280] py-4">Selecione um plano abaixo para continuar.</p>

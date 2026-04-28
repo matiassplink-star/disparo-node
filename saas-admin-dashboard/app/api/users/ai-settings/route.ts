@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
       .single()
 
     return NextResponse.json(user || { openai_key: '', openai_prompt: '' })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Erro ao buscar configurações' }, { status: 500 })
   }
 }

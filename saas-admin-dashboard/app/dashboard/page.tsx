@@ -17,10 +17,7 @@ export default function DashboardPage() {
           const userData = await meRes.json()
           setUser(userData)
 
-          // Buscar números do servidor de WhatsApp
-          const DISPARO_URL = process.env.NEXT_PUBLIC_WA_SERVER_URL || 'http://localhost:3001'
-          // Nota: Em produção, isso precisaria de um token ou proxy via API route
-          // Para simplificar, assumimos que o usuário já tem o token no cookie ou localStorage se acessou o iframe
+          // Buscar dados de acesso
           
           const days = userData.acesso_ate 
             ? Math.ceil((new Date(userData.acesso_ate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))

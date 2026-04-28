@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 // Healthcheck interno — não expõe informações sensíveis
-export async function GET(req: NextRequest) {
+export async function GET() {
   return NextResponse.json({ status: 'ok', ts: Date.now() })
 }

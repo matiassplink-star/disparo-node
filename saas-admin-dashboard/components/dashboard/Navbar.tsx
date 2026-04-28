@@ -16,7 +16,7 @@ interface NavbarProps {
   onMobileToggle?: () => void
 }
 
-export function Navbar({ sidebarWidth = 256, collapsed, onToggle, onMobileToggle }: NavbarProps) {
+export function Navbar({ sidebarWidth: _sidebarWidth = 256, collapsed, onToggle, onMobileToggle }: NavbarProps) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)

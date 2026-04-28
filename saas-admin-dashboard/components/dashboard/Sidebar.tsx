@@ -1,12 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { User } from '@/types'
 import { useLanguage } from '@/components/atualizacao/LanguageContext'
 import { 
   LayoutDashboard, 
-  Activity, 
   Smartphone, 
   BookUser, 
   Send, 
@@ -18,8 +17,6 @@ import {
   LifeBuoy, 
   Globe, 
   LogOut,
-  ChevronLeft,
-  ChevronRight,
   ShieldCheck,
   Lock
 } from 'lucide-react'
@@ -32,7 +29,7 @@ interface SidebarProps {
   setMobileOpen?: (open: boolean) => void
 }
 
-export function Sidebar({ collapsed = false, onToggle, user, mobileOpen = false, setMobileOpen }: SidebarProps) {
+export function Sidebar({ collapsed = false, onToggle: _onToggle, user, mobileOpen = false, setMobileOpen }: SidebarProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -83,7 +80,7 @@ export function Sidebar({ collapsed = false, onToggle, user, mobileOpen = false,
     })
   }
 
-  const handleItemClick = (item: any, e: React.MouseEvent) => {
+  const handleItemClick = (item: { action?: string; panel?: string; href?: string; external?: boolean }, e: React.MouseEvent) => {
     if (item.external) return;
     e.preventDefault();
     if (setMobileOpen) setMobileOpen(false);
@@ -161,7 +158,7 @@ export function Sidebar({ collapsed = false, onToggle, user, mobileOpen = false,
                         size={18} 
                         strokeWidth={2.5}
                         className={`transition-all duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}
-                        style={{ color: isActive ? '#22c55e' : (item as any).color || '#64748b' }}
+                        style={{ color: isActive ? '#22c55e' : (item as { color?: string }).color || '#64748b' }}
                       />
                       {!collapsed && (
                         <div className="flex justify-between items-center w-full">

@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Upload para o bucket "avatars"
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from('avatars')
       .upload(filePath, file, {
         upsert: true,
@@ -68,8 +68,9 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, url: publicUrl })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Desconhecido'
     console.error('Erro fatal no upload:', error)
-    return NextResponse.json({ error: 'Erro interno: ' + (error.message || 'Desconhecido') }, { status: 500 })
+    return NextResponse.json({ error: 'Erro interno: ' + msg }, { status: 500 })
   }
 }

@@ -90,15 +90,15 @@ export async function POST(req: NextRequest) {
       })
 
       return NextResponse.json({ preferenceId: pref.id, pagamentoId: pagamento.id })
-    } catch (mpError: any) {
+    } catch (mpError: unknown) {
+      const msg = mpError instanceof Error ? mpError.message : 'Falha ao criar preferência de pagamento. Verifique se o email é válido e diferente do vendedor.'
       console.error('[MERCADO PAGO ERROR]:', mpError)
-      return NextResponse.json({ 
-        error: 'Erro no Mercado Pago: ' + (mpError?.message || 'Falha ao criar preferência de pagamento. Verifique se o email é válido e diferente do vendedor.') 
-      }, { status: 400 })
+      return NextResponse.json({ error: 'Erro no Mercado Pago: ' + msg }, { status: 400 })
     }
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Erro ao criar pagamento'
     console.error('Erro geral ao criar pagamento:', error)
-    return NextResponse.json({ error: error.message || 'Erro ao criar pagamento' }, { status: 500 })
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

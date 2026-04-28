@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { avatar_url, nome, telefone } = body
 
-    const updateData: any = {}
+    const updateData: Record<string, string> = {}
     if (avatar_url !== undefined) updateData.avatar_url = avatar_url
     if (nome !== undefined) updateData.nome = nome
     if (telefone !== undefined) updateData.telefone = telefone

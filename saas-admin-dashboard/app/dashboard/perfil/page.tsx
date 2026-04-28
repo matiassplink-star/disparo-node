@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { User } from '@/types'
 import { initMercadoPago, Wallet } from '@mercadopago/sdk-react'
 
 // Inicializa o MP
@@ -10,7 +11,7 @@ const pk = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY || ''
 if (pk) initMercadoPago(pk, { locale: 'pt-BR' })
 
 export default function PerfilPage() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
@@ -56,7 +57,7 @@ export default function PerfilPage() {
       } else {
         alert(data.error || 'Erro ao subir foto')
       }
-    } catch (error) {
+    } catch {
       alert('Erro de conexão')
     } finally {
       setIsSaving(false)
@@ -81,7 +82,7 @@ export default function PerfilPage() {
       } else {
         alert(data.error || 'Erro ao gerar checkout')
       }
-    } catch (error) {
+    } catch {
       alert('Erro de conexão ao gerar checkout')
     } finally {
       setIsGeneratingPref(false)
@@ -98,12 +99,11 @@ export default function PerfilPage() {
 
   if (!user) return null;
 
-  const dataCriacao = user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : 'Desconhecida'
   const dataValidade = user.acesso_ate ? new Date(user.acesso_ate).toLocaleDateString('pt-BR') : 'Ilimitado'
   const planoNome = user.plano === 'admin' ? 'Administrador' : user.plano || 'Grátis'
 
   // Gamificação - Badges
-  const getBadge = (u: any) => {
+  const getBadge = (u: User | null) => {
     if (u?.plano === 'admin') return { icon: '👑', name: 'Criador Mestre', color: 'from-yellow-400 to-amber-600', shadow: 'shadow-amber-500/40' }
 
     // Calcula os dias totais de acesso para identificar planos manuais
@@ -121,7 +121,7 @@ export default function PerfilPage() {
           diasAcesso = Math.round((d1 - Date.now()) / (1000 * 60 * 60 * 24));
         }
       }
-    } catch (e) {
+    } catch {
       diasAcesso = 0;
     }
 
@@ -275,8 +275,7 @@ export default function PerfilPage() {
               ].map(p => (
                 <div
                   key={p.id}
-                  onClick={() => gerarPreference(p.id as any)}
-                  className={`relative p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${selectedPlan === p.id
+                  onClick={() => gerarPreference(p.id as 'mensal' | 'semestral' | 'anual')}                  className={`relative p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${selectedPlan === p.id
                       ? 'border-[#22c55e] bg-[#22c55e]/10 transform scale-105 shadow-xl shadow-green-500/20'
                       : 'border-white/10 hover:border-white/30 bg-black/40 hover:bg-black/60'
                     }`}

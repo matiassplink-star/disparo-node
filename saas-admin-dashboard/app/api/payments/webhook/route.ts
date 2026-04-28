@@ -31,13 +31,10 @@ function verifyMpSignature(req: NextRequest, rawBody: string): boolean {
 }
 
 export async function POST(req: NextRequest) {
-  let rawBody = ''
-  try {
-    rawBody = await req.text()
-  } catch { /* ignora */ }
+  try { await req.text() } catch { /* ignora */ }
 
   // Fix #49: verificação de assinatura MP
-  if (!verifyMpSignature(req, rawBody)) {
+  if (!verifyMpSignature(req, '')) {
     console.warn('[WEBHOOK] Assinatura inválida — requisição rejeitada')
     return NextResponse.json({ success: true }) // Fix #60: sempre 200 para MP
   }

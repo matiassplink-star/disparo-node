@@ -37,13 +37,13 @@ export function getSupabaseClient(): SupabaseClient {
 
 // Backward-compatible exports (lazy getters)
 export const supabase = new Proxy({} as SupabaseClient, {
-  get(_, prop) {
-    return (getSupabase() as any)[prop]
+  get(_, prop: string) {
+    return (getSupabase() as unknown as Record<string, unknown>)[prop]
   }
 })
 
 export const supabaseClient = new Proxy({} as SupabaseClient, {
-  get(_, prop) {
-    return (getSupabaseClient() as any)[prop]
+  get(_, prop: string) {
+    return (getSupabaseClient() as unknown as Record<string, unknown>)[prop]
   }
 })
