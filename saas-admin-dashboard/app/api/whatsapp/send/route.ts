@@ -33,30 +33,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'WhatsApp não está conectado.' }, { status: 400 })
     }
 
-    // Tenta enviar com número normal primeiro
-    let evoRes = await sendTextMessage(instance.instance_name, remoteJid, text)
+    let evoRes: any
+    let tryLidFallback = false
 
-    // Se falhou (exists: false) = contato @lid (Meta Privacy) — retry com @lid
-    const evoAny = evoRes as Record<string, unknown>
-    const isNotFound =
-      evoAny?.status === 400 ||
-      JSON.stringify(evoAny).includes('"exists":false') ||
-      JSON.stringify(evoAny).includes('not found')
-
-    if (isNotFound) {
-      evoRes = await sendTextMessage(instance.instance_name, `${remoteJid}@lid`, text)
+    try {
+      // Tenta enviar com número normal primeiro
+      evoRes = await sendTextMessage(instance.instance_name, remoteJid, text)
+    } catch (try1Error: any) {
+      // A abstração sendTextMessage lança Erro se o status for 400 (ex: número não existe)
+      const errStr = try1Error.message || String(try1Error)
+      if (errStr.includes('"exists":false') || errStr.includes('not found') || errStr.includes('Bad Request')) {
+        tryLidFallback = true
+      } else {
+        throw try1Error // Repassa o erro se for timeout, etc
+      }
     }
 
-    // Se ainda falhou, retorna erro real (não genérico)
+    if (tryLidFallback) {
+      try {
+        evoRes = await sendTextMessage(instance.instance_name, `${remoteJid}@lid`, text)
+      } catch (try2Error: any) {
+        // Se a tentativa com @lid tbm falhar, joga o erro pro catch global mostrar
+        throw try2Error
+      }
+    }
+
+    // Se ainda falhou sem dar throw (improvável com a nossa helper, mas checa a key por segurança)
     const evoFinal = evoRes as Record<string, unknown>
     if (!evoFinal?.key) {
-      const resp = evoFinal?.response as Record<string, unknown> | undefined
-      const errorMsg =
-        (Array.isArray(resp?.message) ? resp?.message[0] : resp?.message) ||
-        evoFinal?.message ||
-        'Número não encontrado no WhatsApp'
-      console.error('[send] Evolution API erro:', JSON.stringify(evoFinal))
-      return NextResponse.json({ error: String(errorMsg) }, { status: 400 })
+      console.error('[send] Evolution API erro sem key:', JSON.stringify(evoFinal))
+      return NextResponse.json({ error: 'Número não encontrado ou sem permissão de envio' }, { status: 400 })
     }
 
     const keyData = evoFinal.key as Record<string, unknown>
