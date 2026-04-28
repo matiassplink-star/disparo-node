@@ -33,14 +33,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'WhatsApp não está conectado.' }, { status: 400 })
     }
 
-    // Envia via Evolution API — o retorno contém o key.id da mensagem
-    const evoRes = await sendTextMessage(instance.instance_name, remoteJid, text)
+    // Tenta enviar com número normal primeiro
+    let evoRes = await sendTextMessage(instance.instance_name, remoteJid, text)
 
-    // Captura o external_id da resposta da Evolution para evitar duplicata com webhook
-    // Evolution retorna: { key: { id: 'ABC123', fromMe: true, remoteJid: '...' }, ... }
-    const externalId: string | null = evoRes?.key?.id || null
+    // Se falhou (exists: false) = contato @lid (Meta Privacy) — retry com @lid
+    const evoAny = evoRes as Record<string, unknown>
+    const isNotFound =
+      evoAny?.status === 400 ||
+      JSON.stringify(evoAny).includes('"exists":false') ||
+      JSON.stringify(evoAny).includes('not found')
 
-    // Salva a mensagem com external_id para que o upsert do webhook detecte duplicata
+    if (isNotFound) {
+      evoRes = await sendTextMessage(instance.instance_name, `${remoteJid}@lid`, text)
+    }
+
+    // Se ainda falhou, retorna erro real (não genérico)
+    const evoFinal = evoRes as Record<string, unknown>
+    if (!evoFinal?.key) {
+      const resp = evoFinal?.response as Record<string, unknown> | undefined
+      const errorMsg =
+        (Array.isArray(resp?.message) ? resp?.message[0] : resp?.message) ||
+        evoFinal?.message ||
+        'Número não encontrado no WhatsApp'
+      console.error('[send] Evolution API erro:', JSON.stringify(evoFinal))
+      return NextResponse.json({ error: String(errorMsg) }, { status: 400 })
+    }
+
+    const keyData = evoFinal.key as Record<string, unknown>
+    const externalId: string | null = (keyData?.id as string) || null
+
     await supabase.from('messages').upsert(
       {
         user_id: user.id,

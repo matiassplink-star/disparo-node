@@ -134,15 +134,18 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
         }),
       })
 
-      if (!res.ok) throw new Error('Falha ao enviar')
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || 'Falha ao enviar')
+      }
 
-      // Remove otimística — a mensagem real chega via Realtime ou polling
-      // Aguarda 1s antes de buscar para o webhook processar
+      // Remove otimística — a mensagem real chega via polling
       setTimeout(fetchMessages, 1000)
 
-    } catch {
+    } catch (err) {
       setMessages(prev => prev.filter(m => m.id !== optId))
-      alert('Erro ao enviar mensagem. Verifique a conexão com o WhatsApp.')
+      const msg = err instanceof Error ? err.message : 'Erro ao enviar mensagem'
+      alert(`❌ ${msg}`)
       setInputText(textToSend)
     } finally {
       setIsSending(false)
