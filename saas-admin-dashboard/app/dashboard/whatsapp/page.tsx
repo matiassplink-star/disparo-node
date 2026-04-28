@@ -25,9 +25,12 @@ export default function WhatsAppPage() {
   const checkStatus = useCallback(async () => {
     try {
       const res = await fetch('/api/whatsapp/status')
-      if (!res.ok) return
+      if (!res.ok) {
+        setStatus('disconnected')
+        return
+      }
       const data = await res.json()
-      setStatus(data.status)
+      setStatus(data.status || 'disconnected')
       setPhone(data.phone || null)
       // Se conectou, limpar o QR
       if (data.status === 'connected') setQrCode(null)
