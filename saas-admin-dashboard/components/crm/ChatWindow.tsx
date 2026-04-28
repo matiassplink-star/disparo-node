@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { supabaseClient } from '@/lib/supabase'
 import MessageBubble from './MessageBubble'
 import { User, Mic, Paperclip, Send, Calendar, UserPlus, ArrowRightLeft, Bot, CheckCircle2 } from 'lucide-react'
 
@@ -66,27 +65,21 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
   const [isSending, setIsSending] = useState(false)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const supabase = supabaseClient
 
   const fetchMessages = useCallback(async () => {
     if (!activeChat?.remote_jid) return
-    const { data } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('remote_jid', activeChat.remote_jid)
-      .order('created_at', { ascending: false })
-      .limit(60)
-
-    if (data) {
-      // Ordem cronológica (mais antigas em cima)
+    try {
+      const res = await fetch(`/api/whatsapp/messages?remote_jid=${encodeURIComponent(activeChat.remote_jid)}&limit=60`)
+      if (!res.ok) return
+      const data = await res.json() as Message[]
       setMessages(prev => {
-        const fresh = (data as Message[]).reverse()
-        // Manter mensagens otimísticas até confirmação
         const optimistic = prev.filter(m => String(m.id).startsWith('opt-'))
-        return mergeMessages(fresh, optimistic)
+        return mergeMessages(data, optimistic)
       })
+    } catch {
+      // silencioso — polling vai tentar de novo
     }
-  }, [activeChat, supabase])
+  }, [activeChat])
 
   useEffect(() => {
     if (!activeChat) return
@@ -95,46 +88,14 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
     setMessages([])
     fetchMessages()
 
-    // Canal INSERT — novas mensagens
-    const insertChannel = supabase
-      .channel(`chat_insert_${activeChat.remote_jid}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `remote_jid=eq.${activeChat.remote_jid}`,
-      }, (payload) => {
-        setMessages(prev => mergeMessages(prev, [payload.new as Message]))
-      })
-      .subscribe()
-
-    // Canal UPDATE — status de entrega/leitura
-    const updateChannel = supabase
-      .channel(`chat_update_${activeChat.remote_jid}`)
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'messages',
-        filter: `remote_jid=eq.${activeChat.remote_jid}`,
-      }, (payload) => {
-        const updated = payload.new as Message
-        setMessages(prev =>
-          prev.map(m =>
-            (m.external_id && m.external_id === updated.external_id) || m.id === updated.id
-              ? { ...m, status: updated.status }
-              : m
-          )
-        )
-      })
-      .subscribe()
-
-    // Sem polling — o Realtime + setTimeout(1s) pós-envio são suficientes
+    // Polling de 3s — necessário pois supabaseClient usa auth customizado
+    // (não Supabase Auth nativo), impossibilitando Realtime com RLS
+    pollRef.current = setInterval(fetchMessages, 3000)
 
     return () => {
-      supabase.removeChannel(insertChannel)
-      supabase.removeChannel(updateChannel)
+      if (pollRef.current) clearInterval(pollRef.current)
     }
-  }, [activeChat, fetchMessages, supabase])
+  }, [activeChat, fetchMessages])
 
   // Auto-scroll sem usar scrollIntoView (para não scrollar o layout main acidentalmente)
   useEffect(() => {
