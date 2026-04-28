@@ -182,7 +182,8 @@ export async function GET() {
           .update({ 
             processing: false, 
             retry_count: nextRetry,
-            processed: !willRetry, // se passou de 3, desiste e marca como "processado" pra sair da fila
+            processed: false, // só marca como true quando da sucesso
+            failed: !willRetry, // se passou de 3, manda pra dead letter
             error: logError.message || 'Erro desconhecido' 
           })
           .eq('id', log.id)
