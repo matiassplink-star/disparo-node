@@ -11,13 +11,17 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     if (authError || !user) return NextResponse.json({ error: 'Sessão inválida' }, { status: 401 })
 
-    // Validar corpo
-    const { remoteJid, text } = await request.json()
-    if (!remoteJid || !text) {
+    const { remoteJid: rawJid, text } = await request.json()
+    if (!rawJid || !text) {
       return NextResponse.json({ error: 'Dados insuficientes' }, { status: 400 })
     }
 
-    // Pegar a instância ativa do usuário
+    // Normalizar o remoteJid — sempre usar sem sufixos
+    const remoteJid = rawJid
+      .replace('@s.whatsapp.net', '')
+      .replace('@c.us', '')
+      .replace('@lid', '')
+
     const { data: instance } = await supabase
       .from('whatsapp_instances')
       .select('id, instance_name, status')
@@ -29,25 +33,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'WhatsApp não está conectado.' }, { status: 400 })
     }
 
-    // 1. Enviar mensagem na Evolution API
+    // Envia via Evolution API — o retorno contém o key.id da mensagem
     const evoRes = await sendTextMessage(instance.instance_name, remoteJid, text)
 
-    // 2. Salvar a mensagem no Supabase para aparecer na tela imediatamente 
-    // (Útil para o teste local onde o webhook não funciona)
-    await supabase.from('messages').insert({
-      user_id: user.id,
-      instance_id: instance.id,
-      remote_jid: remoteJid,
-      content: text,
-      from_me: true,
-      message_type: 'text',
-      status: 'sent'
-    })
+    // Captura o external_id da resposta da Evolution para evitar duplicata com webhook
+    // Evolution retorna: { key: { id: 'ABC123', fromMe: true, remoteJid: '...' }, ... }
+    const externalId: string | null = evoRes?.key?.id || null
 
-    return NextResponse.json({ success: true, response: evoRes })
+    // Salva a mensagem com external_id para que o upsert do webhook detecte duplicata
+    await supabase.from('messages').upsert(
+      {
+        user_id: user.id,
+        instance_id: instance.id,
+        remote_jid: remoteJid,
+        external_id: externalId,
+        content: text,
+        from_me: true,
+        message_type: 'text',
+        status: 'sent',
+      },
+      {
+        onConflict: externalId ? 'user_id,external_id' : 'id',
+        ignoreDuplicates: true,
+      }
+    )
 
-  } catch (err: any) {
+    return NextResponse.json({ success: true, externalId })
+
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Falha ao enviar mensagem'
     console.error('[/api/whatsapp/send] Erro:', err)
-    return NextResponse.json({ error: err.message || 'Falha ao enviar mensagem' }, { status: 500 })
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

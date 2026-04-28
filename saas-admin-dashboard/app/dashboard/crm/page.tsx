@@ -176,22 +176,28 @@ export default function CRMPage() {
     fetchKanban()
   }, [fetchChats, fetchKanban])
 
-  // ─── Realtime: novas mensagens atualizam a lista de chats ──────
+  // ─── Realtime: novas mensagens atualizam a lista de chats (com debounce) ────
 
   useEffect(() => {
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
     const channel = supabase
       .channel('crm_new_messages')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages' },
         () => {
-          // Refresh silencioso da lista de chats
-          fetchChats()
+          // Debounce de 2s — evita 5000 chamadas durante Deep Sync
+          if (debounceTimer) clearTimeout(debounceTimer)
+          debounceTimer = setTimeout(() => fetchChats(), 2000)
         }
       )
       .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer)
+      supabase.removeChannel(channel)
+    }
   }, [supabase, fetchChats])
 
   // ─── Kanban Actions ────────────────────────────────────────────

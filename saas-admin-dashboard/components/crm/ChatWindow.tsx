@@ -4,7 +4,23 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabaseClient } from '@/lib/supabase'
 import MessageBubble from './MessageBubble'
 
-// Limpa o remote_jid para exibição (remove sufixos do WhatsApp)
+interface Message {
+  id: string
+  external_id?: string
+  content: string
+  from_me: boolean
+  created_at: string
+  status?: string
+  message_type?: string
+  media_url?: string
+}
+
+interface ActiveChat {
+  remote_jid: string
+  name: string
+  [key: string]: unknown
+}
+
 function cleanJid(jid: string): string {
   return jid
     .replace('@s.whatsapp.net', '')
@@ -12,60 +28,105 @@ function cleanJid(jid: string): string {
     .replace('@lid', '')
 }
 
-export default function ChatWindow({ activeChat }: { activeChat: Record<string, unknown> }) {
-  const [messages, setMessages] = useState<Record<string, unknown>[]>([])
+// Merge sem duplicatas por id ou external_id
+function mergeMessages(prev: Message[], incoming: Message[]): Message[] {
+  const seen = new Set<string>()
+  const result: Message[] = []
+  for (const m of [...prev, ...incoming]) {
+    const key = m.external_id || m.id
+    if (!seen.has(key)) {
+      seen.add(key)
+      result.push(m)
+    } else {
+      // Substituir a versão mais antiga pela mais nova (ex: status atualizado)
+      const idx = result.findIndex(r => (r.external_id || r.id) === key)
+      if (idx !== -1) result[idx] = m
+    }
+  }
+  return result.sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  )
+}
+
+export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
+  const [messages, setMessages] = useState<Message[]>([])
   const [inputText, setInputText] = useState('')
   const [isSending, setIsSending] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const supabase = supabaseClient
-  const pollRef = useRef<NodeJS.Timeout | null>(null)
 
   const fetchMessages = useCallback(async () => {
     if (!activeChat?.remote_jid) return
     const { data } = await supabase
       .from('messages')
       .select('*')
-      .eq('remote_jid', activeChat.remote_jid as string)
+      .eq('remote_jid', activeChat.remote_jid)
       .order('created_at', { ascending: false })
       .limit(60)
 
     if (data) {
-      setMessages(data.reverse())
+      // Ordem cronológica (mais antigas em cima)
+      setMessages(prev => {
+        const fresh = (data as Message[]).reverse()
+        // Manter mensagens otimísticas até confirmação
+        const optimistic = prev.filter(m => String(m.id).startsWith('opt-'))
+        return mergeMessages(fresh, optimistic)
+      })
     }
   }, [activeChat, supabase])
 
   useEffect(() => {
     if (!activeChat) return
+
+    // Limpa mensagens imediatamente ao trocar de conversa
+    setMessages([])
     fetchMessages()
 
-    // Supabase Realtime — ouve novas mensagens em tempo real
-    const channel = supabase
-      .channel(`chat_${activeChat.remote_jid}`)
+    // Canal INSERT — novas mensagens
+    const insertChannel = supabase
+      .channel(`chat_insert_${activeChat.remote_jid}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'messages',
-        filter: `remote_jid=eq.${activeChat.remote_jid}`
+        filter: `remote_jid=eq.${activeChat.remote_jid}`,
       }, (payload) => {
-        setMessages(prev => {
-          // Evita duplicar a mensagem otimística
-          const exists = prev.some(m => m.id === (payload.new as Record<string, unknown>).id)
-          if (exists) return prev
-          return [...prev.filter(m => !String(m.id).startsWith('opt-')), payload.new as Record<string, unknown>]
-        })
+        setMessages(prev => mergeMessages(prev, [payload.new as Message]))
       })
       .subscribe()
 
-    // Fallback: polling a cada 5s caso o Realtime não esteja ativo
+    // Canal UPDATE — status de entrega/leitura
+    const updateChannel = supabase
+      .channel(`chat_update_${activeChat.remote_jid}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'messages',
+        filter: `remote_jid=eq.${activeChat.remote_jid}`,
+      }, (payload) => {
+        const updated = payload.new as Message
+        setMessages(prev =>
+          prev.map(m =>
+            (m.external_id && m.external_id === updated.external_id) || m.id === updated.id
+              ? { ...m, status: updated.status }
+              : m
+          )
+        )
+      })
+      .subscribe()
+
+    // Polling de 5s como fallback
     pollRef.current = setInterval(fetchMessages, 5000)
 
     return () => {
-      supabase.removeChannel(channel)
+      supabase.removeChannel(insertChannel)
+      supabase.removeChannel(updateChannel)
       if (pollRef.current) clearInterval(pollRef.current)
     }
   }, [activeChat, fetchMessages, supabase])
 
-  // Auto-scroll ao chegar mensagem nova
+  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
@@ -78,8 +139,9 @@ export default function ChatWindow({ activeChat }: { activeChat: Record<string, 
     setInputText('')
     setIsSending(true)
 
-    const optimisticMsg = {
-      id: `opt-${Date.now()}`,
+    const optId = `opt-${Date.now()}`
+    const optimisticMsg: Message = {
+      id: optId,
       content: textToSend,
       from_me: true,
       created_at: new Date().toISOString(),
@@ -94,15 +156,18 @@ export default function ChatWindow({ activeChat }: { activeChat: Record<string, 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           remoteJid: activeChat.remote_jid,
-          text: textToSend
-        })
+          text: textToSend,
+        }),
       })
 
       if (!res.ok) throw new Error('Falha ao enviar')
-      // Após enviar, busca mensagens reais (substitui otimística)
-      await fetchMessages()
+
+      // Remove otimística — a mensagem real chega via Realtime ou polling
+      // Aguarda 1s antes de buscar para o webhook processar
+      setTimeout(fetchMessages, 1000)
+
     } catch {
-      setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id))
+      setMessages(prev => prev.filter(m => m.id !== optId))
       alert('Erro ao enviar mensagem. Verifique a conexão com o WhatsApp.')
       setInputText(textToSend)
     } finally {
@@ -110,8 +175,8 @@ export default function ChatWindow({ activeChat }: { activeChat: Record<string, 
     }
   }
 
-  const displayName = (activeChat.name as string) || cleanJid(activeChat.remote_jid as string)
-  const displayJid = cleanJid(activeChat.remote_jid as string)
+  const displayName = (activeChat.name as string) || cleanJid(activeChat.remote_jid)
+  const displayJid = cleanJid(activeChat.remote_jid)
 
   return (
     <div className="flex flex-col h-full w-full bg-gray-900/50">
@@ -119,7 +184,7 @@ export default function ChatWindow({ activeChat }: { activeChat: Record<string, 
       {/* Header */}
       <div className="h-16 border-b border-gray-800 px-6 flex items-center justify-between bg-gray-900 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-lg overflow-hidden">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-lg">
             {displayName.charAt(0).toUpperCase()}
           </div>
           <div>
@@ -145,7 +210,7 @@ export default function ChatWindow({ activeChat }: { activeChat: Record<string, 
             <p className="text-sm">Nenhuma mensagem nesta conversa ainda.</p>
           </div>
         ) : (
-          messages.map(msg => <MessageBubble key={String(msg.id)} message={msg} />)
+          messages.map(msg => <MessageBubble key={msg.external_id || msg.id} message={msg} />)
         )}
         <div ref={messagesEndRef} />
       </div>
