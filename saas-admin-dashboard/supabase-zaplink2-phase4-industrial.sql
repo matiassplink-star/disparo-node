@@ -26,6 +26,9 @@ DROP INDEX IF EXISTS idx_webhook_logs_queue;
 CREATE INDEX idx_webhook_logs_queue ON webhook_logs(processed, processing, retry_count, created_at);
 
 -- 4. Função RPC Profissional com CTE + SKIP LOCKED + Timeout de Travamento
+DROP FUNCTION IF EXISTS get_unprocessed_webhooks(int);
+DROP FUNCTION IF EXISTS get_unprocessed_webhooks();
+
 CREATE OR REPLACE FUNCTION get_unprocessed_webhooks(batch_size int DEFAULT 50)
 RETURNS SETOF webhook_logs AS $$
 BEGIN
