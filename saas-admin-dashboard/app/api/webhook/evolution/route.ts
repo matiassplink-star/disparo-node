@@ -49,10 +49,14 @@ export async function POST(request: NextRequest) {
     // messages.upsert = nova mensagem em tempo real
     if (event === 'messages.upsert' || event === 'messages.set') {
       let messagesArray: Record<string, unknown>[] = []
-      if (Array.isArray(data)) messagesArray = data
-      else if (data?.messages && Array.isArray(data.messages)) messagesArray = data.messages
-      else if (data?.message) messagesArray = [data.message as Record<string, unknown>]
-      else messagesArray = [data]
+      if (Array.isArray(data)) {
+        messagesArray = data
+      } else if (data?.messages && Array.isArray(data.messages)) {
+        messagesArray = data.messages
+      } else if (data && typeof data === 'object') {
+        // Para mensagens avulsas ('ao vivo'), o payload vem como objeto root: { key: {...}, message: {...} }
+        messagesArray = [data as Record<string, unknown>]
+      }
 
       for (const msg of messagesArray) {
         const key = msg.key as Record<string, unknown> | undefined
