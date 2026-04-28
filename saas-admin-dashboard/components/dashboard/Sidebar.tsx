@@ -7,18 +7,18 @@ import { useLanguage } from '@/components/atualizacao/LanguageContext'
 import { 
   LayoutDashboard, 
   Smartphone, 
-  BookUser, 
   Send, 
-  Download, 
   Eraser, 
-  Users, 
-  UserPlus, 
-  BarChart3, 
   LifeBuoy, 
   Globe, 
   LogOut,
   ShieldCheck,
-  Lock
+  MessageSquare,
+  Kanban,
+  Bot,
+  Download,
+  Users,
+  BookUser
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -41,25 +41,25 @@ export function Sidebar({ collapsed = false, onToggle: _onToggle, user, mobileOp
     {
       label: t('group.principal'),
       items: [
-        { action: 'panel', panel: 'dashboard', href: '/dashboard/whatsapp', label: t('nav.dashboard'), icon: LayoutDashboard, color: '#3b82f6' },
-        { action: 'panel', panel: 'numeros', href: '/dashboard/whatsapp', label: t('nav.numbers'), icon: Smartphone, color: '#f59e0b' },
+        { href: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard, color: '#3b82f6' },
+        { href: '/dashboard/whatsapp', label: 'WhatsApp', icon: Smartphone, color: '#22c55e' },
+      ]
+    },
+    {
+      label: 'Atendimento',
+      items: [
+        { href: '/dashboard/chat', label: 'Chat Interno', icon: MessageSquare, color: '#3b82f6' },
+        { href: '/dashboard/crm', label: 'CRM Kanban', icon: Kanban, color: '#f59e0b' },
+        { href: '/dashboard/agente', label: 'Agente IA', icon: Bot, color: '#10b981' },
       ]
     },
     {
       label: t('group.disparos'),
       items: [
-        { action: 'panel', panel: 'contatos', href: '/dashboard/whatsapp', label: t('nav.contacts'), icon: BookUser, color: '#6366f1' },
-        { action: 'panel', panel: 'disparo', href: '/dashboard/whatsapp', label: t('nav.send'), icon: Send, color: '#10b981' },
-      ]
-    },
-    {
-      label: t('group.ferramentas'),
-      items: [
-        { action: 'panel', panel: 'extrator', href: '/dashboard/whatsapp', label: 'Extrator', icon: Download, color: '#ec4899' },
-        { action: 'panel', panel: 'limpeza', href: '/dashboard/whatsapp', label: t('nav.cleaning'), icon: Eraser, color: '#06b6d4' },
-        { action: 'panel', panel: 'envioGrupos', href: '/dashboard/whatsapp', label: t('nav.groups'), icon: Users, color: '#f97316' },
-        { action: 'panel', panel: 'addGrupos', href: '/dashboard/whatsapp', label: t('nav.addGroups'), icon: UserPlus, color: '#6366f1' },
-        { action: 'panel', panel: 'logs', href: '/dashboard/whatsapp', label: t('nav.reports'), icon: BarChart3, color: '#14b8a6' },
+        { href: '/dashboard/whatsapp/disparo', label: t('nav.send'), icon: Send, color: '#10b981' },
+        { href: '/dashboard/whatsapp/limpeza', label: t('nav.cleaning'), icon: Eraser, color: '#06b6d4' },
+        { href: '/dashboard/whatsapp/extrator', label: 'Extrator', icon: Download, color: '#ec4899' },
+        { href: '/dashboard/whatsapp/grupos', label: t('nav.groups'), icon: Users, color: '#f97316' },
       ]
     },
     {
@@ -136,9 +136,7 @@ export function Sidebar({ collapsed = false, onToggle: _onToggle, user, mobileOp
             )}
             <ul className="space-y-1">
               {group.items.map((item) => {
-                const isPanelActive = item.action === 'panel' && pathname === '/dashboard/whatsapp' && currentPanel === item.panel
-                const isUrlActive = item.href !== '#' && (pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href)))
-                const isActive = isPanelActive || (item.action !== 'panel' && isUrlActive)
+                const isActive = item.href !== '#' && (pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href)))
                 const Icon = item.icon
 
                 return (
@@ -163,9 +161,6 @@ export function Sidebar({ collapsed = false, onToggle: _onToggle, user, mobileOp
                       {!collapsed && (
                         <div className="flex justify-between items-center w-full">
                           <span className="truncate">{item.label}</span>
-                          {item.premium && user?.plano !== 'premium' && user?.plano !== 'admin' && (
-                            <Lock size={12} className="text-slate-400" />
-                          )}
                         </div>
                       )}
                       {isActive && !collapsed && (

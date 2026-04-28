@@ -62,6 +62,9 @@ export default function DashboardLayout({
     const rotasPermitidas = [
       '/dashboard',
       '/dashboard/whatsapp',
+      '/dashboard/chat',
+      '/dashboard/crm',
+      '/dashboard/agente',
       '/dashboard/tutoriais',
       '/dashboard/perfil',
       '/dashboard/settings',
