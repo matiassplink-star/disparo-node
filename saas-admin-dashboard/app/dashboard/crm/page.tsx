@@ -119,6 +119,10 @@ export default function CRMPage() {
   const [search, setSearch] = useState('')
   const [isLoadingChats, setIsLoadingChats] = useState(true)
   const [isLoadingKanban, setIsLoadingKanban] = useState(true)
+  const [showNewChat, setShowNewChat] = useState(false)
+  const [newChatPhone, setNewChatPhone] = useState('')
+  const [newChatName, setNewChatName] = useState('')
+  const [isSendingNew, setIsSendingNew] = useState(false)
   // Guard contra dupla execução em dev (React StrictMode)
   const isCreatingColumns = useRef(false)
 
@@ -265,6 +269,34 @@ export default function CRMPage() {
     }
   }
 
+  // ─── Iniciar Nova Conversa ─────────────────────────────────────
+
+  const handleStartNewChat = async () => {
+    if (!newChatPhone.trim()) return
+    setIsSendingNew(true)
+    const phone = newChatPhone.replace(/\D/g, '') // só números
+    const name = newChatName.trim() || phone
+    try {
+      // Abre o chat diretamente (o envio de msg acontece na ChatWindow)
+      const syntheticChat: Chat = {
+        id: `new-${phone}`,
+        remote_jid: phone,
+        name,
+        chat_status: 'open',
+        lastMessage: null,
+        updated_at: new Date().toISOString(),
+        tags: [],
+      }
+      setActiveChat(syntheticChat)
+      setView('chat')
+      setShowNewChat(false)
+      setNewChatPhone('')
+      setNewChatName('')
+    } finally {
+      setIsSendingNew(false)
+    }
+  }
+
   // ─── Filtered Chats ────────────────────────────────────────────
 
   const filteredChats = chats.filter(
@@ -309,6 +341,15 @@ export default function CRMPage() {
             Kanban
           </button>
           <div className="ml-auto flex gap-1">
+            {/* Botão Nova Conversa */}
+            <button
+              onClick={() => setShowNewChat(true)}
+              title="Iniciar nova conversa"
+              className="p-1.5 rounded-lg text-[#22c55e] hover:text-white hover:bg-[#22c55e]/20 transition-colors flex items-center gap-1 text-xs px-2 font-semibold"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>Novo</span>
+            </button>
             <button
               onClick={async () => {
                 if (!confirm('A Sincronização Profunda vai buscar o histórico de até 50 chats e 100 mensagens por chat. Pode levar até 1 minuto. Deseja continuar?')) return
@@ -361,6 +402,55 @@ export default function CRMPage() {
             </button>
           </div>
         </div>
+
+        {/* Modal Nova Conversa */}
+        {showNewChat && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="bg-[#13161b] border border-[#2a2d34] rounded-2xl p-6 w-80 shadow-2xl">
+              <h3 className="text-white font-bold text-base mb-4">💬 Nova Conversa</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-[#64748b] text-xs mb-1 block">Número (com DDI)</label>
+                  <input
+                    type="tel"
+                    value={newChatPhone}
+                    onChange={e => setNewChatPhone(e.target.value)}
+                    placeholder="5534999001234"
+                    className="w-full bg-[#1e2028] border border-[#2a2d34] rounded-lg px-3 py-2 text-sm text-white placeholder-[#64748b] focus:outline-none focus:border-[#22c55e]"
+                    autoFocus
+                    onKeyDown={e => e.key === 'Enter' && handleStartNewChat()}
+                  />
+                </div>
+                <div>
+                  <label className="text-[#64748b] text-xs mb-1 block">Nome (opcional)</label>
+                  <input
+                    type="text"
+                    value={newChatName}
+                    onChange={e => setNewChatName(e.target.value)}
+                    placeholder="Nome do contato"
+                    className="w-full bg-[#1e2028] border border-[#2a2d34] rounded-lg px-3 py-2 text-sm text-white placeholder-[#64748b] focus:outline-none focus:border-[#22c55e]"
+                    onKeyDown={e => e.key === 'Enter' && handleStartNewChat()}
+                  />
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={() => { setShowNewChat(false); setNewChatPhone(''); setNewChatName('') }}
+                    className="flex-1 px-3 py-2 rounded-lg bg-[#1e2028] text-[#64748b] text-sm hover:text-white transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleStartNewChat}
+                    disabled={!newChatPhone.trim() || isSendingNew}
+                    className="flex-1 px-3 py-2 rounded-lg bg-[#22c55e] text-white text-sm font-semibold hover:bg-[#16a34a] transition-colors disabled:opacity-50"
+                  >
+                    Abrir Chat
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Search */}
         <div className="px-3 py-2 border-b border-[#1e2028]">
