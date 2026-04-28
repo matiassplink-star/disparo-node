@@ -3,19 +3,17 @@ import { getSupabase } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
 
-// Processamento assíncrono (Worker / Cron Job)
-// Lê os webhooks brutos do banco e aplica a lógica pesada
+// Processamento assíncrono Industrial
 export async function GET() {
   try {
     const supabase = getSupabase()
 
-    // Pega até 50 logs não processados
+    // 1. Limpeza automática de logs antigos (Fire-and-forget seguro no banco)
+    supabase.rpc('cleanup_old_webhook_logs').catch(() => {})
+
+    // 2. Busca a fila usando SKIP LOCKED (evita concorrência e duplicação)
     const { data: logs, error: fetchError } = await supabase
-      .from('webhook_logs')
-      .select('*')
-      .eq('processed', false)
-      .order('created_at', { ascending: true })
-      .limit(50)
+      .rpc('get_unprocessed_webhooks', { batch_size: 50 })
 
     if (fetchError || !logs || logs.length === 0) {
       return NextResponse.json({ processed_count: 0 })
@@ -38,9 +36,7 @@ export async function GET() {
             if (event === 'connection.update') {
               const state = data?.state
               const statusMap: Record<string, string> = {
-                open: 'connected',
-                connecting: 'connecting',
-                close: 'disconnected',
+                open: 'connected', connecting: 'connecting', close: 'disconnected',
               }
               const newStatus = statusMap[state] || 'disconnected'
 
@@ -58,16 +54,10 @@ export async function GET() {
             // ─── messages.upsert | messages.set ──────────────────────
             if (event === 'messages.upsert' || event === 'messages.set') {
               let messagesArray: Record<string, any>[] = []
-              if (Array.isArray(data)) {
-                messagesArray = data
-              } else if (data?.messages && Array.isArray(data.messages)) {
-                messagesArray = data.messages
-              } else if (data?.message && typeof data.message === 'object' && data.message.key) {
-                // Evolution API v2 frequently sends the message wrapped in 'message' inside 'data'
-                messagesArray = [data.message]
-              } else if (data && typeof data === 'object') {
-                messagesArray = [data]
-              }
+              if (Array.isArray(data)) messagesArray = data
+              else if (data?.messages && Array.isArray(data.messages)) messagesArray = data.messages
+              else if (data?.message && typeof data.message === 'object' && data.message.key) messagesArray = [data.message]
+              else if (data && typeof data === 'object') messagesArray = [data]
 
               for (const msg of messagesArray) {
                 const key = msg.key
@@ -76,22 +66,33 @@ export async function GET() {
                 const remoteJid = key.remoteJid as string
                 if (remoteJid === 'status@broadcast' || remoteJid.endsWith('@g.us')) continue
 
-                const msgContent = msg.message
+                const fromMe = key.fromMe || false
+                // Se o próprio sistema ou usuário mandou via Web/Celular, a Evolution envia. 
+                // Se configurarmos para não processar fromMe, ignoramos. Mas como é um CRM, precisamos do histórico completo.
+
+                // Parser completo Industrial
+                const msgContent = msg.message || {}
                 const extText = msgContent?.extendedTextMessage
                 const imageMsg = msgContent?.imageMessage
                 const videoMsg = msgContent?.videoMessage
+                const audioMsg = msgContent?.audioMessage
+                const docMsg = msgContent?.documentMessage
+                const reactionMsg = msgContent?.reactionMessage
 
-                const messageText =
-                  msgContent?.conversation ||
-                  extText?.text ||
-                  imageMsg?.caption ||
-                  videoMsg?.caption ||
-                  '[Mídia]'
+                let messageText = '[Formato Desconhecido]'
+                let messageType = 'text'
+
+                if (msgContent?.conversation) messageText = msgContent.conversation
+                else if (extText?.text) messageText = extText.text
+                else if (imageMsg) { messageText = imageMsg.caption || '[Imagem]'; messageType = 'image'; }
+                else if (videoMsg) { messageText = videoMsg.caption || '[Vídeo]'; messageType = 'video'; }
+                else if (audioMsg) { messageText = '[Áudio]'; messageType = 'audio'; }
+                else if (docMsg) { messageText = docMsg.title || docMsg.fileName || '[Documento]'; messageType = 'document'; }
+                else if (reactionMsg) { messageText = `[Reação: ${reactionMsg.text}]`; messageType = 'reaction'; }
 
                 const phone = remoteJid.replace('@s.whatsapp.net', '').replace('@c.us', '').replace('@lid', '')
                 const rawPushName = msg.pushName || phone
                 const pushName = rawPushName.replace('@s.whatsapp.net', '').replace('@c.us', '').replace('@lid', '')
-                const fromMe = key.fromMe || false
                 const externalId = key.id || null
 
                 const ts = msg.messageTimestamp
@@ -116,6 +117,7 @@ export async function GET() {
                   await supabase.from('contacts').update({ chat_status: 'open' }).eq('id', existingContact.id)
                 }
 
+                // Deduplicação garantida pela constraint do banco (user_id, external_id)
                 await supabase
                   .from('messages')
                   .upsert(
@@ -125,7 +127,7 @@ export async function GET() {
                       remote_jid: phone,
                       external_id: externalId,
                       content: messageText,
-                      message_type: 'text',
+                      message_type: messageType,
                       from_me: fromMe,
                       status: fromMe ? 'sent' : 'received',
                       created_at: createdAt,
@@ -161,47 +163,28 @@ export async function GET() {
                 }
               }
             }
-
-            // ─── contacts.set | contacts.upsert ──────────────────────
-            if (event === 'contacts.set' || event === 'contacts.upsert') {
-              const contactsArray = Array.isArray(data) ? data : (data?.contacts || [])
-              for (const c of contactsArray) {
-                const phone = (c.id || '').replace('@s.whatsapp.net', '').replace('@c.us', '').replace('@lid', '')
-                if (!phone || phone.endsWith('@g.us')) continue
-
-                const rawName = c.pushName || c.notify || phone
-                const name = rawName.replace('@s.whatsapp.net', '').replace('@c.us', '').replace('@lid', '')
-
-                await supabase
-                  .from('contacts')
-                  .upsert(
-                    { user_id: instance.user_id, instance_id: instance.id, phone, name },
-                    { onConflict: 'user_id,phone', ignoreDuplicates: true }
-                  )
-              }
-            }
-
-            // ─── qrcode.updated ──────────────────────────────────────
-            if (event === 'qrcode.updated') {
-              await supabase
-                .from('whatsapp_instances')
-                .update({ status: 'connecting' })
-                .eq('id', instance.id)
-            }
           }
         }
 
-        // Marca como processado
+        // Sucesso: Marca como processado
         await supabase
           .from('webhook_logs')
-          .update({ processed: true })
+          .update({ processed: true, processing: false, error: null })
           .eq('id', log.id)
 
       } catch (logError: any) {
-        // Marca como erro
+        // Falha: Incrementa retry_count
+        const nextRetry = (log.retry_count || 0) + 1;
+        const willRetry = nextRetry < 3;
+        
         await supabase
           .from('webhook_logs')
-          .update({ processed: true, error: logError.message || 'Error processing log' })
+          .update({ 
+            processing: false, 
+            retry_count: nextRetry,
+            processed: !willRetry, // se passou de 3, desiste e marca como "processado" pra sair da fila
+            error: logError.message || 'Erro desconhecido' 
+          })
           .eq('id', log.id)
       }
     }
@@ -209,7 +192,7 @@ export async function GET() {
     return NextResponse.json({ processed_count: logs.length })
 
   } catch (err) {
-    console.error('[/api/cron/process-webhooks] Erro:', err)
+    console.error('[/api/cron/process-webhooks] Erro Geral:', err)
     return NextResponse.json({ error: 'Falha no processamento' }, { status: 500 })
   }
 }
