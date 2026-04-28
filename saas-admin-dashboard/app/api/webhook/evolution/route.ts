@@ -52,30 +52,32 @@ export async function POST(request: NextRequest) {
 
     // ─── Evento: Nova mensagem recebida ──────────────────────
     if (event === 'messages.upsert') {
-      const msg = data
-      if (!msg?.key?.remoteJid) return NextResponse.json({ received: true })
+      // Evolution API pode enviar um array em data.messages, ou data.message, ou o objeto direto
+      let messagesArray: any[] = []
+      if (Array.isArray(data)) messagesArray = data
+      else if (data?.messages && Array.isArray(data.messages)) messagesArray = data.messages
+      else if (data?.message) messagesArray = [data.message]
+      else messagesArray = [data]
 
-      // Ignorar mensagens de grupos por enquanto
-      if (msg.key.remoteJid.endsWith('@g.us')) {
-        return NextResponse.json({ received: true })
-      }
+      for (const msg of messagesArray) {
+        if (!msg?.key?.remoteJid) continue
 
-      const message = data
-      if (!message?.key?.remoteJid) return NextResponse.json({ received: true })
+        // Ignorar mensagens de status e grupos
+        if (msg.key.remoteJid === 'status@broadcast' || msg.key.remoteJid.endsWith('@g.us')) {
+          continue
+        }
 
-      const messageText =
-        message.message?.conversation ||
-        message.message?.extendedTextMessage?.text ||
-        message.message?.imageMessage?.caption ||
-        ''
+        const messageText =
+          msg.message?.conversation ||
+          msg.message?.extendedTextMessage?.text ||
+          msg.message?.imageMessage?.caption ||
+          msg.message?.videoMessage?.caption ||
+          '[Mídia]' // Fallback para áudios/imagens sem legenda
 
-      // 3. Verifica/Cria Contato
-      let phoneNum = message.key.remoteJid.replace('@s.whatsapp.net', '')
-      if (phoneNum.includes('@g.us')) {
-        // É um grupo, não vamos salvar como contato normal no CRM para não poluir
-        // Ou podemos salvar com um tipo diferente, mas por hora ignoramos no CRM
-      } else {
-        // Busca se contato já existe
+        let phoneNum = msg.key.remoteJid.replace('@s.whatsapp.net', '').replace('@c.us', '')
+        const pushName = msg.pushName || phoneNum
+
+        // 3. Verifica/Cria Contato
         const { data: existingContact } = await supabase
           .from('contacts')
           .select('id, chat_status')
@@ -89,29 +91,29 @@ export async function POST(request: NextRequest) {
             user_id: instance.user_id,
             instance_id: instance.id,
             phone: phoneNum,
-            name: message.pushName || phoneNum,
+            name: pushName,
             chat_status: 'open'
           })
         } else if (existingContact.chat_status === 'closed') {
           // Se o chat estava fechado e o cliente mandou nova mensagem, reabre
-          if (!message.key.fromMe) {
+          if (!msg.key.fromMe) {
             await supabase.from('contacts').update({ chat_status: 'open' }).eq('id', existingContact.id)
           }
         }
-      }
 
-      // 4. Salva a mensagem
-      await supabase
-        .from('messages')
-        .insert({
-          user_id: instance.user_id,
-          instance_id: instance.id,
-          remote_jid: phoneNum,
-          content: messageText,
-          message_type: 'text', // Simplificado, ideal seria extrair o tipo real (image, audio)
-          from_me: message.key.fromMe || false,
-          status: 'sent',
-        })
+        // 4. Salva a mensagem (ignorando se já existir)
+        await supabase
+          .from('messages')
+          .upsert({
+            user_id: instance.user_id,
+            instance_id: instance.id,
+            remote_jid: phoneNum,
+            content: messageText,
+            message_type: 'text',
+            from_me: msg.key.fromMe || false,
+            status: 'sent',
+          }, { ignoreDuplicates: false }) // Idealmente teríamos external_id como Unique Constraint
+      }
     }
 
     // ─── Evento: QR Code atualizado ──────────────────────────
