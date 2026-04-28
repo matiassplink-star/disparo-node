@@ -75,12 +75,62 @@ export async function POST(request: NextRequest) {
 
       syncedChats++
 
-      // ─── Mensagens: usar o remoteJid completo para a API ───
+      // ─── Salvar a última mensagem do chat (que vem no findChats) ───
+      const lastMsg = chat.lastMessage as Record<string, unknown> | undefined
+      if (lastMsg) {
+        const msgContent = lastMsg.message as Record<string, unknown> | undefined
+        const extText = (msgContent?.extendedTextMessage as Record<string, unknown>)?.text as string | undefined
+        const imageCaption = (msgContent?.imageMessage as Record<string, unknown>)?.caption as string | undefined
+        const videoCaption = (msgContent?.videoMessage as Record<string, unknown>)?.caption as string | undefined
+        
+        const lastMessageText =
+          (msgContent?.conversation as string) ||
+          extText || imageCaption || videoCaption ||
+          (lastMsg.body as string) || ''
+          
+        if (lastMessageText || (lastMsg.hasMedia)) {
+          const key = lastMsg.key as Record<string, unknown> | undefined
+          const fromMe = (key?.fromMe as boolean) ?? false
+          const externalId = (key?.id as string) || null
+          const ts = lastMsg.messageTimestamp as number | undefined
+          const createdAt = ts ? new Date(ts * 1000).toISOString() : new Date().toISOString()
+          
+          await supabase.from('messages').upsert(
+            {
+              user_id: user.id,
+              instance_id: instance.id,
+              remote_jid: phone,
+              external_id: externalId,
+              content: lastMessageText || '[Mídia]',
+              from_me: fromMe,
+              message_type: 'text',
+              status: 'sent',
+              created_at: createdAt,
+            },
+            {
+              onConflict: externalId ? 'user_id,external_id' : 'id',
+              ignoreDuplicates: true,
+            }
+          )
+          syncedMessages++
+        }
+      }
+
+      // ─── Mensagens: tentar buscar histórico (com filtro estrito) ───
       const msgs = await getMessages(instance.instance_name, remoteJid, 50)
 
       if (!Array.isArray(msgs)) continue
 
       for (const msg of msgs) {
+        // Validação ESTREMA: Evolution API tem bug e pode retornar msgs globais!
+        const msgKey = msg.key as Record<string, unknown> | undefined
+        const msgJid = (msgKey?.remoteJid as string) || (msg.remoteJid as string) || ''
+        
+        if (msgJid && msgJid !== remoteJid) {
+          // Ignora mensagens vazadas de outras conversas/grupos
+          continue
+        }
+
         const msgContent = msg.message as Record<string, unknown> | undefined
         const extText = (msgContent?.extendedTextMessage as Record<string, unknown>)?.text as string | undefined
         const imageCaption = (msgContent?.imageMessage as Record<string, unknown>)?.caption as string | undefined
@@ -93,9 +143,8 @@ export async function POST(request: NextRequest) {
 
         if (!messageText && !msg.hasMedia) continue
 
-        const key = msg.key as Record<string, unknown> | undefined
-        const fromMe = (key?.fromMe as boolean) ?? false
-        const externalId = (key?.id as string) || null
+        const fromMe = (msgKey?.fromMe as boolean) ?? false
+        const externalId = (msgKey?.id as string) || null
         const ts = msg.messageTimestamp as number | undefined
         const createdAt = ts ? new Date(ts * 1000).toISOString() : new Date().toISOString()
 
