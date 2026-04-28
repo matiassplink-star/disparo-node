@@ -33,24 +33,30 @@ export async function GET(request: NextRequest) {
 
     if (msgsError) throw msgsError
 
+    // Utilitário para limpar sufixos internos do WhatsApp
+    const cleanJid = (jid: string) =>
+      jid.replace('@s.whatsapp.net', '').replace('@c.us', '').replace('@lid', '')
+
     // 3. Formata o retorno mapeando a última mensagem de cada contato
-    const chats = contacts.map((c: any) => {
-      // Encontra a primeira mensagem (mais recente) que bate com o remote_jid
-      const lastMessage = allMessages?.find(m => m.remote_jid === c.phone) || null
+    const chats = contacts.map((c: Record<string, unknown>) => {
+      const phone = c.phone as string
+      const lastMessage = (allMessages ?? []).find((m: Record<string, unknown>) => m.remote_jid === phone) || null
+      const rawName = (c.name as string) || phone
+      // Limpar @lid e sufixos do nome caso tenha sido salvo assim
+      const cleanName = rawName.includes('@') ? cleanJid(rawName) : rawName
 
       return {
         id: c.id,
-        remote_jid: c.phone,
-        name: c.name || c.phone,
+        remote_jid: phone,
+        name: cleanName,
         chat_status: c.chat_status,
         lastMessage,
-        updated_at: lastMessage ? lastMessage.created_at : c.created_at,
-        tags: c.tags || []
+        updated_at: lastMessage ? (lastMessage as Record<string, unknown>).created_at : c.created_at,
+        tags: (c.tags as string[]) || []
       }
     })
-    // Filtra os que tem mensagem e ordena pelos mais recentes
     .filter(c => c.lastMessage)
-    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+    .sort((a, b) => new Date(b.updated_at as string).getTime() - new Date(a.updated_at as string).getTime())
 
     return NextResponse.json(chats || [])
 
