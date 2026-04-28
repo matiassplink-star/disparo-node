@@ -1,15 +1,11 @@
-import { createClient } from '@supabase/supabase-js'
-
 const EVOLUTION_URL = process.env.EVOLUTION_API_URL || ''
 const EVOLUTION_KEY = process.env.EVOLUTION_API_KEY || ''
 
-if (!EVOLUTION_URL || !EVOLUTION_KEY) {
-  console.warn('⚠️ EVOLUTION_API_URL ou EVOLUTION_API_KEY não definidos.')
-}
-
-const defaultHeaders = {
-  'Content-Type': 'application/json',
-  apikey: EVOLUTION_KEY,
+function getHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    apikey: process.env.EVOLUTION_API_KEY || EVOLUTION_KEY,
+  }
 }
 
 // ─── Instâncias ──────────────────────────────────────────────
@@ -17,7 +13,7 @@ const defaultHeaders = {
 export async function createInstance(instanceName: string) {
   const res = await fetch(`${EVOLUTION_URL}/instance/create`, {
     method: 'POST',
-    headers: defaultHeaders,
+    headers: getHeaders(),
     body: JSON.stringify({
       instanceName,
       qrcode: true,
@@ -30,7 +26,7 @@ export async function createInstance(instanceName: string) {
 
 export async function getQRCode(instanceName: string) {
   const res = await fetch(`${EVOLUTION_URL}/instance/connect/${instanceName}`, {
-    headers: defaultHeaders,
+    headers: getHeaders(),
   })
   if (!res.ok) throw new Error(`Falha ao buscar QR Code: ${res.status}`)
   return res.json() // { base64, count }
@@ -38,16 +34,26 @@ export async function getQRCode(instanceName: string) {
 
 export async function getInstanceStatus(instanceName: string) {
   const res = await fetch(`${EVOLUTION_URL}/instance/connectionState/${instanceName}`, {
-    headers: defaultHeaders,
+    headers: getHeaders(),
   })
   if (!res.ok) return { state: 'unknown' }
   return res.json() // { instance: { state: 'open' | 'close' | 'connecting' } }
 }
 
+export async function getInstanceDetails(instanceName: string) {
+  const res = await fetch(`${EVOLUTION_URL}/instance/fetchInstances?instanceName=${instanceName}`, {
+    headers: getHeaders(),
+  })
+  if (!res.ok) return null
+  const data = await res.json()
+  // Evolution returns an array of instances
+  return data && data.length > 0 ? data[0] : null
+}
+
 export async function logoutInstance(instanceName: string) {
   const res = await fetch(`${EVOLUTION_URL}/instance/logout/${instanceName}`, {
     method: 'DELETE',
-    headers: defaultHeaders,
+    headers: getHeaders(),
   })
   return res.ok
 }
@@ -55,7 +61,7 @@ export async function logoutInstance(instanceName: string) {
 export async function deleteInstance(instanceName: string) {
   const res = await fetch(`${EVOLUTION_URL}/instance/delete/${instanceName}`, {
     method: 'DELETE',
-    headers: defaultHeaders,
+    headers: getHeaders(),
   })
   return res.ok
 }
@@ -65,7 +71,7 @@ export async function deleteInstance(instanceName: string) {
 export async function sendTextMessage(instanceName: string, number: string, text: string) {
   const res = await fetch(`${EVOLUTION_URL}/message/sendText/${instanceName}`, {
     method: 'POST',
-    headers: defaultHeaders,
+    headers: getHeaders(),
     body: JSON.stringify({ number, text }),
   })
   if (!res.ok) throw new Error(`Falha ao enviar mensagem: ${res.status}`)
@@ -81,7 +87,7 @@ export async function sendMediaMessage(
 ) {
   const res = await fetch(`${EVOLUTION_URL}/message/sendMedia/${instanceName}`, {
     method: 'POST',
-    headers: defaultHeaders,
+    headers: getHeaders(),
     body: JSON.stringify({ number, mediaUrl, caption, mediatype: mediaType }),
   })
   if (!res.ok) throw new Error(`Falha ao enviar mídia: ${res.status}`)
@@ -93,31 +99,38 @@ export async function sendMediaMessage(
 export async function checkNumbers(instanceName: string, numbers: string[]) {
   const res = await fetch(`${EVOLUTION_URL}/chat/whatsappNumbers/${instanceName}`, {
     method: 'POST',
-    headers: defaultHeaders,
+    headers: getHeaders(),
     body: JSON.stringify({ numbers }),
   })
   if (!res.ok) throw new Error(`Falha ao verificar números: ${res.status}`)
   return res.json() // Array de { number, exists, jid }
 }
 
-// ─── Configurar Webhook Global ────────────────────────────────
-
-export async function setGlobalWebhook(webhookUrl: string) {
-  const res = await fetch(`${EVOLUTION_URL}/webhook/set`, {
+// ─── Webhook por Instância (auto-config ao criar) ────────────
+// Clientes nunca precisam tocar na Evolution API.
+// O webhook é configurado automaticamente ao criar a instância.
+export async function setInstanceWebhook(instanceName: string, webhookUrl: string) {
+  const res = await fetch(`${EVOLUTION_URL}/webhook/set/${instanceName}`, {
     method: 'POST',
-    headers: defaultHeaders,
+    headers: getHeaders(),
     body: JSON.stringify({
-      url: webhookUrl,
-      enabled: true,
-      webhookByEvents: false,
-      webhookBase64: false,
-      events: [
-        'messages.upsert',
-        'connection.update',
-        'qrcode.updated',
-      ],
+      webhook: {
+        url: webhookUrl,
+        enabled: true,
+        webhookByEvents: false,
+        webhookBase64: false,
+        events: [
+          'MESSAGES_UPSERT',
+          'CONNECTION_UPDATE',
+          'QRCODE_UPDATED',
+          'MESSAGES_DELETE',
+        ],
+      }
     }),
   })
-  if (!res.ok) throw new Error(`Falha ao configurar webhook: ${res.status}`)
-  return res.json()
+  // Não joga erro — é melhor esforco
+  if (!res.ok) {
+    console.warn(`[Evolution] Falha ao configurar webhook da instância ${instanceName}: ${res.status}`)
+  }
+  return res.ok
 }

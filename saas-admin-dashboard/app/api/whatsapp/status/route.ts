@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
-import { getInstanceStatus } from '@/lib/evolution-api'
+import { getInstanceStatus, getInstanceDetails } from '@/lib/evolution-api'
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,17 +33,30 @@ export async function GET(request: NextRequest) {
     }
     const mappedStatus = statusMap[evolutionState] || 'disconnected'
 
-    // Atualizar banco se o status mudou
-    if (mappedStatus !== instance.status) {
+    let phoneNumber = instance.phone_number
+
+    // Se está conectado mas não temos o número (ex: teste local onde webhook falha), busca detalhes
+    if (mappedStatus === 'connected' && !phoneNumber) {
+      const details = await getInstanceDetails(instance.instance_name)
+      if (details?.ownerJid) {
+        phoneNumber = details.ownerJid.replace('@s.whatsapp.net', '')
+      }
+    }
+
+    // Atualizar banco se o status ou telefone mudou
+    if (mappedStatus !== instance.status || phoneNumber !== instance.phone_number) {
       await supabase
         .from('whatsapp_instances')
-        .update({ status: mappedStatus })
+        .update({ 
+          status: mappedStatus,
+          ...(phoneNumber ? { phone_number: phoneNumber } : {})
+        })
         .eq('id', instance.id)
     }
 
     return NextResponse.json({
       status: mappedStatus,
-      phone: instance.phone_number,
+      phone: phoneNumber,
       instanceName: instance.instance_name,
     })
   } catch (err) {

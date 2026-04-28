@@ -6,7 +6,6 @@ import { User } from '@/types'
 import { useLanguage } from '@/components/atualizacao/LanguageContext'
 import { 
   LayoutDashboard, 
-  Smartphone, 
   Send, 
   Eraser, 
   LifeBuoy, 
@@ -14,11 +13,10 @@ import {
   LogOut,
   ShieldCheck,
   MessageSquare,
-  Kanban,
   Bot,
   Download,
   Users,
-  BookUser
+  Smartphone
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -48,8 +46,7 @@ export function Sidebar({ collapsed = false, onToggle: _onToggle, user, mobileOp
     {
       label: 'Atendimento',
       items: [
-        { href: '/dashboard/chat', label: 'Chat Interno', icon: MessageSquare, color: '#3b82f6' },
-        { href: '/dashboard/crm', label: 'CRM Kanban', icon: Kanban, color: '#f59e0b' },
+        { href: '/dashboard/crm', label: 'CRM & Chat', icon: MessageSquare, color: '#3b82f6' },
         { href: '/dashboard/agente', label: 'Agente IA', icon: Bot, color: '#10b981' },
       ]
     },

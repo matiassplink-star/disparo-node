@@ -60,28 +60,58 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ received: true })
       }
 
-      const content =
-        msg.message?.conversation ||
-        msg.message?.extendedTextMessage?.text ||
-        msg.message?.imageMessage?.caption ||
-        null
+      const message = data
+      if (!message?.key?.remoteJid) return NextResponse.json({ received: true })
 
-      const messageType = msg.message?.imageMessage ? 'image'
-        : msg.message?.videoMessage ? 'video'
-        : msg.message?.audioMessage ? 'audio'
-        : msg.message?.documentMessage ? 'document'
-        : 'text'
+      const messageText =
+        message.message?.conversation ||
+        message.message?.extendedTextMessage?.text ||
+        message.message?.imageMessage?.caption ||
+        ''
 
-      // Salvar mensagem no banco
-      await supabase.from('messages').insert({
-        user_id: instance.user_id,
-        instance_id: instance.id,
-        remote_jid: msg.key.remoteJid,
-        content,
-        from_me: msg.key.fromMe || false,
-        message_type: messageType,
-        status: 'delivered',
-      })
+      // 3. Verifica/Cria Contato
+      let phoneNum = message.key.remoteJid.replace('@s.whatsapp.net', '')
+      if (phoneNum.includes('@g.us')) {
+        // É um grupo, não vamos salvar como contato normal no CRM para não poluir
+        // Ou podemos salvar com um tipo diferente, mas por hora ignoramos no CRM
+      } else {
+        // Busca se contato já existe
+        const { data: existingContact } = await supabase
+          .from('contacts')
+          .select('id, chat_status')
+          .eq('user_id', instance.user_id)
+          .eq('phone', phoneNum)
+          .maybeSingle()
+
+        if (!existingContact) {
+          // Cria o contato automaticamente
+          await supabase.from('contacts').insert({
+            user_id: instance.user_id,
+            instance_id: instance.id,
+            phone: phoneNum,
+            name: message.pushName || phoneNum,
+            chat_status: 'open'
+          })
+        } else if (existingContact.chat_status === 'closed') {
+          // Se o chat estava fechado e o cliente mandou nova mensagem, reabre
+          if (!message.key.fromMe) {
+            await supabase.from('contacts').update({ chat_status: 'open' }).eq('id', existingContact.id)
+          }
+        }
+      }
+
+      // 4. Salva a mensagem
+      await supabase
+        .from('messages')
+        .insert({
+          user_id: instance.user_id,
+          instance_id: instance.id,
+          remote_jid: phoneNum,
+          content: messageText,
+          message_type: 'text', // Simplificado, ideal seria extrair o tipo real (image, audio)
+          from_me: message.key.fromMe || false,
+          status: 'sent',
+        })
     }
 
     // ─── Evento: QR Code atualizado ──────────────────────────

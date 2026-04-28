@@ -53,10 +53,19 @@ export default function WhatsAppPage() {
     try {
       const res = await fetch('/api/whatsapp/connect', { method: 'POST' })
       const data = await res.json()
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'Erro ao conectar')
+      }
+
       if (data.qrcode) {
         setQrCode(data.qrcode)
+      } else {
+        setStatus(data.status || 'disconnected')
       }
-    } catch {
+    } catch (err: any) {
+      console.error(err)
+      alert(err.message || 'Falha na conexão. Tente novamente.')
       setStatus('disconnected')
     } finally {
       setIsActionLoading(false)
