@@ -168,6 +168,16 @@ export async function DELETE(
     // Deletar usuário do auth
     await supabase.auth.admin.deleteUser(params.id)
 
+    // Deletar mensagens e contatos (CRM)
+    await supabase.from('messages').delete().eq('user_id', params.id)
+    await supabase.from('contacts').delete().eq('user_id', params.id)
+
+    // Buscar instâncias para tentar deletar na Evolution API (opcional, ignora erro)
+    const { data: instances } = await supabase.from('whatsapp_instances').select('instance_name').eq('user_id', params.id)
+    
+    // Deletar instâncias do banco
+    await supabase.from('whatsapp_instances').delete().eq('user_id', params.id)
+
     // Deletar accounts relacionadas
     await supabase
       .from('accounts')
