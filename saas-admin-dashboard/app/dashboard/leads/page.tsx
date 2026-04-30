@@ -5,16 +5,35 @@ import { Search, Download, Upload, Plus, Users, Filter, MoreHorizontal } from 'l
 
 export default function LeadsPage() {
   const [search, setSearch] = useState('')
-  const [leads, setLeads] = useState([])
+  const [leads, setLeads] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Aqui vai o fetch do /api/leads
-    setTimeout(() => {
-      setLeads([])
-      setIsLoading(false)
-    }, 1000)
+    fetchLeads()
   }, [])
+
+  const fetchLeads = async (searchQuery = '') => {
+    setIsLoading(true)
+    try {
+      const res = await fetch(`/api/leads?search=${encodeURIComponent(searchQuery)}`)
+      if (res.ok) {
+        const data = await res.json()
+        setLeads(data.leads || [])
+      }
+    } catch (error) {
+      console.error('Erro ao buscar leads:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Debounce simple for search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchLeads(search)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [search])
 
   return (
     <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[#0b141a]">
@@ -97,11 +116,19 @@ export default function LeadsPage() {
                       <span className="px-2 py-1 rounded bg-green-500/10 text-green-500 text-xs">Ativo</span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex gap-1">
-                        <span className="px-2 py-0.5 rounded bg-[#202c33] text-[#8696a0] text-[10px]">Importado</span>
+                      <div className="flex gap-1 flex-wrap">
+                        {lead.tags && lead.tags.length > 0 ? (
+                          lead.tags.map((tag: string, idx: number) => (
+                            <span key={idx} className="px-2 py-0.5 rounded bg-[#202c33] text-[#8696a0] text-[10px]">{tag}</span>
+                          ))
+                        ) : (
+                          <span className="px-2 py-0.5 rounded bg-[#202c33] text-[#8696a0] text-[10px] capitalize">{lead.source || 'Manual'}</span>
+                        )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-[#8696a0] text-xs">24/10/2023</td>
+                    <td className="px-6 py-4 text-[#8696a0] text-xs">
+                      {new Date(lead.created_at).toLocaleDateString('pt-BR')}
+                    </td>
                     <td className="px-6 py-4 text-right">
                       <button className="text-[#8696a0] hover:text-white bg-transparent border-none cursor-pointer">
                         <MoreHorizontal size={18} />
