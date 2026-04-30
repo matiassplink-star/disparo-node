@@ -35,9 +35,9 @@ export function Sidebar({ collapsed = false, onToggle: _onToggle, user, mobileOp
 
   const menuGroups = [
     {
-      label: t('group.principal'),
+      label: 'Principal',
       items: [
-        { href: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard, color: '#3b82f6' },
+        { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, color: '#3b82f6' },
         { href: '/dashboard/whatsapp', label: 'WhatsApp', icon: Smartphone, color: '#22c55e' },
       ]
     },
@@ -45,16 +45,16 @@ export function Sidebar({ collapsed = false, onToggle: _onToggle, user, mobileOp
       label: 'Atendimento',
       items: [
         { href: '/dashboard/crm', label: 'CRM & Chat', icon: MessageSquare, color: '#3b82f6' },
+        { href: '/dashboard/leads', label: 'Leads', icon: Users, color: '#f59e0b' },
         { href: '/dashboard/agente', label: 'Agente IA', icon: Bot, color: '#10b981' },
       ]
     },
     {
-      label: t('group.disparos'),
+      label: 'Disparos',
       items: [
-        { href: '/dashboard/whatsapp/disparo', label: t('nav.send'), icon: Send, color: '#10b981' },
-        { href: '/dashboard/whatsapp/limpeza', label: t('nav.cleaning'), icon: Eraser, color: '#06b6d4' },
+        { href: '/dashboard/whatsapp/disparo', label: 'Nova Campanha', icon: Send, color: '#10b981' },
         { href: '/dashboard/whatsapp/extrator', label: 'Extrator', icon: Download, color: '#ec4899' },
-        { href: '/dashboard/whatsapp/grupos', label: t('nav.groups'), icon: Users, color: '#f97316' },
+        { href: '/dashboard/whatsapp/grupos', label: 'Grupos', icon: Users, color: '#f97316' },
       ]
     },
     {
