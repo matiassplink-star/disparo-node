@@ -27,4 +27,4 @@ saas-admin-dashboard/build/
 .claude/
 .agent/brain/
 .agent/scratch/
-.agent/logs/
+.agent/logs/ngrok.exe

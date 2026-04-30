@@ -71,3 +71,30 @@ export interface WhatsAppInstance {
   created_at: string
   updated_at: string
 }
+
+// ─── Auth & User ──────────────────────────────────────────────
+
+export type UserPlan = 'free' | 'starter' | 'pro' | 'enterprise'
+export type UserStatus = 'ativo' | 'bloqueado' | 'active' | 'inactive' | 'suspended'
+
+export interface User {
+  id: string
+  email: string
+  // Campos do schema real (português)
+  nome?: string | null
+  plano?: UserPlan | string
+  status?: UserStatus | string
+  acesso_ate?: string | null
+  // Campos alternativos (inglês — compatibilidade)
+  name?: string | null
+  plan?: UserPlan | string
+  role?: 'admin' | 'member' | string
+  avatar_url?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+export interface LoginCredentials {
+  email: string
+  password: string
+}

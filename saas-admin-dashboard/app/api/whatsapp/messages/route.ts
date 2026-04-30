@@ -10,7 +10,15 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: NextRequest) {
   try {
     const supabase = getSupabase()
-    const token = request.cookies.get('sb-access-token')?.value
+
+    // Supabase SSR pode usar nomes variados de cookie dependendo da versão do SDK.
+    // Tentamos: nome legado, nome com project_ref e o padrão novo com sufixo .0
+    const allCookies = request.cookies.getAll()
+    const token =
+      request.cookies.get('sb-access-token')?.value ||
+      allCookies.find(c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token'))?.value ||
+      allCookies.find(c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token.0'))?.value
+
     if (!token) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)

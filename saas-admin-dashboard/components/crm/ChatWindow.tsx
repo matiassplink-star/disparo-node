@@ -2,7 +2,18 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import MessageBubble from './MessageBubble'
-import { User, Mic, Paperclip, Send, Calendar, UserPlus, ArrowRightLeft, Bot, CheckCircle2 } from 'lucide-react'
+import { 
+  User, 
+  Mic, 
+  Paperclip, 
+  Send, 
+  Calendar, 
+  UserPlus, 
+  ArrowRightLeft, 
+  Bot, 
+  CheckCircle2,
+  Trash2,
+} from 'lucide-react'
 
 import { useChatStore, Message } from '@/store/useChatStore'
 import { supabaseClient } from '@/lib/supabase'
@@ -19,9 +30,14 @@ function formatPhoneAsName(name: string): string {
 }
 
 interface ActiveChat {
+  id?: string
   remote_jid: string
   name: string
-  [key: string]: unknown
+  ai_active?: boolean
+  chat_status?: string
+  lastMessage?: { content: string; created_at: string; from_me: boolean } | null
+  updated_at?: string
+  tags?: string[]
 }
 
 function cleanJid(jid: string): string {
@@ -39,14 +55,23 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
 
   const [inputText, setInputText] = useState('')
   const [isSending, setIsSending] = useState(false)
+  const [sendError, setSendError] = useState<string | null>(null)
   const [isLoadingMessages, setIsLoadingMessages] = useState(false)
+  const [isAiActive, setIsAiActive] = useState(activeChat.ai_active !== false)
+  const [isProcessingAction, setIsProcessingAction] = useState(false)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
+
+  // JID limpo para queries e filtros Realtime (exact-match no banco)
+  const cleanRemoteJid = activeChat.remote_jid
+    .replace('@s.whatsapp.net', '')
+    .replace('@c.us', '')
+    .replace('@lid', '')
 
   const fetchMessages = useCallback(async () => {
     if (!activeChat?.remote_jid) return
     setIsLoadingMessages(true)
     try {
-      const res = await fetch(`/api/whatsapp/messages?remote_jid=${encodeURIComponent(activeChat.remote_jid)}&limit=200`, {
+      const res = await fetch(`/api/whatsapp/messages?remote_jid=${encodeURIComponent(cleanRemoteJid)}&limit=200`, {
         cache: 'no-store'
       })
       if (!res.ok) return
@@ -57,7 +82,7 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
     } finally {
       setIsLoadingMessages(false)
     }
-  }, [activeChat?.remote_jid, setMessages])
+  }, [activeChat?.remote_jid, cleanRemoteJid, setMessages])
 
   // Realtime puro + Fetch Inicial
   useEffect(() => {
@@ -67,15 +92,16 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
     fetchMessages()
 
     // 2. Conecta no Realtime nativo do Supabase
+    // CRÍTICO: o filtro é exact-match — usa o JID sem sufixo (@s.whatsapp.net etc.)
     const channel = supabaseClient
-      .channel(`chat_${activeChat.remote_jid}`)
+      .channel(`chat_${cleanRemoteJid}`)
       .on(
         'postgres_changes',
         {
-          event: '*', // Escuta INSERT e UPDATE (para status de leitura/entrega)
+          event: '*',
           schema: 'public',
           table: 'messages',
-          filter: `remote_jid=eq.${activeChat.remote_jid}`,
+          filter: `remote_jid=eq.${cleanRemoteJid}`,
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {
@@ -91,7 +117,7 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
     return () => {
       supabaseClient.removeChannel(channel)
     }
-  }, [activeChat?.remote_jid, fetchMessages, addMessage, updateMessage])
+  }, [activeChat?.remote_jid, cleanRemoteJid, fetchMessages, addMessage, updateMessage])
 
   // Auto-scroll sem usar scrollIntoView (para não scrollar o layout main acidentalmente)
   useEffect(() => {
@@ -145,14 +171,66 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
         updateMessage(activeChat.remote_jid, optId, { external_id: realExternalId })
       }
 
+      setSendError(null)
+
     } catch (err) {
       // Remove da Store se der erro
       useChatStore.getState().removeMessage(activeChat.remote_jid, optId)
       const msg = err instanceof Error ? err.message : 'Erro ao enviar mensagem'
-      alert(`❌ ${msg}`)
+      setSendError(msg)
       setInputText(textToSend)
     } finally {
       setIsSending(false)
+    }
+  }
+
+  const handleToggleAi = async () => {
+    if (isProcessingAction) return
+    setIsProcessingAction(true)
+    const newState = !isAiActive
+    try {
+      const res = await fetch('/api/crm/ai-toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          remoteJid: activeChat.remote_jid,
+          active: newState
+        })
+      })
+      if (res.ok) {
+        setIsAiActive(newState)
+      } else {
+        alert('Erro ao alterar status da IA')
+      }
+    } catch {
+      alert('Erro ao conectar com o servidor')
+    } finally {
+      setIsProcessingAction(false)
+    }
+  }
+
+  const handleResolve = async () => {
+    if (!confirm('Deseja marcar este atendimento como resolvido?')) return
+    if (isProcessingAction) return
+    setIsProcessingAction(true)
+    try {
+      const res = await fetch('/api/crm/resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          remoteJid: activeChat.remote_jid
+        })
+      })
+      if (res.ok) {
+        alert('✅ Atendimento finalizado!')
+        // Opcional: fechar janela ou limpar estado
+      } else {
+        alert('Erro ao resolver atendimento')
+      }
+    } catch {
+      alert('Erro ao conectar com o servidor')
+    } finally {
+      setIsProcessingAction(false)
     }
   }
 
@@ -188,10 +266,22 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
           </button>
           <div className="w-[1px] h-6 bg-[#2a2d34] mx-1 self-center"></div>
           
-          <button onClick={() => alert('Pausa de automação em breve.')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#1e2028] text-[#64748b] text-[13px] font-medium hover:text-white hover:bg-[#2a2d34] transition-colors">
-            <Bot size={14} /> Pausar IA
+          <button 
+            onClick={handleToggleAi} 
+            disabled={isProcessingAction}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
+              isAiActive 
+                ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20' 
+                : 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20'
+            }`}
+          >
+            <Bot size={14} className={isAiActive ? 'animate-pulse' : ''} /> {isAiActive ? 'IA Ativa' : 'IA Pausada'}
           </button>
-          <button onClick={() => alert('Resolução de ticket em breve.')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-500/10 text-emerald-500 text-[13px] font-medium hover:bg-emerald-500/20 transition-colors">
+          <button 
+            onClick={handleResolve} 
+            disabled={isProcessingAction}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#1e2028] text-gray-400 text-[13px] font-medium hover:text-white hover:bg-emerald-600 transition-colors"
+          >
             <CheckCircle2 size={14} /> Resolver
           </button>
         </div>
@@ -220,6 +310,11 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
 
       {/* Input */}
       <div className="p-3 bg-[#0d0f12] border-t border-[#1e2028] shrink-0">
+        {sendError && (
+          <p className="text-red-400 text-xs px-4 pb-2 flex items-center gap-1.5">
+            <span>⚠️</span> {sendError}
+          </p>
+        )}
         <form onSubmit={handleSend} className="flex gap-2 max-w-5xl mx-auto items-center">
           <button type="button" onClick={() => alert('Envio de anexos em breve.')} title="Anexar arquivo" className="p-2.5 text-[#64748b] hover:text-gray-300 rounded-full hover:bg-[#1e2028] transition-colors">
             <Paperclip size={20} />
@@ -227,7 +322,7 @@ export default function ChatWindow({ activeChat }: { activeChat: ActiveChat }) {
           <input
             type="text"
             value={inputText}
-            onChange={e => setInputText(e.target.value)}
+            onChange={e => { setSendError(null); setInputText(e.target.value) }}
             placeholder="Digite uma mensagem..."
             className="flex-1 bg-[#13161b] border border-[#1e2028] text-gray-100 rounded-lg px-4 py-3 text-[15px] focus:outline-none focus:border-[#3b82f6] placeholder-[#64748b]"
             disabled={isSending}

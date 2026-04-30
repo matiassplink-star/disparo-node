@@ -27,6 +27,7 @@ interface Chat {
   remote_jid: string
   name: string
   chat_status: string
+  ai_active: boolean
   lastMessage: { content: string; created_at: string; from_me: boolean } | null
   updated_at: string
   tags: string[]
@@ -91,7 +92,10 @@ function ChatItem({ chat, active, onClick }: { chat: Chat; active: boolean; onCl
             {isNumber ? <User size={20} /> : chat.name.charAt(0).toUpperCase()}
           </div>
           <span
-            className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#0d0f12] ${statusColor[chat.chat_status] || 'bg-slate-500'}`}
+            className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#0d0f12] ${
+              chat.ai_active === false ? 'bg-amber-500' : (statusColor[chat.chat_status] || 'bg-slate-500')
+            }`}
+            title={chat.ai_active === false ? 'IA Pausada' : 'IA Ativa'}
           />
         </div>
 
@@ -291,6 +295,7 @@ export default function CRMPage() {
         remote_jid: phone,
         name,
         chat_status: 'open',
+        ai_active: true,
         lastMessage: null,
         updated_at: new Date().toISOString(),
         tags: [],
@@ -312,6 +317,7 @@ export default function CRMPage() {
         remote_jid: phone,
         name,
         chat_status: 'open',
+        ai_active: true,
         lastMessage: null,
         updated_at: new Date().toISOString(),
         tags: [],

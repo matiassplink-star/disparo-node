@@ -56,8 +56,8 @@ export function UserList({ onDeleteSuccess }: UserListProps) {
     }
   }
 
-  const handleStatusChange = async (userId: string, currentStatus: UserStatus) => {
-    const newStatus: UserStatus = currentStatus === 'ativo' ? 'bloqueado' : 'ativo'
+  const handleStatusChange = async (userId: string, currentStatus: string | undefined) => {
+    const newStatus = currentStatus === 'ativo' ? 'bloqueado' : 'ativo'
     try {
       const res = await fetch(`/api/users/${userId}`, {
         method: 'PATCH',

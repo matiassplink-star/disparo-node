@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
         remote_jid: cleanPhone,
         name: cleanName || cleanPhone,
         chat_status: row.chat_status || 'open',
+        ai_active: row.ai_active !== false,
         tags: (row.tags as string[]) || [],
         lastMessage: {
           content: row.last_message,
@@ -72,7 +73,7 @@ async function fallbackChats(
 ) {
   const { data: contacts } = await supabase
     .from('contacts')
-    .select('id, phone, name, chat_status, tags, created_at')
+    .select('id, phone, name, chat_status, ai_active, tags, created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
@@ -107,6 +108,7 @@ async function fallbackChats(
         remote_jid: phone,
         name: cleanName || cleanPhone,
         chat_status: c.chat_status,
+        ai_active: c.ai_active !== false,
         lastMessage,
         updated_at: lastMessage ? (lastMessage.created_at as string) : (c.created_at as string),
         tags: (c.tags as string[]) || [],

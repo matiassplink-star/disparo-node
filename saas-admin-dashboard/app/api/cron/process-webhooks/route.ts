@@ -8,8 +8,8 @@ export async function GET() {
   try {
     const supabase = getSupabase()
 
-    // 1. Limpeza automática de logs antigos (Fire-and-forget seguro no banco)
-    supabase.rpc('cleanup_old_webhook_logs').catch(() => {})
+    // 1. Limpeza automática de logs antigos (sem travar o processo principal)
+    supabase.rpc('cleanup_old_webhook_logs')
 
     // 2. Busca a fila usando SKIP LOCKED (evita concorrência e duplicação)
     const { data: logs, error: fetchError } = await supabase
@@ -22,7 +22,8 @@ export async function GET() {
     for (const log of logs) {
       try {
         const payload = log.payload as Record<string, unknown>
-        const { instance: instanceName, event, data } = payload
+        const { instance: instanceName, event } = payload
+        const data = payload.data as Record<string, unknown> | undefined
 
         if (instanceName && event) {
           const { data: instance } = await supabase
@@ -34,18 +35,20 @@ export async function GET() {
           if (instance) {
             // ─── connection.update ────────────────────────────────────
             if (event === 'connection.update') {
-              const state = data?.state
+              const state = data?.state as string | undefined
               const statusMap: Record<string, string> = {
                 open: 'connected', connecting: 'connecting', close: 'disconnected',
               }
-              const newStatus = statusMap[state] || 'disconnected'
+              const newStatus = state ? (statusMap[state] || 'disconnected') : 'disconnected'
+              const dataInstance = data?.instance as Record<string, unknown> | undefined
+              const owner = dataInstance?.owner as string | undefined
 
               await supabase
                 .from('whatsapp_instances')
                 .update({
                   status: newStatus,
-                  ...(state === 'open' && data?.instance?.owner
-                    ? { phone_number: data.instance.owner.replace('@s.whatsapp.net', '') }
+                  ...(state === 'open' && owner
+                    ? { phone_number: owner.replace('@s.whatsapp.net', '') }
                     : {}),
                 })
                 .eq('id', instance.id)
@@ -54,48 +57,47 @@ export async function GET() {
             // ─── messages.upsert | messages.set ──────────────────────
             if (event === 'messages.upsert' || event === 'messages.set') {
               let messagesArray: Record<string, unknown>[] = []
-              if (Array.isArray(data)) messagesArray = data
-              else if (data?.messages && Array.isArray(data.messages)) messagesArray = data.messages
-              else if (data?.message && typeof data.message === 'object' && data.message.key) messagesArray = [data.message]
-              else if (data && typeof data === 'object') messagesArray = [data]
+              const d = data as Record<string, unknown> | null | undefined
+              if (Array.isArray(data)) messagesArray = data as Record<string, unknown>[]
+              else if (d?.messages && Array.isArray(d.messages)) messagesArray = d.messages as Record<string, unknown>[]
+              else if (d?.message && typeof d.message === 'object' && (d.message as Record<string,unknown>)?.key) messagesArray = [d.message as Record<string, unknown>]
+              else if (d && typeof d === 'object') messagesArray = [d]
 
               for (const msg of messagesArray) {
-                const key = msg.key
+                const key = msg.key as Record<string, unknown> | undefined
                 if (!key?.remoteJid) continue
 
                 const remoteJid = key.remoteJid as string
                 if (remoteJid === 'status@broadcast' || remoteJid.endsWith('@g.us')) continue
 
-                const fromMe = key.fromMe || false
-                // Se o próprio sistema ou usuário mandou via Web/Celular, a Evolution envia. 
-                // Se configurarmos para não processar fromMe, ignoramos. Mas como é um CRM, precisamos do histórico completo.
+                const fromMe = (key.fromMe as boolean) || false
 
                 // Parser completo Industrial
-                const msgContent = msg.message || {}
-                const extText = msgContent?.extendedTextMessage
-                const imageMsg = msgContent?.imageMessage
-                const videoMsg = msgContent?.videoMessage
-                const audioMsg = msgContent?.audioMessage
-                const docMsg = msgContent?.documentMessage
-                const reactionMsg = msgContent?.reactionMessage
+                const msgContent = (msg.message || {}) as Record<string, unknown>
+                const extText = msgContent.extendedTextMessage as Record<string, unknown> | undefined
+                const imageMsg = msgContent.imageMessage as Record<string, unknown> | undefined
+                const videoMsg = msgContent.videoMessage as Record<string, unknown> | undefined
+                const audioMsg = msgContent.audioMessage as Record<string, unknown> | undefined
+                const docMsg = msgContent.documentMessage as Record<string, unknown> | undefined
+                const reactionMsg = msgContent.reactionMessage as Record<string, unknown> | undefined
 
                 let messageText = '[Formato Desconhecido]'
                 let messageType = 'text'
 
-                if (msgContent?.conversation) messageText = msgContent.conversation
-                else if (extText?.text) messageText = extText.text
-                else if (imageMsg) { messageText = imageMsg.caption || '[Imagem]'; messageType = 'image'; }
-                else if (videoMsg) { messageText = videoMsg.caption || '[Vídeo]'; messageType = 'video'; }
+                if (msgContent.conversation) messageText = msgContent.conversation as string
+                else if (extText?.text) messageText = extText.text as string
+                else if (imageMsg) { messageText = (imageMsg.caption as string) || '[Imagem]'; messageType = 'image'; }
+                else if (videoMsg) { messageText = (videoMsg.caption as string) || '[Vídeo]'; messageType = 'video'; }
                 else if (audioMsg) { messageText = '[Áudio]'; messageType = 'audio'; }
-                else if (docMsg) { messageText = docMsg.title || docMsg.fileName || '[Documento]'; messageType = 'document'; }
+                else if (docMsg) { messageText = (docMsg.title as string) || (docMsg.fileName as string) || '[Documento]'; messageType = 'document'; }
                 else if (reactionMsg) { messageText = `[Reação: ${reactionMsg.text}]`; messageType = 'reaction'; }
 
                 const phone = remoteJid.replace('@s.whatsapp.net', '').replace('@c.us', '').replace('@lid', '')
-                const rawPushName = msg.pushName || phone
+                const rawPushName = (msg.pushName as string) || phone
                 const pushName = rawPushName.replace('@s.whatsapp.net', '').replace('@c.us', '').replace('@lid', '')
-                const externalId = key.id || null
+                const externalId = (key.id as string) || null
 
-                const ts = msg.messageTimestamp
+                const ts = msg.messageTimestamp as number | undefined
                 const createdAt = ts ? new Date(ts * 1000).toISOString() : new Date().toISOString()
 
                 const { data: existingContact } = await supabase
@@ -194,6 +196,9 @@ export async function GET() {
 
   } catch (err) {
     console.error('[/api/cron/process-webhooks] Erro Geral:', err)
-    return NextResponse.json({ error: 'Falha no processamento' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Falha no processamento',
+      details: err instanceof Error ? err.message : String(err)
+    }, { status: 500 })
   }
 }
