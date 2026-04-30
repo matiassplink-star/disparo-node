@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { useState, useEffect } from 'react'
 import { Send, Clock, Play, Pause, X, FileText, CheckCircle2, AlertCircle, Smartphone } from 'lucide-react'
 
