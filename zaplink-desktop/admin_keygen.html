@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>ZAPLINK - Admin Keygen</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.25/jsrsasign-all-min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #020617; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .box { background: #0f172a; padding: 30px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 450px; }
+        h1 { font-size: 20px; margin-bottom: 20px; color: #10b981; }
+        label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; }
+        input, select { width: 100%; background: #020617; border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px; border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; }
+        button { width: 100%; background: #10b981; color: #020617; border: none; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .result { margin-top: 20px; background: #020617; padding: 15px; border-radius: 8px; word-break: break-all; font-family: monospace; font-size: 12px; display: none; border: 1px solid #10b981; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>🔑 ZapLink Keygen Visual</h1>
+        
+        <label>HWID do Cliente</label>
+        <input type="text" id="hwid" placeholder="Cole o código da máquina do cliente">
+        
+        <label>Dias de Validade</label>
+        <input type="number" id="days" value="30">
+        
+        <label>Plano</label>
+        <select id="plan">
+            <option value="pro">Plano PRO</option>
+            <option value="basic">Plano Basic</option>
+            <option value="ultimate">Plano Ultimate</option>
+        </select>
+
+        <label>Secret Key (Do seu .env)</label>
+        <input type="password" id="secret" value="ZapLinkDesktop_2026_Secure">
+
+        <button onclick="generate()">Gerar Chave de Ativação</button>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        function generate() {
+            const hwid = document.getElementById('hwid').value.trim();
+            const days = parseInt(document.getElementById('days').value);
+            const plan = document.getElementById('plan').value;
+            const secret = document.getElementById('secret').value;
+
+            if(!hwid) return alert('Insira o HWID');
+
+            const header = { alg: "HS256", typ: "JWT" };
+            const now = Math.floor(Date.now() / 1000);
+            const payload = {
+                machineId: hwid,
+                plano: plan,
+                iat: now,
+                exp: now + (days * 24 * 60 * 60)
+            };
+
+            const token = KJUR.jws.JWS.sign("HS256", JSON.stringify(header), JSON.stringify(payload), { utf8: secret });
+            
+            const resDiv = document.getElementById('result');
+            resDiv.innerText = token;
+            resDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

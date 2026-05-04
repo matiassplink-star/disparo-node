@@ -1,0 +1,16 @@
+# Segredos
+.env
+.env.local
+
+# Dependências
+node_modules/
+
+# Build
+dist/
+
+# Dados de usuário (gerados em runtime)
+sessoes/
+contatos/
+logs/
+.wwebjs_cache/
+chrome-cache/
